@@ -1,0 +1,6 @@
+﻿Name,Extension,EntryNumber,SequenceNumber,ParentEntryNumber,ParentSequenceNumber,ParentPath,UpdateSequenceNumber,UpdateTimestamp,UpdateReasons,FileAttributes,OffsetToData,SourceFile
+report.docx,.docx,100,2,50,1,.\Users\bob\Documents,0,2026-10-13 02:05:30.0000001,DataExtend|Close,Archive,,E:\C\$Extend\$J
+CLEANER.EXE-55AA66BB.pf,.pf,901,1,53,1,.\Windows\Prefetch,96,2026-10-13 02:06:00.0000002,FileCreate,Archive,,E:\C\$Extend\$J
+secret.lnk,.lnk,902,1,52,1,.\Users\bob\AppData\Roaming\Microsoft\Windows\Recent,192,2026-10-13 02:07:00.0000003,FileCreate,Archive,,E:\C\$Extend\$J
+secret.lnk,.lnk,902,1,52,1,.\Users\bob\AppData\Roaming\Microsoft\Windows\Recent,288,2026-10-13 02:29:00.0000004,FileDelete|Close,Archive,,E:\C\$Extend\$J
+CLEANER.EXE-55AA66BB.pf,.pf,901,1,53,1,.\Windows\Prefetch,384,2026-10-13 02:30:00.0000005,FileDelete|Close,Archive,,E:\C\$Extend\$J

@@ -1,0 +1,692 @@
+<title>ADS Triage Briefing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caladea:wght@400;700&family=Carlito:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* A briefing in the look of the defense deck (cardinal, gold, Cambria and Calibri), with a forensic motif:
+   a hex viewer of the drive's own first bytes, a scanning line, and a "disk scan" wipe between sections. */
+:root {
+  --cardinal: #C8102E; --cardinal-ink: #9E0B23; --gold: #F1BE48; --gold-deep: #B07A0C;
+  --ink: #1A1A1A; --muted: #5E5A5A; --line: #DAD6D6; --paper: #FFFFFF; --panel: #F7F4F2; --bar: #161616;
+  --on-bar: #F2F2F2; --on-cardinal: #FFFFFF; --code-bg: #F3EFEC; --ok: #2E7D4F; --soft: #FBECEE;
+  --hex-bg: #121010; --hex-ink: #CFC8C6; --hex-dim: #6E6664;
+  --head: Cambria, "Caladea", Georgia, "Times New Roman", serif;
+  --body: Calibri, "Carlito", "Segoe UI", Arial, sans-serif;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --cardinal: #E2304C; --cardinal-ink: #FF8095; --gold: #F1BE48; --gold-deep: #F1BE48;
+  --ink: #EDE8E6; --muted: #ADA5A3; --line: #3A3434; --paper: #151212; --panel: #1F1A1A; --bar: #0B0909;
+  --on-bar: #F2F2F2; --on-cardinal: #FFFFFF; --code-bg: #262020; --ok: #6CC596; --soft: #2A1A1D;
+  --hex-bg: #0A0808; --hex-ink: #CFC8C6; --hex-dim: #6E6664; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --cardinal: #E2304C; --cardinal-ink: #FF8095; --gold: #F1BE48; --gold-deep: #F1BE48;
+  --ink: #EDE8E6; --muted: #ADA5A3; --line: #3A3434; --paper: #151212; --panel: #1F1A1A; --bar: #0B0909;
+  --on-bar: #F2F2F2; --on-cardinal: #FFFFFF; --code-bg: #262020; --ok: #6CC596; --soft: #2A1A1D;
+  --hex-bg: #0A0808; --hex-ink: #CFC8C6; --hex-dim: #6E6664; color-scheme: dark }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.55 var(--body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bar); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--head); text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(28px, 4vw, 40px); color: var(--cardinal); line-height: 1.15; }
+h3 { font-size: 21px; line-height: 1.25; }
+p { margin: 0; max-width: 66ch; }
+code, .mono { font-family: var(--mono); font-size: .86em; }
+a { color: var(--cardinal); }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.ico { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* top bar */
+#bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--bar); color: var(--on-bar); }
+#bar .wrap { display: flex; align-items: center; gap: 4px; height: 52px; overflow-x: auto; scrollbar-width: none; }
+#bar .brand { display: flex; align-items: center; gap: 8px; font: 700 15px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin-right: 8px; white-space: nowrap; }
+#bar a { color: inherit; text-decoration: none; padding: 7px 10px; border-radius: 7px; white-space: nowrap; font-size: 15px; }
+#bar a b { display: inline-block; min-width: 1.5em; margin-right: 6px; border-radius: 4px; background: rgba(255,255,255,.15); text-align: center; font: 700 12px/1.6 var(--mono); }
+#bar a:hover { background: rgba(255,255,255,.12); }
+#bar a.cur { background: #C8102E; }
+#bar a.cur b { background: rgba(0,0,0,.3); }
+#progress { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+/* title band: cardinal, with a live hex viewer of the drive's first bytes */
+.title-band { background: #C8102E; color: #FFFFFF; border-bottom: 10px solid #F1BE48; position: relative; overflow: hidden; }
+.title-band::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .08;
+  background-image: linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px); background-size: 28px 28px; }
+.title-band .wrap { position: relative; padding-block: 44px 36px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+.eyebrow { font: 700 14px var(--body); letter-spacing: .14em; text-transform: uppercase; color: #F1BE48; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.eyebrow .case { font-family: var(--mono); letter-spacing: .04em; background: rgba(0,0,0,.25); padding: 1px 8px; border-radius: 4px; color: #FFFFFF; }
+.title-band h1 { font-size: clamp(34px, 5.6vw, 60px); line-height: 1.05; margin-top: 10px; overflow-wrap: anywhere; }
+.title-band .say { font-size: 19px; margin-top: 14px; max-width: 44ch; }
+.title-band .facts { margin-top: 16px; font-size: 15px; display: flex; flex-wrap: wrap; gap: 6px 10px; }
+.title-band .facts span { background: rgba(0,0,0,.2); border-radius: 999px; padding: 2px 12px; white-space: nowrap; }
+.title-band .cta { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-gold { font: 700 16px var(--body); border: 0; border-radius: 999px; padding: 10px 20px; background: #F1BE48; color: #1A1A1A; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; text-decoration: none; }
+.btn-gold:hover { background: #FFFFFF; }
+.btn-ghost { font: 700 16px var(--body); border: 1px solid rgba(255,255,255,.6); border-radius: 999px; padding: 9px 18px; background: transparent; color: #FFFFFF; text-decoration: none; display: inline-flex; gap: 8px; align-items: center; }
+.btn-ghost:hover { background: rgba(255,255,255,.14); }
+
+.hexview { background: #121010; color: #CFC8C6; border-radius: 12px; padding: 14px 14px 10px; font: 13px/1.75 var(--mono); position: relative; overflow: hidden; box-shadow: 0 18px 40px rgba(0,0,0,.35); min-width: 0; }
+.hexview .hd { display: flex; justify-content: space-between; gap: 10px; font: 700 12px var(--body); letter-spacing: .1em; text-transform: uppercase; color: #F1BE48; margin-bottom: 6px; }
+.hexview .hd span:last-child { color: #8E8684; letter-spacing: .04em; text-transform: none; font-weight: 400; }
+.hexrows { overflow-x: auto; }
+.hexrow { display: flex; gap: 12px; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .35s ease, transform .35s ease; }
+.hexrow.on { opacity: 1; transform: none; }
+.hexrow .o { color: #6E6664; }
+.hexrow .b { display: flex; gap: 6px; }
+.hexrow .b i { font-style: normal; border-radius: 3px; padding: 0 1px; transition: background .4s ease, color .4s ease; }
+.hexrow .a { color: #8E8684; letter-spacing: .05em; }
+.hexrow i.hl { background: #F1BE48; color: #1A1A1A; }
+.hexrow i.hl2 { background: #C8102E; color: #FFFFFF; }
+.hexrow i.hl3 { background: #4E8FD1; color: #FFFFFF; }
+.hexkey { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font: 13px var(--body); color: #CFC8C6; }
+.hexkey span { display: inline-flex; align-items: center; gap: 6px; opacity: 0; transition: opacity .5s ease; }
+.hexkey span.on { opacity: 1; }
+.hexkey i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.scanline { position: absolute; left: 0; right: 0; height: 26px; top: 34px; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(241,190,72,.18) 70%, rgba(241,190,72,.65) 96%, transparent); animation: scan 3.4s ease-in-out 1.2s infinite; opacity: 0; }
+@keyframes scan { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(110px); opacity: 0; } }
+.hexview .cap { font: 13px var(--body); color: #8E8684; margin-top: 8px; }
+@media (max-width: 860px) { .title-band .wrap { grid-template-columns: minmax(0, 1fr); } }
+
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; background: var(--bar); color: var(--on-bar); }
+.statwrap { background: var(--bar); }
+.stat { padding: 16px 16px 14px 0; display: grid; gap: 2px; }
+.stat + .stat { padding-left: 16px; border-left: 1px solid rgba(255,255,255,.14); }
+.stat .n { font: 700 clamp(28px, 4.6vw, 44px)/1 var(--head); font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 15px; color: #BDB5B3; }
+.stat.hot .n { color: #F1BE48; }
+@media (max-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stat:nth-child(3) { border-left: 0; padding-left: 0; } .stat:nth-child(n+3) { border-top: 1px solid rgba(255,255,255,.14); } }
+
+/* sections */
+section.slide { padding-block: 56px 30px; border-bottom: 1px solid var(--line); scroll-margin-top: 52px; }
+section.slide .wrap > header { display: grid; gap: 10px; margin-bottom: 26px; }
+.kicker { font: 700 13px var(--mono); letter-spacing: .08em; color: var(--muted); display: flex; align-items: center; gap: 10px; }
+.kicker::after { content: ""; flex: 0 0 60px; height: 2px; background: var(--gold); }
+.lede { color: var(--muted); font-size: 18px; }
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+/* how it works */
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; position: relative; }
+.flow::before { content: ""; position: absolute; left: 30px; right: 30px; top: 30px; height: 3px; background: var(--line); }
+.flow .rail { position: absolute; left: 30px; top: 30px; height: 3px; width: 0; background: var(--gold-deep); transition: width 2.2s ease; }
+.flow.in .rail { width: calc(100% - 60px); }
+.fstep { position: relative; display: grid; gap: 8px; align-content: start; opacity: .25; transform: translateY(10px); transition: opacity .5s ease, transform .5s ease; }
+.fstep.on { opacity: 1; transform: none; }
+.fstep .dot { width: 60px; height: 60px; border-radius: 50%; background: var(--paper); border: 3px solid var(--cardinal); color: var(--cardinal); display: grid; place-items: center; position: relative; }
+.fstep .dot .ico { width: 28px; height: 28px; }
+.fstep .dot b { position: absolute; top: -6px; right: -6px; background: var(--gold); color: #1A1A1A; font: 700 12px/22px var(--mono); width: 22px; height: 22px; border-radius: 50%; text-align: center; }
+.fstep h3 { font-size: 19px; }
+.fstep .big { font: 700 30px/1 var(--head); color: var(--cardinal); font-variant-numeric: tabular-nums; }
+.fstep p { font-size: 15px; color: var(--muted); }
+@media (max-width: 860px) { .flow { grid-template-columns: minmax(0, 1fr); } .flow::before { left: 29px; right: auto; top: 30px; bottom: 30px; width: 3px; height: auto; } .flow .rail { left: 29px; width: 3px !important; height: 0; transition: height 2.2s ease; } .flow.in .rail { height: calc(100% - 60px); }
+  .fstep { grid-template-columns: 60px minmax(0, 1fr); column-gap: 14px; } .fstep > :not(.dot) { grid-column: 2; } .fstep .dot { grid-row: 1 / span 4; } }
+.checks { margin-top: 34px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.ck { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 6px; align-content: start; background: var(--paper); transition: border-color .2s ease, transform .2s ease; }
+.ck:hover { border-color: var(--cardinal); transform: translateY(-2px); }
+.ck .t { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--cardinal-ink); }
+.ck .q { font-size: 15px; }
+.ck .n { font-size: 13px; color: var(--muted); }
+.ck .n b { color: var(--ink); }
+@media (max-width: 900px) { .checks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 460px) { .checks { grid-template-columns: minmax(0, 1fr); } }
+.funnel { margin-top: 34px; display: grid; gap: 8px; }
+.funnel h3 { font-size: 18px; margin-bottom: 4px; }
+.frow { display: grid; gap: 3px; }
+.frow .lab { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
+.frow .lab b { font: 700 17px var(--head); font-variant-numeric: tabular-nums; }
+.frow .track { height: 26px; background: var(--panel); border-radius: 4px; overflow: hidden; }
+.frow .fill { height: 100%; width: 0; background: var(--muted); border-radius: 4px; transition: width 1.1s cubic-bezier(.2,.7,.2,1); }
+.frow.f-cut .fill { background: repeating-linear-gradient(135deg, var(--line) 0 8px, transparent 8px 14px); }
+.frow.f-lead .fill { background: var(--gold-deep); }
+.frow.f-strong .fill { background: var(--cardinal); }
+.noise { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+.noise span { background: var(--panel); border: 1px dashed var(--line); border-radius: 999px; padding: 3px 12px; font-size: 14px; color: var(--muted); }
+.note { margin-top: 12px; font-size: 15px; color: var(--muted); }
+
+/* leads */
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 15px; color: var(--muted); }
+.legend span { display: inline-flex; gap: 8px; align-items: center; }
+.legend i { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.leads { display: grid; gap: 18px; }
+.lead { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); scroll-margin-top: 64px; position: relative; overflow: hidden; }
+.lead.first { border-left: 7px solid var(--cardinal); }
+.lead.worth { border-left: 7px solid var(--gold-deep); }
+.lead .side { display: grid; justify-items: center; align-content: start; gap: 6px; text-align: center; }
+.ring { width: 100px; height: 100px; }
+.ring circle { fill: none; stroke-width: 9; }
+.ring .bg { stroke: var(--panel); }
+.ring .fg { stroke: var(--cardinal); stroke-linecap: round; transition: stroke-dashoffset 1.2s ease; transform: rotate(-90deg); transform-origin: 50% 50%; }
+.lead.worth .ring .fg { stroke: var(--gold-deep); }
+.ring text { fill: var(--ink); font: 700 30px var(--head); text-anchor: middle; dominant-baseline: central; }
+.ring .of { fill: var(--muted); font: 12px var(--body); }
+.tierlab { font: 700 12px var(--body); letter-spacing: .1em; text-transform: uppercase; border-radius: 999px; padding: 2px 10px; background: var(--cardinal); color: #FFFFFF; }
+.lead.worth .tierlab { background: var(--gold); color: #1A1A1A; }
+.rankno { font: 700 13px var(--mono); color: var(--muted); }
+.lead .name { display: flex; align-items: center; gap: 10px; }
+.lead .name .ico { width: 28px; height: 28px; color: var(--muted); }
+.lead .name h3 { font-size: 23px; overflow-wrap: anywhere; }
+.lead .where { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; margin-top: 2px; }
+.lead .sum { margin-top: 8px; font-size: 16px; }
+.lead .sum b { color: var(--cardinal-ink); }
+.clues { display: grid; gap: 12px; margin-top: 14px; }
+.clue { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px; border-radius: 10px; background: var(--panel); transition: opacity .45s ease, transform .45s ease; }
+.clue.hide { opacity: .1; transform: translateX(14px); }
+.clue .ci { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--cardinal); color: #FFFFFF; }
+.clue .ci.f { background: var(--gold); color: #1A1A1A; }
+.clue .cn { font-weight: 700; }
+.clue .cs { font-size: 16px; margin-top: 2px; }
+.clue .why { font-size: 14px; color: var(--muted); margin-top: 6px; font-style: italic; }
+.viz { margin-top: 10px; }
+.swap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 15px; }
+.swap .tag { border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; background: var(--paper); display: grid; }
+.swap .tag small { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.swap .tag.bad { border-color: var(--cardinal); box-shadow: 0 0 0 3px var(--soft); }
+.swap .neq { font: 700 24px var(--head); color: var(--cardinal); }
+.bytes { display: grid; gap: 4px; }
+.bytes .barline { display: flex; height: 26px; border-radius: 5px; overflow: hidden; background: var(--paper); border: 1px solid var(--line); }
+.bytes .img { background: var(--muted); width: 0; transition: width .9s ease; display: flex; align-items: center; padding-left: 8px; color: var(--paper); font-size: 13px; white-space: nowrap; overflow: hidden; }
+.bytes .tail { background: repeating-linear-gradient(135deg, var(--cardinal) 0 6px, var(--cardinal-ink) 6px 12px); width: 0; transition: width .6s ease .9s; }
+.bytes .lg { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.bytes .lg b { color: var(--cardinal-ink); }
+.inside { display: inline-flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 14px; background: var(--paper); border: 1px dashed var(--cardinal); border-radius: 8px; padding: 4px 10px; }
+.snip { font: 13px/1.6 var(--mono); background: var(--code-bg); border-radius: 6px; padding: 6px 10px; overflow-x: auto; white-space: pre; }
+.snip mark { background: var(--gold); color: #1A1A1A; border-radius: 3px; padding: 0 2px; }
+.dots { position: relative; height: 46px; border-bottom: 2px solid var(--line); }
+.dots i { position: absolute; bottom: 6px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--muted); opacity: .55; transition: left .9s ease; }
+.dots i.me { width: 20px; height: 20px; margin-left: -10px; background: var(--cardinal); opacity: 1; box-shadow: 0 0 0 4px var(--soft); }
+.dots + .lg { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.grid { display: flex; flex-wrap: wrap; gap: 4px; max-width: 420px; }
+.grid i { width: 16px; height: 16px; border-radius: 3px; background: var(--muted); opacity: 0; transform: scale(.4); transition: opacity .3s ease, transform .3s ease; }
+.grid i.on { opacity: .6; transform: none; }
+.grid i.me { background: transparent; border: 2px dashed var(--cardinal); }
+.grid i.me.on { opacity: 1; }
+.grid + .lg { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.twobar { display: grid; gap: 4px; font-size: 13px; }
+.twobar div { display: grid; grid-template-columns: 150px minmax(0, 1fr) 54px; gap: 8px; align-items: center; }
+.twobar .tr { height: 14px; background: var(--paper); border-radius: 3px; overflow: hidden; }
+.twobar .fl { height: 100%; width: 0; background: var(--muted); transition: width 1s ease; }
+.twobar .me .fl { background: var(--gold-deep); }
+.twobar b { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) { .twobar div { grid-template-columns: minmax(0, 1fr) 54px; } .twobar div span:first-child { grid-column: 1 / 3; } }
+.walk { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+button { font: 700 14px var(--body); border-radius: 999px; padding: 7px 15px; cursor: pointer; border: 1px solid var(--cardinal); background: transparent; color: var(--cardinal-ink); display: inline-flex; gap: 6px; align-items: center; }
+button:hover { background: var(--cardinal); color: #FFFFFF; }
+details.tech { margin-top: 12px; font-size: 14px; }
+details.tech summary { cursor: pointer; color: var(--muted); font-weight: 700; }
+details.tech ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); display: grid; gap: 3px; }
+details.tech li { overflow-wrap: anywhere; }
+.more { margin-top: 18px; }
+@media (max-width: 600px) { .lead { grid-template-columns: minmax(0, 1fr); padding: 16px; } .lead .side { grid-auto-flow: column; justify-content: start; align-items: center; } .ring { width: 76px; height: 76px; } .clue { grid-template-columns: 32px minmax(0, 1fr); padding: 10px; } .clue .ci { width: 32px; height: 32px; } }
+
+/* passwords and locks */
+.kl { display: grid; grid-template-columns: minmax(0, 1fr) 110px minmax(0, 1fr); gap: 0; align-items: stretch; }
+.kl .col { display: grid; gap: 12px; align-content: start; }
+.kl .col h3 { font: 700 15px var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: .1em; display: flex; align-items: center; gap: 8px; }
+.card { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--panel); display: grid; gap: 4px; min-width: 0; }
+.card .k { font: 600 18px var(--mono); color: var(--cardinal-ink); overflow-wrap: anywhere; }
+.card .w { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.card.lock .k { font: 700 17px var(--body); color: var(--ink); display: flex; gap: 8px; align-items: center; }
+.kl #links { width: 100%; height: 100%; }
+.kl #links path { fill: none; stroke: var(--gold-deep); stroke-width: 2; stroke-dasharray: 5 6; animation: march 1.4s linear infinite; }
+@keyframes march { to { stroke-dashoffset: -22; } }
+@media (max-width: 760px) { .kl { grid-template-columns: minmax(0, 1fr); gap: 18px; } .kl .link { display: none; } }
+
+/* timing */
+.tgrid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.waffle { width: 100%; max-width: 100%; display: block; }
+.wkey { display: flex; gap: 18px; flex-wrap: wrap; font-size: 15px; margin-top: 10px; }
+.wkey span { display: inline-flex; gap: 8px; align-items: center; }
+.wkey i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.odd { display: grid; gap: 10px; }
+.odd .card .k { font: 700 16px var(--body); color: var(--ink); }
+.odd ul { margin: 4px 0 0; padding-left: 18px; font-size: 14px; color: var(--muted); }
+.odd li { overflow-wrap: anywhere; }
+@media (max-width: 860px) { .tgrid { grid-template-columns: minmax(0, 1fr); } }
+
+/* table */
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.tools input { font: 16px var(--body); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); min-width: 0; flex: 1 1 240px; }
+.tools button { font-size: 13px; padding: 5px 12px; }
+.tools button[aria-pressed="true"] { background: var(--cardinal); color: #FFFFFF; }
+.scroll { overflow: auto; border: 1px solid var(--line); border-radius: 10px; }
+#all .scroll { max-height: 560px; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); background: var(--panel); position: sticky; top: 0; }
+td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+td.p { overflow-wrap: anywhere; min-width: 240px; }
+.mini { display: inline-block; width: 46px; height: 8px; border-radius: 4px; background: var(--panel); overflow: hidden; vertical-align: middle; margin-left: 8px; }
+.mini b { display: block; height: 100%; background: var(--muted); }
+tr.first .mini b { background: var(--cardinal); }
+tr.worth .mini b { background: var(--gold-deep); }
+.count { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+.cl-m { display: none; font-size: 14px; color: var(--cardinal-ink); }
+@media (max-width: 600px) { #all th:nth-child(3), #all td:nth-child(3) { display: none; } .cl-m { display: block; } td.p { min-width: 0; } }
+
+/* glossary and method */
+.gloss { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.gloss div { border-top: 3px solid var(--gold); padding-top: 10px; display: grid; gap: 4px; }
+.gloss dt { font: 700 18px var(--head); }
+.gloss dd { margin: 0; font-size: 15px; color: var(--muted); }
+@media (max-width: 860px) { .gloss { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .gloss { grid-template-columns: minmax(0, 1fr); } }
+.method { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 28px; margin-top: 34px; }
+.box { background: var(--panel); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; }
+.box.warn { border-left: 5px solid var(--gold-deep); }
+.scale { display: flex; height: 18px; border-radius: 9px; overflow: hidden; margin-top: 6px; }
+.scale i { display: block; height: 100%; }
+.scale + .lg { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+@media (max-width: 860px) { .method { grid-template-columns: minmax(0, 1fr); } }
+footer { padding-block: 26px 90px; color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+
+/* guided "next" control */
+#guide { position: fixed; z-index: 15; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 6px; background: var(--bar); color: #F2F2F2; border-radius: 999px; padding: 6px 6px 6px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.3); font-size: 14px; max-width: calc(100vw - 32px); }
+#guide .pill { font: 600 12px var(--mono); color: #F1BE48; white-space: nowrap; }
+#guide .lab { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#guide button { border-color: transparent; color: #F2F2F2; padding: 6px 10px; }
+#guide button:hover { background: rgba(255,255,255,.14); }
+#guide button.go { background: #C8102E; color: #FFFFFF; padding: 7px 14px; }
+#guide button.go:hover { background: #E2304C; }
+
+/* the section change: a disk-scan wipe (a band of the drive's bytes with a gold read head) */
+#wipe { position: fixed; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; visibility: hidden; }
+#wipe .band { position: absolute; inset: 0; background: #121010; clip-path: inset(0 100% 0 0); }
+#wipe pre { margin: 0; font: 14px/1.5 var(--mono); color: #3B3533; white-space: pre; padding: 10px; }
+#wipe .head { position: absolute; top: 0; bottom: 0; width: 4px; left: 0; background: #F1BE48; box-shadow: 0 0 24px 6px rgba(241,190,72,.55); }
+#wipe .lab { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #FFFFFF; font: 700 clamp(28px, 6vw, 64px)/1.1 var(--head); }
+#wipe .lab small { display: block; font: 700 14px var(--mono); color: #F1BE48; letter-spacing: .14em; margin-bottom: 8px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } html { scroll-behavior: auto; } .reveal, .fstep, .hexrow, .hexkey span, .grid i { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<nav id="bar" aria-label="Sections"><div class="wrap">
+  <span class="brand"><svg class="ico" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="M14.5 14.5 20 20"/></svg>ADS</span>
+  <a href="#overview"><b>01</b>Summary</a>
+  <a href="#how"><b>02</b>How it works</a>
+  <a href="#leads"><b>03</b>Look first</a>
+  <a href="#keys"><b>04</b>Passwords</a>
+  <a href="#timeline"><b>05</b>Timing</a>
+  <a href="#all"><b>06</b>Everything</a>
+  <a href="#method"><b>07</b>Words &amp; method</a>
+</div><i id="progress"></i></nav>
+
+<div id="wipe" aria-hidden="true"><div class="band"><pre id="wipehex"></pre><div class="lab" id="wipelab"></div></div><div class="head"></div></div>
+
+<header class="title-band" id="overview" data-title="Summary"><div class="wrap">
+  <div>
+    <div class="eyebrow"><span>First-look report</span><span class="case" id="case"></span></div>
+    <h1 id="imgname">Disk image</h1>
+    <p class="say" id="herosay">This report looked at every file on the drive and picked out the ones worth a closer look.</p>
+    <div class="facts" id="facts"></div>
+    <div class="cta"><a class="btn-gold" href="#leads">See what to look at first <svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="btn-ghost" href="#how">How it works</a></div>
+  </div>
+  <figure class="hexview" style="margin:0" aria-label="The first 64 bytes of the drive, as a forensic hex viewer shows them">
+    <div class="hd"><span>Raw bytes, start of drive</span><span id="hexoff">offset 0</span></div>
+    <div class="hexrows" id="hexrows"></div>
+    <div class="hexkey" id="hexkey"></div>
+    <div class="scanline"></div>
+    <figcaption class="cap">Every drive starts with a short label that says what it is. These are the real bytes from this one.</figcaption>
+  </figure>
+</div></header>
+<div class="statwrap"><div class="wrap"><div class="stats" id="stats"></div></div></div>
+
+<section class="slide" id="how" data-title="How it works" aria-labelledby="h-how"><div class="wrap">
+  <header><div class="kicker">02 · HOW IT WORKS</div><h2 id="h-how">Four steps from a whole drive to a short list</h2>
+  <p class="lede">The tool works like a careful first pass by an investigator. It never changes the evidence; it only reads it.</p></header>
+  <div class="flow" id="flow"><i class="rail"></i></div>
+  <h3 style="margin-top:44px" class="reveal">The eight questions asked of every file</h3>
+  <div class="checks" id="checks"></div>
+  <div class="funnel reveal" id="funnelbars"><h3>How the pile shrinks</h3></div>
+  <div class="noise" id="noise"></div>
+</div></section>
+
+<section class="slide" id="leads" data-title="Look first" aria-labelledby="h-leads"><div class="wrap">
+  <header><div class="kicker">03 · LOOK FIRST</div><h2 id="h-leads">The files most worth a closer look</h2>
+  <p class="lede">Each file gets a score from 0 to 100: how much of what was checked looked wrong. Rare clues count for more than common ones. A high score is a reason to look, not proof of anything.</p>
+  <div class="legend" id="legend"></div></header>
+  <div class="leads" id="leadlist"></div>
+  <div class="more" id="more"></div>
+</div></section>
+
+<section class="slide" id="keys" data-title="Passwords" aria-labelledby="h-keys"><div class="wrap">
+  <header><div class="kicker">04 · PASSWORDS AND LOCKED FILES</div><h2 id="h-keys">Passwords found, and files that need one</h2>
+  <p class="lede">On the left are passwords someone wrote down inside files. On the right are files locked with a password. The tool does not try them; testing each password on each locked file is the next step.</p></header>
+  <div class="kl"><div class="col" id="keycol"><h3><svg class="ico" viewBox="0 0 24 24"><circle cx="16" cy="8" r="4"/><path d="M13 11 4 20M7 17l2 2M5 19l1.5 1.5"/></svg>Written-down passwords</h3></div>
+  <div class="link" aria-hidden="true"><svg id="links" preserveAspectRatio="none"></svg></div>
+  <div class="col" id="lockcol"><h3><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Locked files</h3></div></div>
+</div></section>
+
+<section class="slide" id="timeline" data-title="Timing" aria-labelledby="h-time"><div class="wrap">
+  <header><div class="kicker">05 · TIMING</div><h2 id="h-time">Which files were changed at an unusual time</h2>
+  <p class="lede" id="time-lede"></p></header>
+  <div class="tgrid">
+    <div><canvas class="waffle" id="waffle" role="img"></canvas><div class="wkey" id="wkey"></div></div>
+    <div class="odd" id="odd"></div>
+  </div>
+</div></section>
+
+<section class="slide" id="all" data-title="Everything found" aria-labelledby="h-all"><div class="wrap">
+  <header><div class="kicker">06 · EVERYTHING FOUND</div><h2 id="h-all">Every file with at least one clue</h2>
+  <p class="lede">Type part of a name to search, or pick a clue to see only the files it found.</p></header>
+  <div class="tools"><input id="q" type="search" placeholder="Search file names and folders" aria-label="Search file names and folders"><span id="rulebtns" class="tools" style="margin:0"></span></div>
+  <div class="count" id="count"></div>
+  <div class="scroll"><table><thead><tr><th>Score</th><th>File</th><th>Clues</th></tr></thead><tbody id="rows"></tbody></table></div>
+</div></section>
+
+<section class="slide" id="method" data-title="Words and method" aria-labelledby="h-method"><div class="wrap">
+  <header><div class="kicker">07 · WORDS AND METHOD</div><h2 id="h-method">Words used in this report, and how the score works</h2></header>
+  <dl class="gloss" id="gloss" style="margin:0"></dl>
+  <div class="method">
+    <div class="box"><strong>How the score is worked out</strong>
+      <span>Each of the eight questions only counts if it makes sense for that file (a text file cannot be password-locked the way a Word file can). Each question gets a weight: the rarer its answer is on this drive, the more it counts. The score is the weighted share of a file's questions that found something wrong, shown out of 100.</span>
+      <div class="scale" id="scale"></div><div class="lg"><span>0</span><span id="scalemid"></span><span>100</span></div>
+    </div>
+    <div style="display:grid;gap:14px;align-content:start">
+      <div class="box warn" id="na"></div>
+      <div class="box"><strong>A word of caution</strong><span>The cut-offs for “Look first” and “Worth a look” were set on this course image, so treat them as a reading aid. The tool points to files; a person still has to open and read them.</span></div>
+    </div>
+  </div>
+  <details class="tech" style="margin-top:22px"><summary>For examiners: per-check numbers</summary>
+    <div class="scroll" style="margin-top:10px"><table><thead><tr><th>Check</th><th>Could judge</th><th>Found something</th><th>Base rate p</th><th>Weight ln(1/p)</th></tr></thead><tbody id="rulerows"></tbody></table></div>
+  </details>
+</div></section>
+<footer><div class="wrap" id="foot"></div></footer>
+
+<div id="guide" role="navigation" aria-label="Guided tour"><span class="pill" id="gpill">01 / 07</span><span class="lab" id="glab"></span>
+  <button type="button" id="gprev" aria-label="Previous section"><svg class="ico" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+  <button type="button" class="go" id="gnext">Next <svg class="ico" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+(() => {
+  const D = DATA;
+  const $ = (s, r = document) => r.querySelector(s);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const NS = "http://www.w3.org/2000/svg";
+  const fmt = n => Number(n).toLocaleString("en-US");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const RULES = D.rules;
+  const pts = s => Math.round(s * 100);
+  const tier = s => s >= D.tiers.strong ? "first" : s >= D.tiers.moderate ? "worth" : "minor";
+  const TIER = { first: "Look first", worth: "Worth a look", minor: "Minor" };
+  const size = n => n < 1024 ? fmt(n) + " bytes" : n < 1048576 ? (n / 1024).toFixed(n < 10240 ? 1 : 0) + " KB" : (n / 1048576).toFixed(1) + " MB";
+  const when = s => { if (!s) return ""; const d = new Date(s.replace(" ", "T") + "Z"); return isNaN(d) ? s : d.toLocaleString("en-US", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit" }); };
+  const KIND = { "encrypted-ooxml": "Locked Office file", excel97: "Excel spreadsheet", word97: "Word document", ppt97: "PowerPoint file", jpeg: "Photo", png: "Picture", gif: "Picture",
+    pdf: "PDF document", zip: "ZIP archive", rar: "RAR archive", pe: "Windows program", elf: "Linux program", text: "Text file", email: "Email", html: "Web page", xml: "Data file", ooxml: "Office file", "java-class": "Java program" };
+  const kind = t => KIND[t] || (t ? t[0].toUpperCase() + t.slice(1) + " file" : "File");
+
+  // simple line icons
+  const ICON = {
+    C1: "M6 3h8l4 4v14H6z M14 3v4h4 M9 13h6 M12 10v6", C2: "M6 3h8l4 4v9H6z M14 3v4h4 M6 19h12 M6 21.5h12",
+    C3: "M5 11h14v10H5z M8 11V8a4 4 0 0 1 8 0v3 M12 15v2", C4: "M16 4a4 4 0 1 1 0 8a4 4 0 1 1 0-8 M13 11 4 20 M7 17l2 2 M5 19l1.5 1.5",
+    C5: "M3 4h6v6H3z M3 14h6v6H3z M15 4h6v6h-6z M18 17m-3.5 0a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0", C6: "M5 3h11l3 3v15H5z M8 9h8 M8 13h8 M8 17h4 M3 3l18 18",
+    C7: "M3 6h18v4H3z M5 10v10h14V10 M10 14h4", F1: "M12 3a9 9 0 1 1 0 18a9 9 0 1 1 0-18 M12 7v5l3 2",
+    disk: "M4 5h16v14H4z M4 15h16 M16 17.5h1", broom: "M14 3l-4 9 M6 12h8l2 9H4z M9 16v5 M12 16v5", list: "M4 6h2 M4 12h2 M4 18h2 M9 6h11 M9 12h11 M9 18h11",
+    file: "M6 3h8l4 4v14H6z M14 3v4h4", eye: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z M12 9a3 3 0 1 1 0 6a3 3 0 1 1 0-6"
+  };
+  const icon = (k, cls) => { const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("class", "ico" + (cls ? " " + cls : "")); s.setAttribute("aria-hidden", "true");
+    const p = document.createElementNS(NS, "path"); p.setAttribute("d", ICON[k] || ICON.file); s.append(p); return s; };
+  const fileIcon = t => ({ jpeg: "eye", png: "eye", gif: "eye", "encrypted-ooxml": "C3", zip: "C7", rar: "C7" })[t] || "file";
+
+  // ---- title band
+  const im = D.image, C = D.counts;
+  $("#case").textContent = "SHA-256 " + im.sha256.slice(0, 12) + "…";
+  $("#case").title = "Fingerprint of the image: " + im.sha256;
+  $("#imgname").textContent = im.name;
+  const firstN = D.all_leads.filter(l => l.score >= D.tiers.strong).length, worthN = D.all_leads.filter(l => l.score >= D.tiers.moderate).length - firstN;
+  $("#herosay").textContent = "The tool read every file on this drive without changing anything, set aside the clutter computers make on their own, and asked eight questions of the " +
+    fmt(C.examined) + " files left. " + fmt(firstN) + " files stand out the most.";
+  [(im.bytes / 1e6).toFixed(0) + " MB drive image", im.fs_type + " drive named “" + (im.label || "none") + "”", "Prepared by " + D.tool, D.generated].forEach(t => $("#facts").append(el("span", "", t)));
+  [["Files and folders", C.entries], ["Clutter set aside", C.noise], ["Files checked", C.examined], ["To look at first", firstN, true]].forEach(([l, n, hot]) => {
+    const s = el("div", "stat" + (hot ? " hot" : "")), v = el("div", "n", fmt(n)); v.dataset.to = n; s.append(v, el("div", "l", l)); $("#stats").append(s); });
+
+  // hex viewer of the drive's first 64 bytes, with the label fields marked
+  const hex = (D.boot_hex || "").match(/../g) || [];
+  const FIELDS = [[3, 11, "hl", "Made by: " + (im.oem || "").trim()], [43, 54, "hl2", "Drive name: " + (im.label || "").trim()], [54, 62, "hl3", "Drive type: " + im.fs_type]];
+  const cells = [];
+  for (let r = 0; r < hex.length; r += 16) {
+    const row = el("div", "hexrow"), b = el("span", "b");
+    row.append(el("span", "o", (r).toString(16).padStart(4, "0").toUpperCase()));
+    let asc = "";
+    for (let i = r; i < r + 16 && i < hex.length; i++) { const c = el("i", "", hex[i].toUpperCase()); cells[i] = c; b.append(c); const v = parseInt(hex[i], 16); asc += v >= 32 && v < 127 ? String.fromCharCode(v) : "·"; }
+    row.append(b, el("span", "a", asc)); $("#hexrows").append(row);
+  }
+  FIELDS.forEach(([a, z, cls, lab]) => { const s = el("span"); const sw = el("i"); sw.className = ""; sw.style.background = cls === "hl" ? "#F1BE48" : cls === "hl2" ? "#C8102E" : "#4E8FD1"; s.append(sw, document.createTextNode(lab)); $("#hexkey").append(s); });
+  const hexIn = () => {
+    const rows = [...document.querySelectorAll(".hexrow")], keys = [...document.querySelectorAll("#hexkey span")];
+    rows.forEach((r, i) => setTimeout(() => r.classList.add("on"), reduce ? 0 : 150 + i * 140));
+    FIELDS.forEach(([a, z, cls], k) => setTimeout(() => { for (let i = a; i < z; i++) cells[i] && cells[i].classList.add(cls); keys[k].classList.add("on"); }, reduce ? 0 : 900 + k * 550));
+  };
+  hexIn();
+
+  // ---- how it works
+  const STEPS = [
+    ["disk", "Read the drive", C.entries, "files and folders read, from a copy of the drive. Nothing on it was changed."],
+    ["broom", "Set aside clutter", C.noise, "helper files that Mac and Windows computers create by themselves, such as hidden “._” files."],
+    ["eye", "Ask eight questions", C.examined, "files checked, including " + fmt(C.archive_members) + " found inside ZIP archives."],
+    ["list", "Rank what was found", C.with_findings, "files had at least one clue. Files with more, and rarer, clues rise to the top."]];
+  STEPS.forEach(([ic, h, n, p], i) => { const s = el("div", "fstep"); const d = el("div", "dot"); d.append(icon(ic), el("b", "", i + 1));
+    const big = el("div", "big", fmt(n)); big.dataset.to = n; s.append(d, el("h3", "", h), big, el("p", "", p)); $("#flow").append(s); });
+  Object.entries(RULES).forEach(([r, v]) => { const c = el("div", "ck reveal"), t = el("div", "t"); t.append(icon(r), el("span", "", v.name));
+    const n = el("div", "n"); n.append(el("b", "", fmt(v.violated)), document.createTextNode(v.violated === 1 ? " file found" : " files found"));
+    c.append(t, el("div", "q", v.question), n); c.title = v.why; $("#checks").append(c); });
+  const total = C.files + C.archive_members;
+  const frows = [["Every file and folder on the drive", C.entries, ""], ["Files, counting those inside ZIP archives", total, ""],
+    ["Left after setting clutter aside", C.examined, "f-cut"], ["With at least one clue", C.with_findings, "f-lead"],
+    ["Worth a look or more", firstN + worthN, "f-lead"], ["Look first", firstN, "f-strong"]];
+  frows.forEach(([lab, n, cls]) => { const r = el("div", "frow " + cls), L = el("div", "lab"); L.append(el("span", "", lab), el("b", "", fmt(n)));
+    const t = el("div", "track"), f = el("div", "fill"); f.dataset.w = Math.max(0.6, 100 * Math.sqrt(n / frows[0][1])); t.append(f); r.append(L, t); $("#funnelbars").append(r); });
+  $("#funnelbars").append(el("p", "note", "Bars are drawn on a square-root scale so the short list stays visible next to thousands of files."));
+  Object.entries(D.noise).forEach(([k, v]) => $("#noise").append(el("span", "", fmt(v) + " × " + k)));
+
+  // ---- leads
+  const T = D.tiers;
+  [["var(--cardinal)", "Look first: score " + pts(T.strong) + " or more"], ["var(--gold-deep)", "Worth a look: " + pts(T.moderate) + " to " + (pts(T.strong) - 1)]].forEach(([c, t]) => {
+    const s = el("span"), i = el("i"); i.style.background = c; s.append(i, document.createTextNode(t)); $("#legend").append(s); });
+  const shown = D.leads.filter(l => l.score >= T.moderate);
+  const FIRST = 10;
+  shown.forEach((l, i) => { const c = leadCard(l, i + 1); if (i >= FIRST) c.hidden = true; $("#leadlist").append(c); });
+  if (shown.length > FIRST) { const b = el("button", "", "Show " + (shown.length - FIRST) + " more"); b.type = "button";
+    b.addEventListener("click", () => { document.querySelectorAll(".lead[hidden]").forEach(x => { x.hidden = false; io && io.observe(x); }); b.remove(); }); $("#more").append(b); }
+
+  function folderOf(p) { const parts = p.split(" › "); const f = parts[0].split("/").slice(0, -1).join("/"); const where = f ? "folder " + f : "the top folder of the drive";
+    return parts.length > 1 ? "inside " + parts[0].split("/").pop() + ", in " + where : "in " + where; }
+  function nameOf(p) { return p.split(" › ").pop().split("/").pop(); }
+  function leadCard(l, rank) {
+    const t = tier(l.score), c = el("article", "lead " + t); c.id = "lead-" + l.id;
+    const side = el("div", "side"), R = 40, circ = 2 * Math.PI * R;
+    const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", "0 0 100 100"); svg.setAttribute("class", "ring"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", "Score " + pts(l.score) + " out of 100");
+    const bg = document.createElementNS(NS, "circle"), fg = document.createElementNS(NS, "circle"); bg.setAttribute("class", "bg"); fg.setAttribute("class", "fg");
+    [bg, fg].forEach(k => { k.setAttribute("cx", 50); k.setAttribute("cy", 50); k.setAttribute("r", R); });
+    fg.setAttribute("stroke-dasharray", circ); fg.setAttribute("stroke-dashoffset", reduce ? circ * (1 - l.score) : circ); fg.dataset.off = circ * (1 - l.score); fg.dataset.circ = circ;
+    const tx = document.createElementNS(NS, "text"); tx.setAttribute("x", 50); tx.setAttribute("y", 46); tx.textContent = pts(l.score);
+    const of = document.createElementNS(NS, "text"); of.setAttribute("x", 50); of.setAttribute("y", 68); of.setAttribute("class", "of"); of.textContent = "of 100";
+    svg.append(bg, fg, tx, of);
+    side.append(el("span", "rankno", "#" + rank), svg, el("span", "tierlab", TIER[t]));
+    const body = el("div"); body.style.minWidth = "0";
+    const nm = el("div", "name"); nm.append(icon(fileIcon(l.type)), el("h3", "", nameOf(l.path))); body.append(nm);
+    body.append(el("div", "where", folderOf(l.path)));
+    const sum = el("p", "sum"); sum.append(el("b", "", l.fired.length === 1 ? "1 clue" : l.fired.length + " clues"), document.createTextNode(": " + l.fired.map(r => RULES[r].name.toLowerCase()).join(", ") + ".")); body.append(sum);
+    const clues = el("div", "clues"); l.fired.forEach(r => clues.append(clueFor(l, r))); body.append(clues);
+    if (l.fired.length > 1) {
+      const walk = el("div", "walk"), btn = el("button", "", "Show clues one at a time"); btn.type = "button"; walk.append(btn); body.append(walk);
+      let k = -1;
+      btn.addEventListener("click", () => { const ss = [...clues.children];
+        if (k < 0 || k >= ss.length) { ss.forEach(s => s.classList.add("hide")); k = 0; ring(fg); }
+        ss[k].classList.remove("hide"); animate(ss[k]); k++; btn.textContent = k >= ss.length ? "Start again" : "Next clue (" + (k + 1) + " of " + ss.length + ")"; });
+    }
+    const det = el("details", "tech"); det.append(el("summary", "", "Technical detail"));
+    const ul = el("ul");
+    [["Full path", l.path], ["Detected content", kind(l.type) + (l.type ? " (" + l.type + ")" : "")], ["Size", fmt(l.size) + " bytes"],
+     ["Last changed (UTC)", l.modified || "not recorded"], ["Score D(f)", l.score.toFixed(3) + " over " + l.evaluable + " applicable checks"]].forEach(([k, v]) => ul.append(el("li", "", k + ": " + v)));
+    l.fired.forEach(r => { const d = l.outcomes[r][1]; if (d.tech) ul.append(el("li", "", r + " " + RULES[r].name + ": " + d.tech)); });
+    det.append(ul); body.append(det);
+    c.append(side, body); return c;
+  }
+  function clueFor(l, r) {
+    const d = l.outcomes[r][1], s = el("div", "clue"), ci = el("div", "ci" + (r[0] === "F" ? " f" : "")); ci.append(icon(r));
+    const b = el("div"); b.style.minWidth = "0";
+    b.append(el("div", "cn", RULES[r].name), el("div", "cs", d.say || ""));
+    const v = el("div", "viz");
+    if (r === "C1") { const sw = el("div", "swap"); const a = el("span", "tag"), z = el("span", "tag bad");
+      a.append(el("small", "", "Name says"), el("span", "", "." + d.extension + " · " + (d.name_says || ""))); z.append(el("small", "", "Really is"), el("span", "", kind(d.content)));
+      sw.append(a, el("span", "neq", "≠"), z); v.append(sw); }
+    if (r === "C2") { const by = el("div", "bytes"), line = el("div", "barline"), a = el("div", "img", kind(l.type)), t = el("div", "tail");
+      const pa = 100 * d.end_offset / d.file_size; a.dataset.w = pa; t.dataset.w = Math.max(100 - pa, 2); line.append(a, t);
+      const lg = el("div", "lg"); lg.append(el("span", "", "What you see when you open it: " + size(d.end_offset))); const h = el("span"); h.append(el("b", "", "Hidden: " + size(d.trailing_bytes))); lg.append(h);
+      by.append(line, lg); v.append(by);
+      (d.hidden_members || []).forEach(m => { const x = el("div", "inside"); x.append(icon("C7"), document.createTextNode("Hidden inside: " + m.name + (m.size ? " (" + size(m.size) + ")" : "") + (m.encrypted ? ", locked" : ""))); v.append(x); }); }
+    if (r === "C4") (d.hits || []).slice(0, 1).forEach(h => { const x = el("div", "snip"), i = h.context.indexOf(h.candidate);
+      if (i >= 0) x.append(document.createTextNode(h.context.slice(0, i)), el("mark", "", h.candidate), document.createTextNode(h.context.slice(i + h.candidate.length))); else x.textContent = h.context; v.append(x); });
+    if (r === "C5" && d.kind === "big" && d.peer_sizes) { const dots = el("div", "dots"); const all = d.peer_sizes.concat([d.size]); const lo = Math.log(Math.min(...all)), hi = Math.log(Math.max(...all));
+      const pos = n => 3 + 94 * (hi > lo ? (Math.log(n) - lo) / (hi - lo) : .5);
+      d.peer_sizes.forEach(n => { const i = el("i"); i.dataset.left = pos(n); i.style.left = reduce ? pos(n) + "%" : "0%"; dots.append(i); });
+      const me = el("i", "me"); me.dataset.left = pos(d.size); me.style.left = reduce ? pos(d.size) + "%" : "0%"; me.title = "This file"; dots.append(me);
+      const lg = el("div", "lg"); lg.append(el("span", "", "smaller"), el("span", "", "Each dot is a photo in the same folder; the red one is this file"), el("span", "", "bigger")); v.append(dots, lg); }
+    if (r === "C6" && d.siblings) { const g = el("div", "grid"); for (let i = 0; i < d.siblings; i++) g.append(el("i", i < d.referenced ? "" : "")); g.append(el("i", "me"));
+      v.append(g, el("div", "lg", "Grey squares are files the guides mention. The dashed one is this file, which they never mention.")); }
+    if (r === "C5" && d.kind === "odd_type" && d.others) { const g = el("div", "grid"); Object.values(d.others).forEach(n => { for (let i = 0; i < Math.min(n, 30); i++) g.append(el("i")); }); g.append(el("i", "me"));
+      v.append(g, el("div", "lg", "Each grey square is another file in the folder. The dashed one is this file, the only one of its kind.")); }
+    if (r === "F1" && d.bulk_files) { const tb = el("div", "twobar"), mx = d.bulk_files;
+      [["Copied all at once", d.bulk_files, ""], ["Changed with this file", d.files_with_this_time, "me"]].forEach(([lab, n, cls]) => { const row = el("div", cls), tr = el("div", "tr"), f = el("div", "fl");
+        f.dataset.w = Math.max(1.5, 100 * n / mx); tr.append(f); row.append(el("span", "", lab), tr, el("b", "", fmt(n))); tb.append(row); }); v.append(tb); }
+    if (v.childNodes.length) b.append(v);
+    b.append(el("div", "why", "Why it matters: " + RULES[r].why));
+    s.append(ci, b); return s;
+  }
+  function animate(root) {
+    root.querySelectorAll("[data-w]").forEach(e => { e.style.transition = "none"; e.style.width = "0"; e.offsetWidth; e.style.transition = ""; requestAnimationFrame(() => requestAnimationFrame(() => e.style.width = e.dataset.w + "%")); });
+    root.querySelectorAll(".dots i").forEach(e => { if (reduce) return; e.style.transition = "none"; e.style.left = "0%"; e.offsetWidth; e.style.transition = ""; requestAnimationFrame(() => requestAnimationFrame(() => e.style.left = e.dataset.left + "%")); });
+    root.querySelectorAll(".grid").forEach(g => [...g.children].forEach((x, i) => { if (reduce) { x.classList.add("on"); return; } x.classList.remove("on"); setTimeout(() => x.classList.add("on"), 30 * i); }));
+  }
+  function ring(fg) { if (reduce) return; fg.style.transition = "none"; fg.setAttribute("stroke-dashoffset", fg.dataset.circ); fg.getBoundingClientRect(); fg.style.transition = ""; requestAnimationFrame(() => fg.setAttribute("stroke-dashoffset", fg.dataset.off)); }
+
+  // ---- passwords and locks
+  D.keys.forEach(k => { const c = el("div", "card key"); c.append(el("span", "k", k.key), el("span", "w", "written in " + nameOf(k.found_in) + ", " + folderOf(k.found_in))); $("#keycol").append(c); });
+  D.locked.forEach(p => { const c = el("div", "card lock"), k = el("span", "k"); k.append(icon("C3"), document.createTextNode(nameOf(p))); c.append(k, el("span", "w", folderOf(p))); $("#lockcol").append(c); });
+  if (!D.keys.length) $("#keycol").append(el("p", "note", "No written-down passwords were found."));
+  if (!D.locked.length) $("#lockcol").append(el("p", "note", "No locked files were found."));
+  function drawLinks() {
+    const svg = $("#links"), box = svg.getBoundingClientRect(); svg.replaceChildren(); if (!box.width) return;
+    svg.setAttribute("viewBox", "0 0 " + box.width + " " + box.height);
+    const ks = [...document.querySelectorAll(".card.key")], ls = [...document.querySelectorAll(".card.lock")];
+    ks.forEach(k => ls.forEach(l => { const a = k.getBoundingClientRect(), b = l.getBoundingClientRect(), y1 = a.top + a.height / 2 - box.top, y2 = b.top + b.height / 2 - box.top;
+      const p = document.createElementNS(NS, "path"); p.setAttribute("d", "M0 " + y1 + " C" + box.width / 2 + " " + y1 + " " + box.width / 2 + " " + y2 + " " + box.width + " " + y2); p.setAttribute("opacity", .35); svg.append(p); }));
+  }
+  addEventListener("resize", drawLinks);
+
+  // ---- timing: one square per file, drawn on a canvas
+  const TL = D.timeline, bulk = D.strata.find(s => s.time === TL.bulk_time), rare = D.strata.filter(s => s.rare);
+  const rareN = rare.reduce((a, s) => a + s.files, 0), otherN = Math.max(0, TL.timed_files - (bulk ? bulk.files : 0) - rareN);
+  $("#time-lede").textContent = TL.bulk_share >= 0.2
+    ? "Each square below is one file. When files are copied onto a drive together, they all get the same time stamp. " + fmt(bulk.files) + " of " + fmt(TL.timed_files) +
+      " files share one moment, " + when(TL.bulk_time) + " (UTC). The red squares are the few files changed at a different, rare time."
+    : "No single time is shared by most files on this drive, so the timing question does not apply here.";
+  const wf = $("#waffle"), css = getComputedStyle(document.documentElement);
+  const colors = () => [css.getPropertyValue("--line").trim(), css.getPropertyValue("--muted").trim(), css.getPropertyValue("--cardinal").trim()];
+  function drawWaffle(progress) {
+    const W = wf.clientWidth || 600, n = TL.timed_files, cell = Math.max(5, Math.floor(Math.sqrt(W * 260 / Math.max(n, 1)))), cols = Math.floor(W / cell), rows = Math.ceil(n / cols);
+    const dpr = devicePixelRatio || 1; wf.width = W * dpr; wf.height = rows * cell * dpr; wf.style.height = rows * cell + "px";
+    const g = wf.getContext("2d"); g.scale(dpr, dpr); const [cl, cm, cr] = colors(); const show = Math.round(n * progress);
+    const b = bulk ? bulk.files : 0;
+    for (let i = 0; i < show; i++) { g.fillStyle = i < b ? cm : i < b + otherN ? cl : cr; g.globalAlpha = i < b ? .55 : 1; g.fillRect((i % cols) * cell, Math.floor(i / cols) * cell, cell - 1.5, cell - 1.5); }
+    g.globalAlpha = 1;
+  }
+  wf.setAttribute("aria-label", fmt(TL.timed_files) + " files; " + (bulk ? fmt(bulk.files) : 0) + " share the copy time and " + fmt(rareN) + " have a rare time");
+  [["var(--muted)", "Copied all at once (" + (bulk ? fmt(bulk.files) : 0) + ")"], ["var(--line)", "Other common times (" + fmt(otherN) + ")"], ["var(--cardinal)", "Rare time (" + fmt(rareN) + ")"]].filter(x => !/\(0\)$/.test(x[1])).forEach(([c, t]) => {
+    const s = el("span"), i = el("i"); i.style.background = c; s.append(i, document.createTextNode(t)); $("#wkey").append(s); });
+  rare.forEach(s => { const c = el("div", "card"); c.append(el("span", "k", when(s.time) + " · " + fmt(s.files) + (s.files === 1 ? " file" : " files")));
+    const ul = el("ul"); s.examples.slice(0, 8).forEach(p => ul.append(el("li", "", nameOf(p) + " (" + folderOf(p).replace(/^in (folder )?/, "") + ")"))); if (s.examples.length > 8) ul.append(el("li", "", "and " + (s.examples.length - 8) + " more"));
+    c.append(ul); $("#odd").append(c); });
+  let waffleP = reduce ? 1 : 0; drawWaffle(waffleP);
+  addEventListener("resize", () => drawWaffle(waffleP));
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawWaffle(waffleP));
+  function growWaffle() { if (reduce) { drawWaffle(1); return; } const t0 = performance.now(); const tick = t => { waffleP = Math.min(1, (t - t0) / 1800); drawWaffle(1 - Math.pow(1 - waffleP, 2)); if (waffleP < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
+
+  // ---- table
+  const all = D.all_leads; let filt = null;
+  Object.keys(RULES).forEach(r => { const b = el("button"); b.type = "button"; b.append(icon(r), document.createTextNode(RULES[r].name)); b.dataset.r = r; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => { filt = filt === r ? null : r; document.querySelectorAll("#rulebtns button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.r === filt))); table(); }); $("#rulebtns").append(b); });
+  $("#q").addEventListener("input", table);
+  function table() {
+    const q = $("#q").value.toLowerCase(), body = $("#rows"); body.replaceChildren();
+    const rows = all.filter(l => (!filt || l.fired.includes(filt)) && (!q || l.path.toLowerCase().includes(q)));
+    rows.forEach(l => { const tr = el("tr", tier(l.score)), sc = el("td", "num"); sc.append(document.createTextNode(pts(l.score))); const m = el("span", "mini"), mb = el("b"); mb.style.width = pts(l.score) + "%"; m.append(mb); sc.append(m);
+      const p = el("td", "p"); p.append(el("strong", "", nameOf(l.path)), el("div", "where", folderOf(l.path)), el("div", "cl-m", l.fired.map(r => RULES[r].name).join(", ")));
+      tr.append(sc, p, el("td", "", l.fired.map(r => RULES[r].name).join(", "))); body.append(tr); });
+    $("#count").textContent = "Showing " + fmt(rows.length) + " of " + fmt(all.length) + " files";
+  }
+  table();
+
+  // ---- words and method
+  [["Drive image", "An exact copy of a storage drive, saved as one file. Investigators work on the copy so the original is never touched."],
+   ["Read-only", "The tool only reads the image. It never writes to it, so the evidence stays exactly as it was."],
+   ["Fingerprint (SHA-256)", "A long code worked out from every byte of the image. If even one byte changed, the code would change, which proves the copy is intact."],
+   ["File signature", "The first few bytes of a file that say what it really is, whatever its name says. Every photo, for example, starts with the same bytes."],
+   ["Archive (ZIP, RAR)", "One file that holds a bundle of other files, often squeezed to save space."],
+   ["Locked (encrypted)", "Scrambled so that only someone with the password can read it."],
+   ["Time stamp", "The date and time the drive recorded for when a file was last changed."],
+   ["Clutter", "Small helper files that computers make by themselves. They are real, but rarely interesting, so they are set aside."],
+   [im.fs_type, "The way this drive organizes its files. It is an older, simple system used on USB sticks and memory cards."]].forEach(([t, d]) => {
+    const w = el("div"); w.append(el("dt", "", t), el("dd", "", d)); $("#gloss").append(w); });
+  const sc = $("#scale"); [["var(--line)", T.moderate], ["var(--gold-deep)", T.strong - T.moderate], ["var(--cardinal)", 1 - T.strong]].forEach(([c, w]) => { const i = el("i"); i.style.background = c; i.style.width = 100 * w + "%"; sc.append(i); });
+  $("#scalemid").textContent = "Worth a look from " + pts(T.moderate) + ", look first from " + pts(T.strong);
+  Object.entries(RULES).forEach(([r, v]) => { const tr = el("tr"); tr.append(el("td", "", r + " · " + v.name), el("td", "num", fmt(v.evaluable)), el("td", "num", fmt(v.violated)), el("td", "num", v.p_r.toFixed(4)), el("td", "num", v.weight.toFixed(2))); $("#rulerows").append(tr); });
+  $("#na").append(el("strong", "", "What this drive could not tell us"),
+    el("span", "", "The main method in the paper looks for tampered time stamps using records that only Windows (NTFS) drives keep. This is a " + im.fs_type + " drive, which keeps none of them, so those checks did not run. The eight questions above were used instead."));
+  $("#foot").textContent = "Prepared by " + D.tool + " from " + im.path + " (read-only). SHA-256 " + im.sha256 + ". Every finding is a reason to look, not a conclusion.";
+
+  // ---- motion: count-ups, reveals, bars and rings as they come into view
+  const countUp = n => { const to = +n.dataset.to; if (reduce || !to) return; const t0 = performance.now();
+    const tick = t => { const k = Math.min(1, (t - t0) / 1200), e = 1 - Math.pow(1 - k, 3); n.textContent = fmt(Math.round(to * e)); if (k < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); };
+  document.querySelectorAll(".stat .n").forEach(countUp);
+  const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return; const t = e.target; io.unobserve(t);
+    if (t.classList.contains("reveal")) t.classList.add("in");
+    if (t.id === "flow") { t.classList.add("in"); [...t.querySelectorAll(".fstep")].forEach((s, i) => setTimeout(() => { s.classList.add("on"); countUp(s.querySelector(".big")); }, reduce ? 0 : 200 + i * 550)); }
+    if (t.id === "funnelbars") t.querySelectorAll(".fill").forEach((f, i) => setTimeout(() => f.style.width = f.dataset.w + "%", reduce ? 0 : i * 120));
+    if (t.classList.contains("lead")) { animate(t); const fg = t.querySelector(".fg"); if (fg) fg.setAttribute("stroke-dashoffset", fg.dataset.off); }
+    if (t.id === "waffle") growWaffle();
+    if (t.id === "keys") drawLinks();
+  }), { threshold: 0.2 }) : null;
+  if (io) document.querySelectorAll(".reveal, #flow, #funnelbars, .lead:not([hidden]), #waffle, #keys").forEach(x => io.observe(x));
+  else { document.querySelectorAll(".reveal").forEach(x => x.classList.add("in")); document.querySelectorAll(".fstep").forEach(x => x.classList.add("on")); document.querySelectorAll(".fill").forEach(f => f.style.width = f.dataset.w + "%"); document.querySelectorAll(".lead").forEach(animate); drawWaffle(1); }
+
+  // ---- section change: a disk-scan wipe over the page, then the jump
+  const secs = [...document.querySelectorAll("#overview, section.slide[id]")], tabs = [...document.querySelectorAll("#bar a")];
+  const wipe = $("#wipe"), band = $("#wipe .band"), head = $("#wipe .head");
+  const src = (D.boot_hex || "") + im.sha256; let lines = "";
+  for (let r = 0; r < 60; r++) { let s = (r * 16).toString(16).padStart(8, "0").toUpperCase() + "  "; for (let i = 0; i < 24; i++) s += src.substr(((r * 24 + i) * 2) % (src.length - 2), 2).toUpperCase() + " "; lines += s + "\n"; }
+  $("#wipehex").textContent = lines;
+  let busy = false;
+  function go(target) {
+    if (!target) return; const idx = secs.indexOf(target);
+    if (reduce || !band.animate || busy) { target.scrollIntoView(); return; }
+    busy = true; const lab = $("#wipelab"); const lw = el("div"); lw.append(el("small", "", String(idx + 1).padStart(2, "0") + " / " + String(secs.length).padStart(2, "0")), document.createTextNode(target.dataset.title || "")); lab.replaceChildren(lw);
+    wipe.style.visibility = "visible"; const o = { duration: 820, easing: "cubic-bezier(.65,0,.35,1)" };
+    band.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)", offset: .45 }, { clipPath: "inset(0 0 0 0)", offset: .55 }, { clipPath: "inset(0 0 0 100%)" }], o);
+    head.animate([{ transform: "translateX(0)" }, { transform: "translateX(100vw)", offset: .45 }, { transform: "translateX(100vw)", opacity: 0, offset: .55 }, { transform: "translateX(0)", opacity: 0, offset: .56 }, { transform: "translateX(100vw)", opacity: 1 }], o)
+      .onfinish = () => { wipe.style.visibility = "hidden"; busy = false; };
+    setTimeout(() => target.scrollIntoView({ behavior: "instant" }), 400);
+  }
+  document.querySelectorAll('#bar a, .cta a').forEach(a => a.addEventListener("click", ev => { const t = document.querySelector(a.getAttribute("href")); if (!t) return; ev.preventDefault(); go(t); }));
+  const curIdx = () => { let k = 0; secs.forEach((s, i) => { if (s.getBoundingClientRect().top < 140) k = i; }); return k; };
+  $("#gnext").addEventListener("click", () => go(secs[Math.min(secs.length - 1, curIdx() + 1)]));
+  $("#gprev").addEventListener("click", () => go(secs[Math.max(0, curIdx() - 1)]));
+  addEventListener("keydown", e => { if (e.target.matches("input, textarea") || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === "ArrowRight" || e.key === "n") { e.preventDefault(); $("#gnext").click(); } if (e.key === "ArrowLeft" || e.key === "p") { e.preventDefault(); $("#gprev").click(); } });
+  const onScroll = () => {
+    const h = document.documentElement, p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight); $("#progress").style.width = 100 * p + "%";
+    const k = curIdx(), cur = secs[k]; tabs.forEach(t => t.classList.toggle("cur", t.getAttribute("href") === "#" + cur.id));
+    $("#gpill").textContent = String(k + 1).padStart(2, "0") + " / " + String(secs.length).padStart(2, "0");
+    const nx = secs[k + 1]; $("#glab").textContent = nx ? "Next: " + nx.dataset.title : "End of report";
+    $("#gnext").disabled = !nx; $("#gnext").style.opacity = nx ? 1 : .4;
+  };
+  addEventListener("scroll", onScroll, { passive: true }); onScroll();
+  setTimeout(drawLinks, 300);
+  if (location.hash) { const t = document.querySelector(location.hash); if (t) t.scrollIntoView(); }
+})();
+</script>

@@ -1,0 +1,9 @@
+# Raw disk images (too large and not for public upload)
+*.img
+*.E01
+*.dd
+*.raw
+
+# Python bytecode
+__pycache__/
+*.pyc
