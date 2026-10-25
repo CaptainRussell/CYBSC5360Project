@@ -70,7 +70,7 @@ def cmd_analyze(a):
         with open(a.calibration, encoding="utf-8") as fh:
             calibration = json.load(fh)
     r = pipeline.analyze_db(a.db, a.out, cfg, calibration, a.theta, a.weight_mode,
-                            calibration_path=a.calibration)
+                            calibration_path=a.calibration, self_calibrate=a.self_calibrate)
     print("scored %d files, flagged %d, %d cluster(s), system score %.2f -> %s"
           % (r["scored"], r["flagged"], r["clusters"], r["system_score"], a.out))
     print("open the plain-language report: %s" % os.path.join(a.out, "briefing.html"))
@@ -204,6 +204,8 @@ def main(argv=None):
     s.add_argument("--calibration")
     s.add_argument("--theta", type=float)
     s.add_argument("--weight-mode", choices=["equal", "specificity", "full"])
+    s.add_argument("--self-calibrate", action="store_true",
+                   help="with no calibration file, measure each rule's firing rate p_r on this image itself")
     s.set_defaults(fn=cmd_analyze)
 
     s = sub.add_parser("evaluate", help="compare ADS and single rules against ground truth")

@@ -8,7 +8,7 @@ from . import db, loaders
 from .indicators import evaluate_indicators
 from .report import write_outputs
 from .rules import Context, evaluate_all
-from .scoring import cluster, compute_weights, score_files, system_score
+from .scoring import baseline_rates, cluster, compute_weights, score_files, system_score
 
 # How the Zimmerman CSVs are recognised inside a folder. Names are matched in lower case on every
 # platform, and each file is given to the FIRST kind whose patterns match, so one file is never
@@ -91,18 +91,26 @@ def ingest_image(image, dbpath, cfg):
     return [{"kind": "mft", "file": os.path.basename(image) + " (MFT read from the image)", "rows": n}]
 
 
-def analyze_db(dbpath, outdir, cfg, calibration=None, theta=None, weight_mode=None, calibration_path=None):
+def analyze_db(dbpath, outdir, cfg, calibration=None, theta=None, weight_mode=None, calibration_path=None,
+               self_calibrate=False):
     """Evaluate rules and indicators, score, cluster, and write every output including briefing.html.
 
     calibration is the loaded calibration dict; calibration_path is where it came from, recorded in
     run.json and report.md so each run states how it was weighted.
+
+    self_calibrate: with no clean reference machine to measure each rule's benign firing rate p_r
+    on, measure it on this image itself, as the first-look report does. A rule that fires on many
+    files of this drive then counts for less than one that fires on few.
     """
     con = db.connect(dbpath)
     ctx = Context(con, cfg)
+    rows = list(evaluate_all(ctx))
+    if calibration is None and self_calibrate:
+        calibration = {"rates": baseline_rates(rows)}
+        calibration_path = "(rates measured on this image)"
     th = theta if theta is not None else (calibration or {}).get("theta", cfg["theta"])
     mode = weight_mode or cfg["weight_mode"]
     weights = compute_weights(cfg, calibration, mode)
-    rows = list(evaluate_all(ctx))
     indicators = evaluate_indicators(ctx)
     scored = score_files(ctx, rows, weights, indicators, th, cfg["min_evaluable"])
     clusters = cluster(ctx, scored, indicators, cfg)

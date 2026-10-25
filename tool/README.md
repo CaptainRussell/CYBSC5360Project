@@ -1,72 +1,63 @@
 # Artifact Disagreement Scorer (ADS)
 
-Working implementation of the tool in Section III of the term paper draft. It reads the CSV output of Eric Zimmerman's MFTECmd, PECmd, LECmd and EvtxECmd, loads it into one SQLite database with every time as a UTC FILETIME, evaluates rules R1 to R11 and indicators S1 to S5, and writes a ranked, explainable report. It uses only the Python 3 standard library.
+Working implementation of the tool in the term paper. It looks for places where a drive's independent records disagree, weighs those disagreements together, and explains every flag in plain words. It has two parts:
+
+* **First look at a drive image:** eight questions asked of every file (disguised, something hidden at the end, locked, password written down, odd one out, never mentioned, archive of personal files, changed at an unusual time). Works on raw images of **FAT and NTFS** drives.
+* **Windows date checks:** rules R1 to R11 and warnings S1 to S5 that compare the dates Windows keeps in different places. They read an NTFS image directly (the MFT-only rules R6, R7, R11) or the CSV output of Eric Zimmerman's MFTECmd, PECmd, LECmd and EvtxECmd (all rules).
+
+It uses only the Python 3 standard library. The image is only read, never changed.
 
 ## The easy way: a point-and-click window
 
-You need Python 3 (python.org). Nothing else to install.
+You need Python 3 (python.org). Nothing else to install. Double-click `Run ADS (Windows).bat` or `Run ADS (Mac).command`, or run:
 
 ```
 python3 -m ads gui
 ```
 
-or just double-click `Run ADS (Windows).bat` / `Run ADS (Mac).command`.
-
 This opens a small control panel in your browser (only your own computer can reach it). It has two choices:
 
-* **Windows drive** — give it the folder that holds the record files made by `scripts/run_parsers.ps1` (`mft.csv`, `usn.csv`, and so on). Press Run and the plain-language report opens.
-* **USB or memory-card image** — give it a FAT drive image (`.img`, `.dd`, `.raw`).
+* **Windows drive:** give it an NTFS image, or the folder of record files made by `scripts/run_parsers.ps1`. Press Run and the plain-language date report opens.
+* **First look at a drive image:** give it a FAT or NTFS image (`.img`, `.dd`, `.raw`). Optionally give an answer key of your own findings, and a second page shows where the tool ranked each item you found by hand.
 
-Everything below is the same thing from the command line, for scripting and for the experiments in the paper.
+## Proof of function: the two course projects (Section IV)
 
-## First-look report on a drive image (easiest way to use ADS)
+The evaluation runs ADS on the course's Project 1 and Project 2 images and compares it with my own EnCase and FTK findings. Step-by-step instructions, the two answer keys, and why Project 2 is a fair held-out test are in **`proof/README.md`**. The Project 1 run and its proof page are in `results/26Fall_Project1B/`.
 
-You need Python 3 (python.org). Nothing else to install.
+```
+python3 -m ads proof --results results/26Fall_Project1B --key proof/project1_answer_key.csv
+```
 
-* **Windows:** drag the image file onto `Run ADS (Windows).bat`. (Double-clicking it instead opens the point-and-click window.)
-* **Mac:** double-click `Run ADS (Mac).command` to open the point-and-click window, then choose the image there.
+## First-look report from the command line
+
+* **Windows:** drag the image file onto `Run ADS (Windows).bat`.
 * **Any system:** `python3 -m ads IMAGE.img`
 
-The tool reads the image without changing it, shows its progress in four steps, and opens the report in your browser when it is done. The report goes in a folder called "IMAGE report" (choose another with `--out FOLDER`; add `--no-open` to skip opening the browser).
+The report goes in a folder called "IMAGE report" (choose another with `--out FOLDER`; add `--no-open` to skip opening the browser). It holds:
 
-The report folder holds:
-
-* `briefing.html`: the report itself, one self-contained page that opens in any browser. It walks through seven sections (summary, how it works, files to look at first, passwords and locked files, timing, everything found, words and method) with a Next button, arrow keys, animations and a plain-language explanation of every clue. Technical detail for examiners is folded away under each file.
-* `leads.csv`: every file with a clue, its score out of 100, its level (Look first, Worth a look, Minor) and what was found, in plain words. Opens in Excel.
+* `briefing.html`: the report itself, one self-contained page that opens in any browser. Seven sections (summary, how it works, files to look at first, passwords and locked files, timing, everything found, words and method) with a Next button and a plain-language explanation of every clue. Technical detail is folded away under each file.
+* `leads.csv`: every file with a clue, its score out of 100, its level and what was found, in plain words. Opens in Excel.
 * `triage.json`: the same results as data.
 
-The eight questions (C1 to C7 and F1 in `ads/triage.py`) are: disguised file, something hidden at the end, locked with a password, password written down, stands out from its neighbors, never mentioned, archive with personal files, and changed at an unusual time.
+The eight questions are C1 to C7 and F1 in `ads/triage.py`. The FAT reader (`ads/fat.py`) matched The Sleuth Kit byte for byte on all 4,923 live files of the Project 1B image. The NTFS reader (`ads/ntfs.py`) matches The Sleuth Kit on every file of the test image in `tests/fixtures/` (paths, sizes, contents and timestamps) and on 3,605 files of a larger partitioned test image.
 
-The FAT reader (`ads/fat.py`) matched The Sleuth Kit byte for byte on all 4,923 live files of the Project 1B image. The run on that image and its comparison with the EnCase analysis are in `results/26Fall_Project1B/comparison.md`.
+## Windows date checks from the command line
 
-## Quick start (NTFS timeline rules)
-
-Every `analyze` run writes **`briefing.html`**, a single self-contained page that explains each flagged file in one plain sentence ("the date shown says 2019, but the change journal records the file being created in 2026"), with the exact dates and technical detail folded away for an examiner. It also writes `report.md` and the CSVs below. Every `evaluate` run writes **`evaluation.html`** with a drawn ROC chart and a plain-language "did combining the checks help?" summary.
+Every `analyze` run writes **`briefing.html`**, a single page that explains each flagged file in one plain sentence ("the date shown says 1 Mar 2019, but the change journal records the file being created on 10 Oct 2026"), with the exact values folded away for an examiner. It also writes `report.md` and the CSVs below.
 
 ```
 cd "Term Paper/tool"
-python3 -m unittest discover -s tests -v          # 38 tests on synthetic fixtures
+python3 -m unittest discover -s tests -v          # 50 tests
 
-# 1. On Windows: parse an exported image (see scripts/run_parsers.ps1)
-# 2. Anywhere with Python 3:
-python3 -m ads ingest    --db case.sqlite --mft mft.csv --usn usn.csv --lnk lnk.csv \
-                         --prefetch prefetch.csv --evtx evtx_system.csv evtx_security.csv evtx_application.csv
-python3 -m ads calibrate --db baseline.sqlite --out calibration.json     # benign image B -> p_r
-python3 -m ads analyze   --db calib01.sqlite --out results/calib01 --calibration calibration.json
-python3 -m ads evaluate  --results results/calib01 --truth gt_calib01.csv \
-                         --set-theta calibration.json --target-fpr 0.01  # calibration set C -> theta
-python3 -m ads analyze   --db test01.sqlite --out results/test01 --calibration calibration.json
-python3 -m ads evaluate  --results results/test01 --truth gt_test01.csv  # test set T -> metrics
+# Straight from an NTFS image (MFT-only rules R6, R7, R11):
+python3 -m ads ingest  --db case.sqlite --image drive.img
+# Or from Zimmerman CSVs (all rules; on Windows, see scripts/run_parsers.ps1):
+python3 -m ads ingest  --db case.sqlite --mft mft.csv --usn usn.csv --lnk lnk.csv \
+                       --prefetch prefetch.csv --evtx evtx_system.csv evtx_security.csv evtx_application.csv
+python3 -m ads analyze --db case.sqlite --out results/case
 ```
 
-## Running the experiment (Section IV)
-
-The `experiment/` folder has the kit for the lab study and a step-by-step guide in `experiment/README.md`:
-
-* `apply_scenario.ps1` applies one tampering scenario (T1 to T8) inside the test VM and records the answer key in the exact format `evaluate --truth` reads, so the correct answer is known before the tool runs.
-```
-
-`analyze --weight-mode equal|specificity|full` gives the three variants of experiment E4. `evaluate` always reports every single rule ("R1 only" and so on) beside ADS from the same outcomes, which is experiment E1.
+`calibrate`, `evaluate` and `analyze --weight-mode equal|specificity|full` remain for measuring the rules against a ground-truth list of tampered files (they are exercised on the synthetic test cases). `evaluate` reports every single rule ("R1 only" and so on) beside ADS and writes `evaluation.html` with an ROC chart.
 
 ## Pipeline map (Section III-G)
 

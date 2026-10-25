@@ -98,6 +98,17 @@ class TestNTFSInThePipeline(NTFSFixture):
                 evaluable = {row["rule"] for row in csv.DictReader(fh) if row["outcome"] != "not_evaluable"}
             self.assertEqual(evaluable, {"R6", "R7", "R11"}, "only the MFT-only rules can run from the MFT alone")
 
+    def test_self_calibration_is_used_and_recorded(self):
+        cfg = load_config(None)
+        with tempfile.TemporaryDirectory() as d:
+            db = os.path.join(d, "case.sqlite")
+            pipeline.ingest_image(self.img, db, cfg)
+            pipeline.analyze_db(db, os.path.join(d, "out"), cfg, self_calibrate=True)
+            with open(os.path.join(d, "out", "run.json"), encoding="utf-8") as fh:
+                run = json.load(fh)
+            self.assertEqual(run["calibration"], "(rates measured on this image)")
+            self.assertIsNotNone(run["weights"]["R7"]["p_r"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -55,7 +55,7 @@ def _run_ntfs(jid, path):
             summary = pipeline.ingest_folder(path, db, cfg)
         _step(jid, "Loaded " + ", ".join("%s (%d rows)" % (s["kind"], s["rows"]) for s in summary))
         _step(jid, "Cross-checking the records")
-        r = pipeline.analyze_db(db, out, cfg)
+        r = pipeline.analyze_db(db, out, cfg, self_calibrate=True)
         _step(jid, "Checked %d files; flagged %d" % (r["scored"], r["flagged"]))
         _finish(jid, out, os.path.join(out, "briefing.html"))
     except Exception as e:
