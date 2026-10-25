@@ -113,10 +113,12 @@ If ADS does not beat the best single rule, that is reported as a finding: it wou
 
 ## J. Schedule to the Final Paper
 
+The tool is ahead of the original plan. As of this draft, every stage in Section III-G is written: loading the parser output, rules R1 to R11, indicators S1 to S5, scoring, clustering, the report, and the evaluation metrics. It passes its automated tests on small synthetic cases. The time this frees goes to the part that cannot be rushed: a longer period of ordinary use on the baseline machine, and more test runs.
+
 | Dates | Work |
 |---|---|
-| Nov 2 to Nov 8 | Build base VM; begin two-week benign baseline use; finish parsing and normalization stage |
-| Nov 9 to Nov 15 | Implement rules R1 to R11 and indicators S1 to S5; run on early baseline snapshots |
-| Nov 16 to Nov 22 | Freeze baseline; build calibration and test clones; apply scenarios with ground-truth log; calibrate τ and θ |
-| Nov 23 to Nov 29 | Run E1 to E4 (and E5, E6 if time permits); run on course images |
+| Oct 26 to Nov 1 | Submit this draft; build the base VM and begin ordinary use |
+| Nov 2 to Nov 15 | Two or more weeks of ordinary use on the baseline VM; run the tool on early snapshots and fix anything real data exposes; parser cross-check |
+| Nov 16 to Nov 22 | Freeze the baseline; build calibration clones; apply scenarios with the answer-key script; set τ and θ |
+| Nov 23 to Nov 29 | Build test clones; run E1 to E6; run on course images |
 | Nov 30 to Dec 6 | Write results and discussion; finalize the six-page IEEE paper |
