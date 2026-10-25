@@ -82,6 +82,30 @@ def score(key, leads):
     return out
 
 
+def single_checks(key, leads):
+    """Each check on its own against the combined ranking, at the same number of files to review.
+
+    A check alone flags every file it fires on, with no order among them, so an examiner reviews all
+    of them. For a fair comparison ADS gets the same budget: its top n files, where n is the number
+    of files the single check flags.
+    """
+    ev = [k for k in key if k["kind"] == "evidence"]
+    ranks = {}
+    for k in ev:
+        hits = [l["rank"] for l in leads if any(_matches(l["path"], a) for a in k["alts"])]
+        ranks[k["path"]] = min(hits) if hits else None
+    ids = sorted({c for l in leads for c, _ in l["checks"]}, key=lambda c: (c[0], int(c[1:]) if c[1:].isdigit() else 0))
+    out = []
+    for cid in ids:
+        flagged = [l for l in leads if any(c == cid for c, _ in l["checks"])]
+        name = next(n for l in flagged for c, n in l["checks"] if c == cid)
+        found = sum(1 for k in ev if any(_matches(l["path"], a) for l in flagged for a in k["alts"]))
+        n = len(flagged)
+        ads = sum(1 for r in ranks.values() if r is not None and r <= n)
+        out.append({"check": cid, "name": name, "flags": n, "found": found, "ads_same_budget": ads})
+    return out
+
+
 def summarize(scored, leads, facts):
     ev = [s for s in scored if s["kind"] == "evidence"]
     found = [s for s in ev if s["found"]]
@@ -100,6 +124,7 @@ def write(results, key_path, out=None):
     leads, facts = load_run(results)
     scored = score(key, leads)
     summ = summarize(scored, leads, facts)
+    summ["singles"] = single_checks(key, leads)
     out = out or results
     os.makedirs(out, exist_ok=True)
     with open(os.path.join(out, "proof.csv"), "w", newline="", encoding="utf-8") as fh:
@@ -146,7 +171,13 @@ def render(scored, summ, facts, key_name):
                  % (s["kind"], status, _e(s.get("item") or s["path"]), _e(s.get("question", "")),
                     _e(s["matched"] or s["path"]), "Decoy" if s["kind"] == "decoy" else "Evidence", detail,
                     _e(s.get("found_manually_by", ""))))
-    return (PAGE.replace("@verdict@", _e(verdict)).replace("@rows@", rows)
+    singles = ""
+    for c in summ.get("singles", []):
+        better = c["ads_same_budget"] > c["found"]
+        singles += ('<tr><td><b>%s</b> %s</td><td>%s</td><td>%d of %d</td><td class="%s">%d of %d</td></tr>'
+                    % (_e(c["check"]), _e(c["name"]), format(c["flags"], ","), c["found"], summ["evidence"],
+                       "yes" if better else "", c["ads_same_budget"], summ["evidence"]))
+    return (PAGE.replace("@verdict@", _e(verdict)).replace("@rows@", rows).replace("@singles@", singles)
             .replace("@found@", str(summ["found"])).replace("@evidence@", str(summ["evidence"]))
             .replace("@top10@", str(summ["top10"])).replace("@leads@", format(summ["leads"], ","))
             .replace("@examined@", format(summ["examined"], ",")).replace("@kind@", _e(facts["kind"]))
@@ -173,7 +204,8 @@ h2{font-family:var(--head);color:var(--cardinal);font-size:22px;margin:26px 0 6p
 table{border-collapse:collapse;width:100%;font-size:15px}
 th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 th{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.05em}
-.yes{font:700 18px var(--head);color:var(--ok)}.no{font-weight:700;color:var(--cardinal)}
+.yes{font:700 18px var(--head);color:var(--ok)}
+td.yes{font-size:16px}.no{font-weight:700;color:var(--cardinal)}
 .q{color:var(--muted);font-size:14px}.p{font-family:Consolas,monospace;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
 .d{font-size:14px;color:var(--muted)}.m{font-size:14px}
 tr.decoy td{background:var(--soft)}
@@ -194,6 +226,11 @@ footer{color:var(--muted);font-size:14px;padding:26px 0 50px}
 <p>Each row is something the examiner found by hand. “#3” means it was third on ADS's list. Decoys (shaded) are
 files planted to mislead; listing them is not an error, since the examiner had to rule them out too.</p>
 <table><tr><th>ADS rank</th><th>What the examiner found</th><th>What ADS saw</th><th>How it was found by hand</th></tr>@rows@</table>
+<h2>Each check on its own, against all of them together</h2>
+<p>A single check flags every file it fires on, in no order, so an examiner would have to review all of them.
+The last column gives ADS the same number of files to review (its top files) and counts the evidence files
+among them. Where it is higher, combining the checks found more for the same effort.</p>
+<table><tr><th>Check on its own</th><th>Files it flags</th><th>Evidence it catches</th><th>ADS, same number of files</th></tr>@singles@</table>
 </div>
 <footer><div class="wrap">ADS points to files for an examiner to review; it does not answer the case questions itself.
 A file not on the list was not flagged by any check.</div></footer>

@@ -35,6 +35,19 @@ class TestProjectOneReproduced(unittest.TestCase):
                 self.assertEqual(len(list(csv.DictReader(fh))), 9)
 
 
+class TestSingleChecks(unittest.TestCase):
+    def test_project_one_single_check_comparison(self):
+        leads, _ = proof.load_run(P1_RESULTS)
+        got = {c["check"]: (c["flags"], c["found"], c["ads_same_budget"])
+               for c in proof.single_checks(proof.load_key(P1_KEY), leads)}
+        # Broad checks: ADS finds more in the same number of files. The precise one-file checks (C2, C7)
+        # beat ADS at a budget of one file, because ADS's top file is a decoy.
+        self.assertEqual(got["F1"], (12, 4, 6))
+        self.assertEqual(got["C6"], (60, 1, 7))
+        self.assertEqual(got["C2"], (1, 1, 0))
+        self.assertEqual(max(v[1] for v in got.values()), 4, "no single check alone catches more than 4 of 7")
+
+
 class TestMatching(unittest.TestCase):
     def test_suffix_must_end_on_a_folder_boundary(self):
         self.assertTrue(proof._matches("/Disk/bin/gzip", "bin/gzip"))
