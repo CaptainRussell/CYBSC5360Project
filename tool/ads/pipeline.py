@@ -74,6 +74,23 @@ def ingest_folder(folder, dbpath, cfg, progress=None):
     return summary
 
 
+def ingest_image(image, dbpath, cfg):
+    """Read the MFT straight from a raw NTFS image into a fresh case database.
+
+    Only the MFT is loaded, so the rules that need the change journal, shortcuts,
+    Prefetch or event logs report "cannot check"; R6, R7 and R11 run. For the
+    others, export those records and use ingest_folder on the parsers' CSVs.
+    """
+    from .ntfs import load_mft_from_image
+    if os.path.exists(dbpath):
+        os.remove(dbpath)
+    con = db.connect(dbpath)
+    n = load_mft_from_image(con, image)
+    con.commit()
+    con.close()
+    return [{"kind": "mft", "file": os.path.basename(image) + " (MFT read from the image)", "rows": n}]
+
+
 def analyze_db(dbpath, outdir, cfg, calibration=None, theta=None, weight_mode=None, calibration_path=None):
     """Evaluate rules and indicators, score, cluster, and write every output including briefing.html.
 

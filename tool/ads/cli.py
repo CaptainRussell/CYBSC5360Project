@@ -33,6 +33,9 @@ def cmd_ingest(a):
             print("%-8s %6d rows  %s" % (kind, fn(con, f), f))
     for f in a.lnk or []:
         print("%-8s %6d rows  %s" % ("lnk", loaders.load_lnk(con, f, cfg["mount_prefix"]), f))
+    for f in a.image or []:
+        from .ntfs import load_mft_from_image
+        print("%-8s %6d rows  %s (MFT read from the image)" % ("mft", load_mft_from_image(con, f), f))
     con.commit()
     con.close()
 
@@ -101,10 +104,9 @@ def cmd_evaluate(a):
 
 
 def cmd_triage(a):
-    import csv
     import time
-    from .briefing import render
-    from .fat import NotFAT
+    from .briefing import write_triage
+    from .triage import UnsupportedImage
     from .triage import Triage
 
     tty = sys.stdout.isatty()
@@ -135,10 +137,8 @@ def cmd_triage(a):
     say("  Step 1 of 4  Opening the drive")
     try:
         t = Triage(image, progress=progress)
-    except NotFAT:
-        sys.exit("\n%s does not hold a FAT drive, so the first-look report cannot read it.\n"
-                 "For Windows (NTFS) images, first run Eric Zimmerman's tools with scripts/run_parsers.ps1,\n"
-                 "then use 'python -m ads ingest' and 'python -m ads analyze'." % image)
+    except UnsupportedImage as e:
+        sys.exit("\n%s\nADS reads raw (.img, .dd, .raw) images of FAT and NTFS drives. Convert an E01 to raw first." % e)
     vol = t.vol.summary()
     say("               %s drive named \u201c%s\u201d" % (vol["fs_type"], (vol["label"] or "").strip()))
     t.collect().run()
@@ -147,21 +147,7 @@ def cmd_triage(a):
         say("  Step 2 of 4  Reading files            done")
         say("  Step 3 of 4  Asking eight questions   done")
     say("  Step 4 of 4  Writing the report")
-    data = t.to_json(top=a.top)
-    os.makedirs(out, exist_ok=True)
-    with open(os.path.join(out, "triage.json"), "w", encoding="utf-8") as fh:
-        json.dump(data, fh, indent=1, default=str)
-    with open(os.path.join(out, "leads.csv"), "w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
-        w.writerow(["rank", "score_out_of_100", "level", "file", "clues", "check_ids", "what_was_found", "type", "size_bytes", "last_changed_utc"])
-        for n, i in enumerate(t.leads(), 1):
-            says = " | ".join(i["outcomes"][r][1].get("say", "") for r in i["fired"])
-            level = "Look first" if i["score"] >= data["tiers"]["strong"] else "Worth a look" if i["score"] >= data["tiers"]["moderate"] else "Minor"
-            names = "; ".join(data["rules"][r]["name"] for r in i["fired"])
-            w.writerow([n, round(i["score"] * 100), level, i["path"], names, " ".join(i["fired"]), says, i["type"], i["size"], i["modified"]])
-    html = os.path.join(out, "briefing.html")
-    with open(html, "w", encoding="utf-8") as fh:
-        fh.write(render(data))
+    data, html = write_triage(t, out, a.top)
     c = data["counts"]
     first = [l for l in data["leads"] if l["score"] >= data["tiers"]["strong"]]
     say("")
@@ -192,6 +178,8 @@ def main(argv=None):
     for k in ("mft", "usn", "lnk", "prefetch", "evtx"):
         s.add_argument("--" + k, nargs="+")
     s.add_argument("--config")
+    s.add_argument("--image", nargs="+", help="raw NTFS image(s): read the MFT straight from the image "
+                                               "(no MFTECmd needed; gives the MFT-only rules R6, R7, R11)")
     s.add_argument("--append", action="store_true")
     s.set_defaults(fn=cmd_ingest)
 

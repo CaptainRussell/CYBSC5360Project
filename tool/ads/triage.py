@@ -33,7 +33,8 @@ from datetime import datetime
 from datetime import datetime, timezone
 
 from . import __version__, sniff
-from .fat import FATVolume
+from .fat import FATVolume, NotFAT
+from .ntfs import NotNTFS, NTFSVolume
 from .loaders import sha256_file
 
 CONSISTENT, VIOLATED, NOT_EVALUABLE = "consistent", "violated", "not_evaluable"
@@ -214,10 +215,26 @@ def _rar4_members(blob):
     return out
 
 
+class UnsupportedImage(Exception):
+    pass
+
+
+def open_volume(image_path):
+    """Open a FAT or an NTFS volume in a raw image (bare, or inside an MBR/GPT partition table)."""
+    try:
+        return FATVolume(image_path)
+    except NotFAT:
+        pass
+    try:
+        return NTFSVolume(image_path)
+    except NotNTFS:
+        raise UnsupportedImage("%s holds neither a FAT nor an NTFS drive that ADS can read." % image_path)
+
+
 class Triage:
     def __init__(self, image_path, max_read=MAX_READ, progress=None):
         self.image_path = image_path
-        self.vol = FATVolume(image_path)
+        self.vol = open_volume(image_path)
         self.max_read = max_read
         self.progress = progress or (lambda *a: None)
         self.items = []
@@ -564,8 +581,12 @@ class Triage:
             "types": dict(types.most_common(12)),
             "rules": {rid: {**RULES[rid], **self.rates[rid]} for rid in RULES},
             "timeline": {"bulk_time": self.bulk_time, "bulk_share": self.bulk_share, "timed_files": self.n_timed},
-            "not_applicable": "Timeline rules R1-R11 need NTFS artifacts ($MFT, $UsnJrnl, LNK, Prefetch, event logs); "
-                              "this %s volume has none of them." % self.vol.summary()["fs_type"],
+            "not_applicable": (
+                "Timeline rules R1-R11 need NTFS artifacts ($MFT, $UsnJrnl, LNK, Prefetch, event logs); "
+                "this %s volume has none of them." % self.vol.summary()["fs_type"]
+                if self.vol.summary()["fs_type"] != "NTFS" else
+                "This is an NTFS volume, so the timestamp rules R1-R11 run in the separate Windows drive report "
+                "(python -m ads ingest --image, then analyze); this first-look report asks the eight questions."),
             "leads": [slim(i) for i in leads[:top]],
             "all_leads": [{"path": i["path"], "score": round(i["score"], 4), "fired": i["fired"]} for i in leads],
         }

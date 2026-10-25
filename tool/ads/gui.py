@@ -1,8 +1,9 @@
 """A small point-and-click launcher that opens in the browser.
 
 No extra packages, no tkinter: it runs a local web page (only this computer can
-reach it) with two choices, a Windows drive (a folder of parser CSVs) or a
-USB/FAT drive image. Pick one, press Run, and the plain-language report opens.
+reach it) with two choices: the Windows date checks (an NTFS image, or a folder of
+parser CSVs) or the first-look report on a FAT or NTFS drive image. Pick one,
+press Run, and the plain-language report opens.
 
     python3 -m ads gui          # opens http://127.0.0.1:8765 in your browser
 """
@@ -37,15 +38,21 @@ def _step(jid, msg):
         JOBS[jid]["steps"].append(msg)
 
 
-def _run_ntfs(jid, folder):
+def _run_ntfs(jid, path):
+    """A folder of parser CSVs, or a raw NTFS image read directly (MFT-only rules)."""
     from . import pipeline
     cfg = load_config(None)
-    out = os.path.join(folder, "ADS report")
+    is_image = os.path.isfile(path)
+    out = (os.path.splitext(path)[0] + " Windows report") if is_image else os.path.join(path, "ADS report")
     db = os.path.join(out, "case.sqlite")
     os.makedirs(out, exist_ok=True)
     try:
-        _step(jid, "Reading the records in that folder")
-        summary = pipeline.ingest_folder(folder, db, cfg)
+        if is_image:
+            _step(jid, "Reading the file table (MFT) straight from the image")
+            summary = pipeline.ingest_image(path, db, cfg)
+        else:
+            _step(jid, "Reading the records in that folder")
+            summary = pipeline.ingest_folder(path, db, cfg)
         _step(jid, "Loaded " + ", ".join("%s (%d rows)" % (s["kind"], s["rows"]) for s in summary))
         _step(jid, "Cross-checking the records")
         r = pipeline.analyze_db(db, out, cfg)
@@ -55,25 +62,21 @@ def _run_ntfs(jid, folder):
         _fail(jid, str(e))
 
 
-def _run_fat(jid, image):
-    from .briefing import render
-    from .fat import NotFAT
-    from .triage import Triage
+def _run_image(jid, image):
+    """First-look report on a FAT or NTFS drive image: the eight questions."""
+    from .briefing import write_triage
+    from .triage import Triage, UnsupportedImage
     out = os.path.splitext(image)[0] + " report"
     try:
         _step(jid, "Opening the drive image")
         t = Triage(image)
-        _step(jid, "Reading files and asking eight questions of each")
+        _step(jid, "Found a %s drive. Reading files and asking eight questions of each" % t.vol.summary()["fs_type"])
         t.collect().run()
-        data = t.to_json()
-        os.makedirs(out, exist_ok=True)
-        with open(os.path.join(out, "briefing.html"), "w", encoding="utf-8") as fh:
-            fh.write(render(data))
+        data, html = write_triage(t, out)
         _step(jid, "Checked %d files; %d had a clue" % (data["counts"]["examined"], data["counts"]["with_findings"]))
-        _finish(jid, out, os.path.join(out, "briefing.html"))
-    except NotFAT:
-        _fail(jid, "That image is not a FAT drive. For a Windows (NTFS) image, use the Windows drive option "
-                   "after running the parsers (scripts/run_parsers.ps1).")
+        _finish(jid, out, html)
+    except UnsupportedImage as e:
+        _fail(jid, "%s ADS reads raw images (.img, .dd, .raw) of FAT and NTFS drives." % e)
     except Exception as e:
         _fail(jid, str(e))
 
@@ -150,12 +153,12 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(403, "forbidden")
         kind = data.get("kind", [""])[0]
         path = data.get("path", [""])[0].strip().strip('"').strip("'")
-        if kind == "ntfs" and not os.path.isdir(path):
-            return self._send(200, json.dumps({"error": "That folder was not found: %s" % path}), "application/json")
+        if kind == "ntfs" and not os.path.exists(path):
+            return self._send(200, json.dumps({"error": "That folder or image was not found: %s" % path}), "application/json")
         if kind == "fat" and not os.path.isfile(path):
             return self._send(200, json.dumps({"error": "That image file was not found: %s" % path}), "application/json")
         jid = _new_job()
-        target = _run_ntfs if kind == "ntfs" else _run_fat
+        target = _run_ntfs if kind == "ntfs" else _run_image
         threading.Thread(target=target, args=(jid, path), daemon=True).start()
         self._send(200, json.dumps({"job": jid}), "application/json")
 
@@ -217,14 +220,14 @@ a.open{display:inline-block;margin-top:10px;font-weight:700}
 <div class="wrap">
 <div class="card">
 <h2>Windows drive</h2>
-<p class="hint">For a Windows (NTFS) system drive. First run the parsers (scripts/run_parsers.ps1) to make the record files, then give the folder that holds them here.</p>
-<label for="ntfs">Folder with the record files (mft.csv, usn.csv, …)</label>
+<p class="hint">Checks the dates Windows keeps for each file. Give either an NTFS drive image (quickest: reads the file table directly), or the folder of record files made by scripts/run_parsers.ps1 (adds the change journal, shortcuts, Prefetch and event logs).</p>
+<label for="ntfs">NTFS drive image, or folder with the record files</label>
 <input type="text" id="ntfs" placeholder="C:\Cases\Case01\parsed">
 <button onclick="run('ntfs','ntfs')">Run on this folder</button>
 </div>
 <div class="card">
-<h2>USB or memory-card image</h2>
-<p class="hint">For a FAT drive image (.img, .dd, .raw). Give the image file itself.</p>
+<h2>First look at a drive image</h2>
+<p class="hint">Asks eight questions of every file (disguised, hidden, locked, password written down, and so on). Works on FAT and NTFS images (.img, .dd, .raw).</p>
 <label for="fat">Drive image file</label>
 <input type="text" id="fat" placeholder="C:\Cases\usb.img">
 <button onclick="run('fat','fat')">Run on this image</button>

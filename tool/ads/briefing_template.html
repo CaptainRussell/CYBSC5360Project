@@ -438,14 +438,16 @@ const DATA = /*__DATA__*/null;
   $("#imgname").textContent = im.name;
   const firstN = D.all_leads.filter(l => l.score >= D.tiers.strong).length, worthN = D.all_leads.filter(l => l.score >= D.tiers.moderate).length - firstN;
   $("#herosay").textContent = "The tool read every file on this drive without changing anything, set aside the clutter computers make on their own, and asked eight questions of the " +
-    fmt(C.examined) + " files left. " + fmt(firstN) + " files stand out the most.";
+    fmt(C.examined) + " files left. " + fmt(firstN) + (firstN === 1 ? " file stands" : " files stand") + " out the most.";
   [(im.bytes / 1e6).toFixed(0) + " MB drive image", im.fs_type + " drive named “" + (im.label || "none") + "”", "Prepared by " + D.tool, D.generated].forEach(t => $("#facts").append(el("span", "", t)));
   [["Files and folders", C.entries], ["Clutter set aside", C.noise], ["Files checked", C.examined], ["To look at first", firstN, true]].forEach(([l, n, hot]) => {
     const s = el("div", "stat" + (hot ? " hot" : "")), v = el("div", "n", fmt(n)); v.dataset.to = n; s.append(v, el("div", "l", l)); $("#stats").append(s); });
 
   // hex viewer of the drive's first 64 bytes, with the label fields marked
   const hex = (D.boot_hex || "").match(/../g) || [];
-  const FIELDS = [[3, 11, "hl", "Made by: " + (im.oem || "").trim()], [43, 54, "hl2", "Drive name: " + (im.label || "").trim()], [54, 62, "hl3", "Drive type: " + im.fs_type]];
+  const FIELDS = im.fs_type === "NTFS"
+    ? [[3, 11, "hl", "Drive type: NTFS"], [11, 13, "hl2", "Sector size"], [48, 56, "hl3", "Where the file table (MFT) starts"]]
+    : [[3, 11, "hl", "Made by: " + (im.oem || "").trim()], [43, 54, "hl2", "Drive name: " + (im.label || "").trim()], [54, 62, "hl3", "Drive type: " + im.fs_type]];
   const cells = [];
   for (let r = 0; r < hex.length; r += 16) {
     const row = el("div", "hexrow"), b = el("span", "b");
@@ -630,13 +632,17 @@ const DATA = /*__DATA__*/null;
    ["Locked (encrypted)", "Scrambled so that only someone with the password can read it."],
    ["Time stamp", "The date and time the drive recorded for when a file was last changed."],
    ["Clutter", "Small helper files that computers make by themselves. They are real, but rarely interesting, so they are set aside."],
-   [im.fs_type, "The way this drive organizes its files. It is an older, simple system used on USB sticks and memory cards."]].forEach(([t, d]) => {
+   [im.fs_type, im.fs_type === "NTFS"
+      ? "The way this drive organizes its files. NTFS is the system Windows uses; it keeps a detailed file table (the MFT) with several dates for every file."
+      : "The way this drive organizes its files. It is an older, simple system used on USB sticks and memory cards."]].forEach(([t, d]) => {
     const w = el("div"); w.append(el("dt", "", t), el("dd", "", d)); $("#gloss").append(w); });
   const sc = $("#scale"); [["var(--line)", T.moderate], ["var(--gold-deep)", T.strong - T.moderate], ["var(--cardinal)", 1 - T.strong]].forEach(([c, w]) => { const i = el("i"); i.style.background = c; i.style.width = 100 * w + "%"; sc.append(i); });
   $("#scalemid").textContent = "Worth a look from " + pts(T.moderate) + ", look first from " + pts(T.strong);
   Object.entries(RULES).forEach(([r, v]) => { const tr = el("tr"); tr.append(el("td", "", r + " · " + v.name), el("td", "num", fmt(v.evaluable)), el("td", "num", fmt(v.violated)), el("td", "num", v.p_r.toFixed(4)), el("td", "num", v.weight.toFixed(2))); $("#rulerows").append(tr); });
-  $("#na").append(el("strong", "", "What this drive could not tell us"),
-    el("span", "", "The main method in the paper looks for tampered time stamps using records that only Windows (NTFS) drives keep. This is a " + im.fs_type + " drive, which keeps none of them, so those checks did not run. The eight questions above were used instead."));
+  $("#na").append(el("strong", "", im.fs_type === "NTFS" ? "Where the date checks are" : "What this drive could not tell us"),
+    el("span", "", im.fs_type === "NTFS"
+      ? "The main method in the paper checks the dates Windows keeps for each file. This is an NTFS drive, so those checks can run, but they are in a separate report: open the window again, choose the Windows date checks, and give it this same image. The eight questions above are this report."
+      : "The main method in the paper looks for tampered time stamps using records that only Windows (NTFS) drives keep. This is a " + im.fs_type + " drive, which keeps none of them, so those checks did not run. The eight questions above were used instead."));
   $("#foot").textContent = "Prepared by " + D.tool + " from " + im.path + " (read-only). SHA-256 " + im.sha256 + ". Every finding is a reason to look, not a conclusion.";
 
   // ---- motion: count-ups, reveals, bars and rings as they come into view
