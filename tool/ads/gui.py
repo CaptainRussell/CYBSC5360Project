@@ -9,6 +9,7 @@ USB/FAT drive image. Pick one, press Run, and the plain-language report opens.
 
 import json
 import os
+import secrets
 import threading
 import time
 import urllib.parse
@@ -19,6 +20,10 @@ from .config import load_config
 
 JOBS = {}
 _LOCK = threading.Lock()
+# A fresh random token per run. Only the panel page this server sends knows it, and every request
+# must carry it, so a web page from another site open in the same browser cannot start a job or
+# read results. Requests must also name this computer as their host (blocks DNS rebinding).
+TOKEN = secrets.token_urlsafe(24)
 
 
 def _new_job():
@@ -95,18 +100,29 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _host_ok(self):
+        port = self.server.server_address[1]
+        return self.headers.get("Host", "") in ("127.0.0.1:%d" % port, "localhost:%d" % port)
+
+    def _token_ok(self, given):
+        return secrets.compare_digest(given or "", TOKEN)
+
     def do_GET(self):
+        if not self._host_ok():
+            return self._send(403, "forbidden")
         u = urllib.parse.urlparse(self.path)
         q = urllib.parse.parse_qs(u.query)
         if u.path == "/":
-            return self._send(200, PAGE)
+            return self._send(200, PAGE.replace("@TOKEN@", TOKEN))
+        if not self._token_ok(q.get("t", [""])[0]):
+            return self._send(403, "forbidden")
         if u.path == "/status":
             jid = q.get("job", [""])[0]
             job = JOBS.get(jid)
             if not job:
                 return self._send(404, "{}", "application/json")
             view = {"status": job["status"], "steps": job["steps"], "error": job["error"],
-                    "report": ("/report?job=%s&f=briefing.html" % jid) if job["report"] else None,
+                    "report": ("/report?job=%s&f=briefing.html&t=%s" % (jid, TOKEN)) if job["report"] else None,
                     "folder": job["out"]}
             return self._send(200, json.dumps(view), "application/json")
         if u.path == "/report":
@@ -124,10 +140,14 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, "not found")
 
     def do_POST(self):
+        if not self._host_ok():
+            return self._send(403, "forbidden")
         if self.path != "/run":
             return self._send(404, "not found")
         length = int(self.headers.get("Content-Length", 0))
         data = urllib.parse.parse_qs(self.rfile.read(length).decode("utf-8"))
+        if not self._token_ok(data.get("t", [""])[0]):
+            return self._send(403, "forbidden")
         kind = data.get("kind", [""])[0]
         path = data.get("path", [""])[0].strip().strip('"').strip("'")
         if kind == "ntfs" and not os.path.isdir(path):
@@ -212,6 +232,7 @@ a.open{display:inline-block;margin-top:10px;font-weight:700}
 <div id="log"></div>
 </div>
 <script>
+const TOKEN='@TOKEN@';
 let timer=null;
 function el(t,c,h){let e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e}
 function run(kind,inputId){
@@ -220,7 +241,7 @@ function run(kind,inputId){
   if(!path){log.appendChild(el('div','step err','Please enter a path first.'));return}
   log.appendChild(el('div','step','<span class="spin"></span>Starting…'));
   fetch('/run',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:'kind='+encodeURIComponent(kind)+'&path='+encodeURIComponent(path)})
+    body:'kind='+encodeURIComponent(kind)+'&path='+encodeURIComponent(path)+'&t='+TOKEN})
    .then(r=>r.json()).then(d=>{
      if(d.error){log.innerHTML='';log.appendChild(el('div','step err',d.error));return}
      poll(d.job);
@@ -229,7 +250,7 @@ function run(kind,inputId){
 function poll(job){
   if(timer)clearInterval(timer);
   timer=setInterval(()=>{
-    fetch('/status?job='+job).then(r=>r.json()).then(d=>{
+    fetch('/status?job='+job+'&t='+TOKEN).then(r=>r.json()).then(d=>{
       let log=document.getElementById('log');log.innerHTML='';
       d.steps.forEach(s=>log.appendChild(el('div','step',s)));
       if(d.status==='running')log.appendChild(el('div','step','<span class="spin"></span>Working…'));

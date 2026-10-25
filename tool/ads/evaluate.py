@@ -42,26 +42,49 @@ def label(files, truth):
 
 
 def roc(scores, labels):
-    """ROC points (fpr, tpr, threshold) for 'flag if score > threshold'."""
+    """ROC points (fpr, tpr, threshold) for 'flag if score > threshold'.
+
+    One sort and one pass, so a full image (hundreds of thousands of files) takes
+    seconds: thresholds are the distinct scores (and -1) in descending order, and
+    each point counts the files scoring strictly above its threshold.
+    """
     pos = sum(1 for v in labels.values() if v)
     neg = len(labels) - pos
+    ranked = sorted(((s, bool(labels[k])) for k, s in scores.items()), key=lambda x: -x[0])
     thresholds = sorted({s for s in scores.values()} | {-1.0}, reverse=True)
     pts = [(0.0, 0.0, float("inf"))]
+    tp = fp = i = 0
     for t in thresholds:
-        tp = sum(1 for k, s in scores.items() if s > t and labels[k])
-        fp = sum(1 for k, s in scores.items() if s > t and not labels[k])
+        while i < len(ranked) and ranked[i][0] > t:
+            if ranked[i][1]:
+                tp += 1
+            else:
+                fp += 1
+            i += 1
         pts.append((fp / neg if neg else 0.0, tp / pos if pos else 0.0, t))
     return pts
 
 
 def auc(scores, labels):
-    """Probability a tampered file outscores a benign one (ties count half)."""
-    p = [s for k, s in scores.items() if labels[k]]
-    n = [s for k, s in scores.items() if not labels[k]]
+    """Probability a tampered file outscores a benign one (ties count half).
+
+    Computed from ranks (the Mann-Whitney U statistic), which equals comparing
+    every tampered file with every benign one but takes one sort.
+    """
+    items = sorted((s, bool(labels[k])) for k, s in scores.items())
+    p = sum(1 for _, y in items if y)
+    n = len(items) - p
     if not p or not n:
         return None
-    wins = sum((1.0 if a > b else 0.5 if a == b else 0.0) for a in p for b in n)
-    return wins / (len(p) * len(n))
+    rank_sum, i = 0.0, 0
+    while i < len(items):
+        j = i
+        while j < len(items) and items[j][0] == items[i][0]:
+            j += 1
+        mid = (i + 1 + j) / 2.0          # average rank of a run of tied scores
+        rank_sum += mid * sum(1 for _, y in items[i:j] if y)
+        i = j
+    return (rank_sum - p * (p + 1) / 2.0) / (p * n)
 
 
 def tpr_at_fpr(points, max_fpr):

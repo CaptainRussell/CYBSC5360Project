@@ -34,8 +34,17 @@ Tuning (C) must never see the test data (T).
 
    Without `-Confirm` it only says what it would do. The script appends one row
    per planted change to `answer_key.csv`, in the format `evaluate --truth`
-   reads. Scenarios T1 to T8 match Table III of the paper. T2 and T8 can take an
-   external SI+FN timestamp tool with `-SetMACE C:\tools\SetMACE.exe`.
+   reads. Scenarios T1 to T8 match Table III of the paper.
+
+   Each file-level scenario first "opens" its file the way Explorer does, which
+   makes Windows write a shortcut for it, then waits two minutes (`-WaitSeconds`)
+   before tampering. Without that step the tampered files would have no shortcut,
+   and the four shortcut checks (R2, R3, R4, R9) could never be tested.
+
+   T2 changes the protected FN dates too, which PowerShell cannot do. Give it the
+   command for an outside tool with `{file}` where the path goes, for example
+   `-SiFnCommand 'C:\tools\SetMace.exe "{file}" ...'`. Check that tool's own
+   documentation for the exact syntax; the script does not guess it.
 
 3. **Image and parse.** Snapshot the clone, image the disk (raw or E01, hashed),
    export the artifacts, and run the parsers:

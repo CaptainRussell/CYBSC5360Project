@@ -4,6 +4,8 @@ subtitle: "CPRE 5360 Term Paper: Drafted Evaluation Plan (Draft for November 1)"
 author: "Captain Scott Russell"
 ---
 
+> **Superseded.** This draft is kept for the record. The current text is `paper/paper.md` (built into `paper/CPRE 5360 Term Paper Draft - Russell.pdf`). It corrects two things in this draft: ADS reads five records, not six (there is no $LogFile parser), and the parser cross-check was dropped from the success criteria because it was never built.
+
 # IV. Evaluation Plan
 
 ## A. Research Questions

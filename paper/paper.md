@@ -6,7 +6,7 @@ note: Draft of the proposed solution and evaluation plan, November 1, 2026
 ---
 
 ::: abstract
-A person hiding their tracks on a Windows computer can change the dates on a file in seconds, and the dates Windows shows will then say whatever they chose. But Windows records the same activity in several other places, written by different parts of the system for different reasons. Changing all of them so that they still agree is much harder. This paper proposes the Artifact Disagreement Scorer (ADS), a tool that lines up six of these independent records, checks them against each other with eleven rules, notices when records have been deleted, and combines the results into one score per file with a plain-language reason for every flag. Earlier work showed each record is unreliable alone but never measured whether combining them helps. The evaluation plan measures that: on Windows 11 machines in ordinary use, with a written answer key of every change made, does the combined score catch more tampering than any single check at the same false alarm rate?
+A person hiding their tracks on a Windows computer can change the dates on a file in seconds, and the dates Windows shows will then say whatever they chose. But Windows records the same activity in several other places, written by different parts of the system for different reasons. Changing all of them so that they still agree is much harder. This paper proposes the Artifact Disagreement Scorer (ADS), a tool that lines up five of these independent records, checks them against each other with eleven rules, notices when records have been deleted, and combines the results into one score per file with a plain-language reason for every flag. Earlier work showed each record is unreliable alone but never measured whether combining them helps. The evaluation plan measures that: on Windows 11 machines in ordinary use, with a written answer key of every change made, does the combined score catch more tampering than any single check at the same false alarm rate?
 :::
 
 ::: keywords
@@ -39,20 +39,20 @@ This paper asks one question: *does measuring how much several independent recor
 
 ## Overview and Design Goals
 
-The Artifact Disagreement Scorer (ADS) reads six independent records from an image of a Windows drive, lines them up file by file, applies a set of consistency rules, and combines the results into a disagreement score for each file and a warning level for the system as a whole (Fig. 2). Four goals shape the design:
+The Artifact Disagreement Scorer (ADS) reads five independent records from an image of a Windows drive, lines them up file by file, applies a set of consistency rules, and combines the results into a disagreement score for each file and a warning level for the system as a whole (Fig. 2). Four goals shape the design:
 
 1. **Combine, do not trust one check.** No single rule decides. A file is flagged when the weight of independent disagreement crosses a threshold, so normal noise in one record does not raise an alert on its own.
 2. **Treat a missing record as a clue.** Deleting a record is often easier than altering it convincingly [1]. ADS reports cleared or missing records instead of silently skipping the rules that need them.
 3. **Explain every flag.** Every score breaks down into the rules that fired and the values they compared, written in plain language, so an examiner can state and defend exactly why a file was flagged.
 4. **Reuse trusted parsers.** Reading these records is a solved problem. ADS uses widely tested open tools for that and contributes only the cross-checking and scoring layer, which is where existing tools stop.
 
-![The ADS pipeline. Each stage keeps a hash of its input, so the chain of custody reaches every intermediate file.](figures/fig1_pipeline.png){width=2.9in}
+![The ADS pipeline. Every exported record and every parser output is hashed, so the chain of custody reaches each intermediate file.](figures/fig1_pipeline.png){width=2.9in}
 
 **Scope.** One Windows release (Windows 11 24H2), NTFS system drives, changes made from inside the running system, and test machines I build myself. Changes made by editing the raw disk offline bypass the journals and are out of scope.
 
 ## Records Used and How They Are Linked
 
-Table I lists the six records. They were chosen because each is written by a different part of Windows, which is what makes their agreement meaningful.
+Table I lists the five records. They were chosen because each is written by a different part of Windows, which is what makes their agreement meaningful.
 
 Table: Records used by ADS
 
@@ -60,7 +60,6 @@ Table: Records used by ADS
 |---|---|---|---|
 | MFT (SI and FN) | File system | Eight dates, record number | File ID |
 | Change journal ($J) | File system | Create and date-change entries | File ID |
-| $LogFile | File system | Before and after copies of changes | File ID |
 | Shortcut (LNK) files | Windows shell | Own dates; copy of target's dates | Path |
 | Prefetch | Windows | Program name, last 8 run times | Path, time |
 | Event logs | Event Log service | Logons, log clearing, clock changes | Time |
@@ -103,7 +102,7 @@ $$ D(f) = \frac{\sum_r w_r \, v_r(f)}{\sum_r w_r} $$
 
 Here v_r(f) is 1 if rule r is violated for file f and 0 if consistent; rules that cannot be checked are left out of both sums, and the number of rules that could be checked is reported beside D(f), so a score based on one rule is never confused with one based on six.
 
-Each weight w_r multiplies two terms. The first is ln(1/p_r), where p_r is how often rule r fires on a clean machine: a rule that fires on 2% of normal files counts for more than one that fires on 20%. The second turns the seven tamper-resistance factors of [2] into a number from 1 to 3, so records a user cannot easily reach (the journal, the FN dates) count for more than records a user can edit or delete (shortcuts, Prefetch). To my knowledge this is the first use of [2] as a numeric input to detection.
+Each weight w_r multiplies two terms. The first is ln(1/p_r), where p_r is how often rule r fires on a clean machine: a rule that fires on 2% of normal files counts for more than one that fires on 20%. The second turns the seven tamper-resistance factors of [2] into a number from 1 to 3, so records a user cannot easily reach (the journal, the FN dates) count for more than records a user can edit or delete (shortcuts, Prefetch). [2] scores the SI and FN dates itself; for the other records I applied its categories, and these provisional scores will be checked on the test system before results are reported. To my knowledge this is the first use of [2] as a numeric input to detection.
 
 A file is flagged when D(f) exceeds a threshold θ chosen on separate calibration data to meet a target false alarm rate. A weighted sum was chosen over a trained classifier because a lab experiment has few tampered files, which would let a trained model overfit, and because a sum keeps every flag explainable. Finally, flagged files whose evidence falls within five minutes of each other are grouped with any program runs and warnings in that window, turning a list of files into a candidate event to investigate.
 
@@ -124,7 +123,7 @@ Because findings often go to investigators, lawyers, and commanders who are not 
 
 ## Test Machines and Answer Key
 
-All test systems are Windows 11 24H2 virtual machines with default settings for Prefetch, event log sizes, and the change journal, recorded so the setup can be repeated. The correct answer must be known before ADS runs. A script inside the virtual machine performs each planned change and writes an answer-key line for it (file, file ID, category, and time); the time from the host computer is also recorded, so a scenario that changes the guest's clock cannot corrupt the key. A file is *tampered* if it is in the answer key and *clean* otherwise, a conservative choice that may slightly overstate false alarms. Each scenario is applied to a fresh copy of a common base snapshot so scenarios cannot contaminate each other.
+All test systems are Windows 11 24H2 virtual machines with default settings for Prefetch, event log sizes, and the change journal, recorded so the setup can be repeated. The correct answer must be known before ADS runs. A script inside the virtual machine performs each planned change and writes an answer-key line for it (file path, category, and time). Each file is first opened as a user would open it, so Windows writes a shortcut for it before the change. Times are taken before any clock change, and the clock scenario is checked against the host's clock, so a moved guest clock cannot corrupt the key. A file is *tampered* if it is in the answer key and *clean* otherwise, a conservative choice that may slightly overstate false alarms. Each scenario is applied to a fresh copy of a common base snapshot so scenarios cannot contaminate each other.
 
 ## Tampering Scenarios
 
@@ -157,7 +156,7 @@ For each file ADS is compared with the answer key to give the detection rate (sh
 
 ## Success Criteria
 
-The proposal is supported if, on the test set: (1) ADS has a higher detection rate than the best single rule at both 1% and 0.1% false alarm rates; (2) ADS has a larger AUC than any single rule; (3) on every T8 image ADS either flags the altered files or a warning reports the removal, so no scenario produces a clean result with no warning; (4) full weighting does at least as well as equal weighting; and (5) the parser cross-check agrees on at least 99% of sampled records or every disagreement is explained. If ADS does not beat the best single rule, that is itself a finding: the advice in [1] to combine records would not hold once normal activity is included, and E2 would show why.
+The proposal is supported if, on the test set: (1) ADS has a higher detection rate than the best single rule at both 1% and 0.1% false alarm rates; (2) ADS has a larger AUC than any single rule; (3) on every T8 image ADS either flags the altered files or a warning reports the removal, so no scenario produces a clean result with no warning; (4) full weighting does at least as well as equal weighting; and (5) in E6, the report alone explains every sampled flag. If ADS does not beat the best single rule, that is itself a finding: the advice in [1] to combine records would not hold once normal activity is included, and E2 would show why.
 
 ## Threats to Validity
 

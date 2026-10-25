@@ -1,37 +1,49 @@
 """One shared ingest-and-analyze path, used by both the command line and the GUI."""
 
+import fnmatch
 import glob
-import json
 import os
 
 from . import db, loaders
-from .evaluate import choose_theta, label, load_results, load_truth
 from .indicators import evaluate_indicators
 from .report import write_outputs
 from .rules import Context, evaluate_all
 from .scoring import cluster, compute_weights, score_files, system_score
 
-# How the Zimmerman CSVs are recognised inside a folder, by filename substring.
-CSV_PATTERNS = {
-    "mft": ["*mft*.csv"],
-    "usn": ["*usn*.csv", "*j.csv", "*journal*.csv"],
-    "lnk": ["*lnk*.csv", "*lecmd*.csv"],
-    "prefetch": ["*pf*.csv", "*prefetch*.csv", "*pecmd*.csv"],
-    "evtx": ["*evtx*.csv", "*event*.csv", "*_system*.csv", "*_security*.csv", "*_application*.csv"],
-}
+# How the Zimmerman CSVs are recognised inside a folder. Names are matched in lower case on every
+# platform, and each file is given to the FIRST kind whose patterns match, so one file is never
+# loaded twice. The journal comes before the MFT because MFTECmd's default names for both start
+# with "MFTECmd" (e.g. 20261010_MFTECmd_$J_Output.csv and 20261010_MFTECmd_$MFT_Output.csv).
+CSV_KINDS = [
+    ("usn", ["*$j*", "*usn*", "*journal*"]),
+    ("mft", ["*$mft*", "*mft*"]),
+    ("lnk", ["*lnk*", "*lecmd*"]),
+    ("prefetch", ["*prefetch*", "*pecmd*", "pf.csv", "*_pf.csv", "pf_*.csv"]),
+    ("evtx", ["*evtx*", "*eventlog*", "*system*", "*security*", "*application*"]),
+]
+# Side outputs that look like parser CSVs but are not inputs: PECmd's run timeline, and the
+# chain-of-custody hash list written by run_parsers.ps1.
+CSV_SKIP = ["*timeline*", "hashes.csv"]
+
+
+def classify_csv(name):
+    """The kind a parser CSV holds, judged from its file name, or None to skip it."""
+    n = os.path.basename(name).lower()
+    if not n.endswith(".csv") or any(fnmatch.fnmatchcase(n, p) for p in CSV_SKIP):
+        return None
+    for kind, pats in CSV_KINDS:
+        if any(fnmatch.fnmatchcase(n, p) for p in pats):
+            return kind
+    return None
 
 
 def find_csvs(folder):
     """Return {kind: [paths]} for the Zimmerman CSVs found in a folder."""
     found = {}
-    for kind, pats in CSV_PATTERNS.items():
-        hits = []
-        for pat in pats:
-            for p in glob.glob(os.path.join(folder, pat)) + glob.glob(os.path.join(folder, pat.upper())):
-                if os.path.isfile(p) and p not in hits:
-                    hits.append(p)
-        if hits:
-            found[kind] = sorted(hits)
+    for p in sorted(glob.glob(os.path.join(folder, "*"))):
+        kind = classify_csv(p) if os.path.isfile(p) else None
+        if kind:
+            found.setdefault(kind, []).append(p)
     return found
 
 
@@ -62,8 +74,12 @@ def ingest_folder(folder, dbpath, cfg, progress=None):
     return summary
 
 
-def analyze_db(dbpath, outdir, cfg, calibration=None, theta=None, weight_mode=None):
-    """Evaluate rules and indicators, score, cluster, and write every output including briefing.html."""
+def analyze_db(dbpath, outdir, cfg, calibration=None, theta=None, weight_mode=None, calibration_path=None):
+    """Evaluate rules and indicators, score, cluster, and write every output including briefing.html.
+
+    calibration is the loaded calibration dict; calibration_path is where it came from, recorded in
+    run.json and report.md so each run states how it was weighted.
+    """
     con = db.connect(dbpath)
     ctx = Context(con, cfg)
     th = theta if theta is not None else (calibration or {}).get("theta", cfg["theta"])
@@ -76,7 +92,8 @@ def analyze_db(dbpath, outdir, cfg, calibration=None, theta=None, weight_mode=No
     sys_score = system_score(indicators, cfg)
     inputs = [dict(r) for r in ctx.con.execute("SELECT * FROM inputs")]
     meta = {"db": os.path.abspath(dbpath), "theta": th, "weight_mode": mode,
-            "calibration": None, "config": cfg, "inputs": inputs}
+            "calibration": calibration_path or ("(in memory)" if calibration else None),
+            "config": cfg, "inputs": inputs}
     write_outputs(outdir, ctx, rows, scored, indicators, clusters, weights, sys_score, meta)
     ctx.con.close()
     return {"scored": len(scored), "flagged": sum(r["flagged"] for r in scored),

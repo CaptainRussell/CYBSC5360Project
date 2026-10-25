@@ -62,9 +62,11 @@ def _pct(v):
 def render(result, out_dir, target_fpr=0.01):
     rows = result["detectors"]
     ads = next(r for r in rows if r["detector"] == "ADS")
-    singles = [r for r in rows if r["detector"] != "ADS" and r["auc"] is not None]
-    best = max(singles, key=lambda r: r["auc"]) if singles else None
     fpr_key = "tpr_at_fpr_%g" % target_fpr
+    singles = [r for r in rows if r["detector"] != "ADS" and r["auc"] is not None]
+    # "Best single check" means best at the false-alarm rate the verdict talks about (success
+    # criterion 1); overall AUC only breaks ties.
+    best = max(singles, key=lambda r: (r[fpr_key], r["auc"])) if singles else None
     svg = roc_svg(ads["points"], best["points"] if best else [(0, 0), (1, 1)],
                   best["detector"] if best else "")
 
@@ -140,7 +142,7 @@ footer{color:var(--muted);font-size:14px;padding:26px 0 50px}
 <p class="verdict">@verdict@</p>
 <div class="cols">
 <div>@svg@
-<div class="key"><span><i style="background:#C8102E"></i>ADS (all checks)</span><span><i style="background:#B07A0C"></i>best single check</span><span><i style="background:#999;height:0;border-top:2px dashed #999"></i>pure guessing</span></div>
+<div class="key"><span><i style="background:#C8102E"></i>ADS (all checks)</span><span><i style="background:#B07A0C"></i>best single check at @fpr@% false alarms</span><span><i style="background:#999;height:0;border-top:2px dashed #999"></i>pure guessing</span></div>
 </div>
 <div>
 <p>The curve shows the trade-off between catching tampering (up) and raising false alarms (right). A curve

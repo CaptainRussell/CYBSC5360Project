@@ -66,7 +66,8 @@ def cmd_analyze(a):
     if a.calibration:
         with open(a.calibration, encoding="utf-8") as fh:
             calibration = json.load(fh)
-    r = pipeline.analyze_db(a.db, a.out, cfg, calibration, a.theta, a.weight_mode)
+    r = pipeline.analyze_db(a.db, a.out, cfg, calibration, a.theta, a.weight_mode,
+                            calibration_path=a.calibration)
     print("scored %d files, flagged %d, %d cluster(s), system score %.2f -> %s"
           % (r["scored"], r["flagged"], r["clusters"], r["system_score"], a.out))
     print("open the plain-language report: %s" % os.path.join(a.out, "briefing.html"))

@@ -10,6 +10,8 @@ You need Python 3 (python.org). Nothing else to install.
 python3 -m ads gui
 ```
 
+or just double-click `Run ADS (Windows).bat` / `Run ADS (Mac).command`.
+
 This opens a small control panel in your browser (only your own computer can reach it). It has two choices:
 
 * **Windows drive** — give it the folder that holds the record files made by `scripts/run_parsers.ps1` (`mft.csv`, `usn.csv`, and so on). Press Run and the plain-language report opens.
@@ -21,8 +23,8 @@ Everything below is the same thing from the command line, for scripting and for 
 
 You need Python 3 (python.org). Nothing else to install.
 
-* **Windows:** drag the image file onto `Run ADS (Windows).bat`.
-* **Mac:** double-click `Run ADS (Mac).command`, then drag the image into the window and press Enter.
+* **Windows:** drag the image file onto `Run ADS (Windows).bat`. (Double-clicking it instead opens the point-and-click window.)
+* **Mac:** double-click `Run ADS (Mac).command` to open the point-and-click window, then choose the image there.
 * **Any system:** `python3 -m ads IMAGE.img`
 
 The tool reads the image without changing it, shows its progress in four steps, and opens the report in your browser when it is done. The report goes in a folder called "IMAGE report" (choose another with `--out FOLDER`; add `--no-open` to skip opening the browser).
@@ -43,7 +45,7 @@ Every `analyze` run writes **`briefing.html`**, a single self-contained page tha
 
 ```
 cd "Term Paper/tool"
-python3 -m unittest discover -s tests -v          # 30 tests on synthetic fixtures
+python3 -m unittest discover -s tests -v          # 38 tests on synthetic fixtures
 
 # 1. On Windows: parse an exported image (see scripts/run_parsers.ps1)
 # 2. Anywhere with Python 3:

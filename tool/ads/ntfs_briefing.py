@@ -7,12 +7,26 @@ why, and the evidence behind each flag, with the technical detail folded away.
 
 import html
 import json
+import re
 
 from .config import RULE_IDS
-from .explain import INDICATOR_PLAIN, rule_name, rule_what, say
+from .explain import INDICATOR_PLAIN, nice, rule_name, rule_what, say
 from .rules import VIOLATED
 
-STRONG, MODERATE = 0.50, 0.34
+# Only files above the flag threshold θ are shown. Among them, "Look first" needs at least two
+# independent checks disagreeing and a score of at least STRONG (or θ, if θ is set higher);
+# every other flagged file is "Worth a look". Both tiers can therefore occur at any θ.
+STRONG = 0.50
+_TS = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?")
+
+
+def _nice_text(s):
+    """Rewrite every stored timestamp inside a string in the plain '10 Oct 2026, 09:25:03 UTC' form."""
+    return _TS.sub(lambda m: nice(m.group(0)), str(s))
+
+
+def _strong(theta):
+    return max(float(theta), STRONG)
 PALETTE = """
 :root{--cardinal:#C8102E;--cardinal-ink:#9E0B23;--gold:#F1BE48;--gold-deep:#B07A0C;--ink:#1A1A1A;
 --muted:#5E5A5A;--line:#DAD6D6;--paper:#FFF;--panel:#F7F4F2;--bar:#161616;--on-bar:#F2F2F2;--ok:#2E7D4F;
@@ -27,12 +41,10 @@ PALETTE = """
 """
 
 
-def _tier(f):
-    if f["score"] >= STRONG and len(f["fired"]) >= 2:
+def _tier(f, theta):
+    if f["score"] >= _strong(theta) and len(f["fired"]) >= 2:
         return "Look first", "hot"
-    if f["score"] >= MODERATE:
-        return "Worth a look", "warm"
-    return "Minor", "minor"
+    return "Worth a look", "warm"
 
 
 def _esc(s):
@@ -53,7 +65,7 @@ def build_data(ctx, outcome_rows, scored, indicators, clusters, sys_score, meta)
             _o, d = outcomes[key][rid]
             fired.append({"id": rid, "name": rule_name(rid), "say": say(rid, d),
                           "tech": {k: v for k, v in d.items() if not k.startswith("_")}})
-        tier, cls = _tier(r)
+        tier, cls = _tier(r, meta["theta"])
         leads.append({"path": r["path"], "entry": r["entry"], "seq": r["seq"],
                       "score": round(r["score"] * 100), "tier": tier, "cls": cls,
                       "evaluable": r["evaluable"], "confidence": round(r["confidence"] * 100),
@@ -114,13 +126,15 @@ def render(data):
 
     clusters = ""
     for n, c in enumerate(d["clusters"], 1):
-        pf = ("<br>Programs that ran in this window: " + _esc(", ".join(c["prefetch"]))) if c["prefetch"] else ""
+        pf = ("<br>Programs that ran in this window: " + _esc(_nice_text(", ".join(c["prefetch"])).replace(" @ ", " at "))) if c["prefetch"] else ""
         inds = ("<br>Warnings in this window: " + _esc(", ".join(c["indicators"]))) if c["indicators"] else ""
         files = "".join("<li>%s</li>" % _esc(p) for p in c["paths"])
-        clusters += ('<div class="event"><h3>Event %d — %s</h3>'
-                     '<p>%d file(s) were changed within a few minutes of each other, between %s and %s.%s%s</p>'
-                     '<ul>%s</ul></div>' % (n, _esc(c["start"]), c["files"], _esc(c["start"]), _esc(c["end"]),
-                                            pf, inds, files))
+        start, end = nice(c["start"]), nice(c["end"])
+        when = ("at %s" % start) if start == end else ("between %s and %s" % (start, end))
+        many = ("%d files were changed within a few minutes of each other" % c["files"]) if c["files"] > 1 \
+            else "1 file was changed"
+        clusters += ('<div class="event"><h3>Event %d — %s</h3><p>%s %s.%s%s</p><ul>%s</ul></div>'
+                     % (n, _esc(start), many, _esc(when), pf, inds, files))
     clusters = clusters or '<p class="none">No files were flagged close enough together in time to form an event.</p>'
 
     warns = ""
@@ -141,9 +155,9 @@ def render(data):
     repl = {
         "@palette@": PALETTE, "@scored@": d["counts"]["scored"], "@flagged@": d["counts"]["flagged"],
         "@look@": d["counts"]["look_first"], "@sysscore@": d["system"]["score"], "@sysline@": _esc(sysline),
-        "@generated@": _esc(d["generated"]), "@theta@": _esc(d["theta"]), "@mode@": _esc(d["weight_mode"]),
+        "@generated@": _esc(d["generated"]), "@theta@": int(round(float(d["theta"]) * 100)), "@mode@": _esc(d["weight_mode"]),
         "@leads@": leads, "@clusters@": clusters, "@warns@": warns, "@rules@": rules, "@inputs@": inputs,
-        "@strong@": int(STRONG * 100), "@moderate@": int(MODERATE * 100),
+        "@strong@": int(round(_strong(d["theta"]) * 100)),
     }
     page = TEMPLATE
     for k, v in repl.items():
@@ -186,7 +200,6 @@ section{padding:40px 0 10px;border-bottom:1px solid var(--line)}
 .lead{border:1px solid var(--line);border-left-width:6px;border-radius:12px;padding:16px;margin:16px 0;background:var(--paper)}
 .lead.hot{border-left-color:var(--cardinal)}
 .lead.warm{border-left-color:var(--gold-deep)}
-.lead.minor{border-left-color:var(--line)}
 .lead header{display:flex;gap:16px;align-items:flex-start}
 .score{flex:none;width:76px;text-align:center;background:var(--panel);border-radius:10px;padding:8px 4px}
 .score .num{font:700 30px/1 var(--head)}
@@ -238,7 +251,8 @@ points out where they contradict each other, and explains each one in plain word
 <p>Of @scored@ files examined, @flagged@ were flagged because their own records disagree with each other.
 @look@ of those are the ones to look at first. @sysline@</p>
 <p>Every flag below is explained in one plain sentence, with the exact dates and the technical detail folded
-underneath for an examiner.</p>
+underneath for an examiner. All times in this report are UTC (Coordinated Universal Time), the clock Windows
+keeps internally; for US Central time subtract 5 or 6 hours.</p>
 </div></section>
 
 <section id="first"><div class="wrap">
@@ -273,9 +287,9 @@ eleven checks for disagreement and weighs them together, so one noisy check neve
 <section id="method"><div class="wrap">
 <div class="kick">METHOD &amp; WORDS</div><h2>How to read the score, and the fine print</h2>
 <p>Each file's score is the weighted share of the checks that disagreed, out of the checks that could be run,
-as a number from 0 to 100. A file is flagged above @theta@ (shown here as a share). Tiers: “Look first” at
-@strong@ or above with at least two checks disagreeing; “Worth a look” at @moderate@ or above; “Minor” below
-that. Weighting mode: @mode@.</p>
+as a number from 0 to 100. A file is flagged when its score is above @theta@. Flagged files are “Look first”
+when they score @strong@ or more with at least two checks disagreeing, and “Worth a look” otherwise.
+Weighting mode: @mode@.</p>
 <p>The records were read with standard, widely used forensic tools; this report only cross-checks and explains
 them. Each input and its fingerprint (SHA-256):</p>
 <table><tr><th>Record</th><th>File</th><th>Rows</th><th>Fingerprint</th></tr>@inputs@</table>
