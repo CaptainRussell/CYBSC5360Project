@@ -49,6 +49,6 @@ The "Keys & locks" section of the briefing lists the three passwords next to the
 
 * **Not an independent test.** I wrote checks C1 to C7 after reading your answers, and the display tiers (strong at D ≥ 0.30, moderate at D ≥ 0.20) were set on this image. That makes this run a demonstration, not an evaluation. A fair test needs an image nobody tuned on, such as another project image.
 * **Validation of the reader.** The pure-Python FAT reader matched The Sleuth Kit (pytsk3) byte for byte on all 4,923 live files. It recovers none of the 468 deleted entries, all macOS temporary files, because their clusters were reused.
-* **Scope change.** The paper's Section III is about timestamp tampering on NTFS. Whether C1 to F1 belong in the paper (for example as a generalization in Discussion) is your call. I have not edited either draft.
+* **Scope.** The paper's Section III is about timestamp tampering on NTFS. C1 to F1 appear in the paper only as a short demonstration in Discussion (Section V-A, `Discussion Draft - Russell.md`), labelled as not being an independent test.
 
 One file in `signedapplet.zip` (`guan lab.txt`), which you set aside as accidental lab login details, is not a lead and does not appear in any output.
