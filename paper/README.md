@@ -16,4 +16,4 @@ The PDF is made by LibreOffice, which uses Liberation Serif in place of Times Ne
 
 ## Sections for the final paper (December 6)
 
-The final paper adds Results (Section V) and Discussion (Section VI). A drafted Discussion part, the FAT demonstration, is in `../Discussion Draft - Russell.md`.
+The final paper adds Results (Section V) and Discussion (Section VI). The Results draft, with Project 1 complete and Project 2 laid out ready to fill in, is `../Results Draft - Russell.md`. How to run Project 2 is in `../tool/proof/README.md`.

@@ -4,7 +4,7 @@ subtitle: "CPRE 5360 Term Paper: Proposed Solution (Draft for November 1)"
 author: "Captain Scott Russell"
 ---
 
-> **Superseded.** This draft is kept for the record. The current text is `paper/paper.md` (built into `paper/CPRE 5360 Term Paper Draft - Russell.pdf`). It corrects two things in this draft: ADS reads five records, not six (there is no $LogFile parser), and the parser cross-check was dropped from the success criteria because it was never built.
+> **Superseded.** This draft is kept for the record. The current text is `paper/paper.md` (built into `paper/CPRE 5360 Term Paper Draft - Russell.pdf`). Since this draft, the project's scope changed: the two-week baseline and the virtual-machine experiment were dropped, and the evaluation is now a proof of function on the two course project images (`tool/proof/README.md`). ADS also reads five records, not six (there is no $LogFile parser), and the parser cross-check was dropped because it was never built.
 
 # III. Proposed Solution
 
