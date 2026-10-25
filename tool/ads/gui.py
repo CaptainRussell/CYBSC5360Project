@@ -29,7 +29,7 @@ TOKEN = secrets.token_urlsafe(24)
 
 def _new_job():
     jid = "j%d" % int(time.time() * 1000)
-    JOBS[jid] = {"status": "running", "steps": [], "out": None, "report": None, "error": None}
+    JOBS[jid] = {"status": "running", "steps": [], "out": None, "report": None, "proof": None, "error": None}
     return jid
 
 
@@ -62,18 +62,25 @@ def _run_ntfs(jid, path):
         _fail(jid, str(e))
 
 
-def _run_image(jid, image):
-    """First-look report on a FAT or NTFS drive image: the eight questions."""
+def _run_image(jid, image, key=""):
+    """First-look report on a FAT or NTFS drive image: the eight questions; optionally a proof page."""
     from .briefing import write_triage
     from .triage import Triage, UnsupportedImage
     out = os.path.splitext(image)[0] + " report"
     try:
         _step(jid, "Opening the drive image")
         t = Triage(image)
-        _step(jid, "Found a %s drive. Reading files and asking eight questions of each" % t.vol.summary()["fs_type"])
+        _step(jid, "Opened the drive (%s). Reading files and asking eight questions of each" % t.vol.summary()["fs_type"])
         t.collect().run()
         data, html = write_triage(t, out)
         _step(jid, "Checked %d files; %d had a clue" % (data["counts"]["examined"], data["counts"]["with_findings"]))
+        if key:
+            from . import proof
+            _, summ = proof.write(out, key)
+            _step(jid, "Compared with your answer key: %d of %d evidence files are on the list (%d in the top 10)"
+                  % (summ["found"], summ["evidence"], summ["top10"]))
+            with _LOCK:
+                JOBS[jid]["proof"] = True
         _finish(jid, out, html)
     except UnsupportedImage as e:
         _fail(jid, "%s ADS reads raw images (.img, .dd, .raw) of FAT and NTFS drives." % e)
@@ -126,6 +133,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(404, "{}", "application/json")
             view = {"status": job["status"], "steps": job["steps"], "error": job["error"],
                     "report": ("/report?job=%s&f=briefing.html&t=%s" % (jid, TOKEN)) if job["report"] else None,
+                    "proof": ("/report?job=%s&f=proof.html&t=%s" % (jid, TOKEN)) if job["proof"] and job["report"] else None,
                     "folder": job["out"]}
             return self._send(200, json.dumps(view), "application/json")
         if u.path == "/report":
@@ -157,9 +165,14 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, json.dumps({"error": "That folder or image was not found: %s" % path}), "application/json")
         if kind == "fat" and not os.path.isfile(path):
             return self._send(200, json.dumps({"error": "That image file was not found: %s" % path}), "application/json")
+        key = data.get("key", [""])[0].strip().strip('"').strip("'")
+        if kind == "fat" and key and not os.path.isfile(key):
+            return self._send(200, json.dumps({"error": "That answer key file was not found: %s" % key}), "application/json")
         jid = _new_job()
-        target = _run_ntfs if kind == "ntfs" else _run_image
-        threading.Thread(target=target, args=(jid, path), daemon=True).start()
+        if kind == "ntfs":
+            threading.Thread(target=_run_ntfs, args=(jid, path), daemon=True).start()
+        else:
+            threading.Thread(target=_run_image, args=(jid, path, key), daemon=True).start()
         self._send(200, json.dumps({"job": jid}), "application/json")
 
 
@@ -229,7 +242,10 @@ a.open{display:inline-block;margin-top:10px;font-weight:700}
 <h2>First look at a drive image</h2>
 <p class="hint">Asks eight questions of every file (disguised, hidden, locked, password written down, and so on). Works on FAT and NTFS images (.img, .dd, .raw).</p>
 <label for="fat">Drive image file</label>
-<input type="text" id="fat" placeholder="C:\Cases\usb.img">
+<input type="text" id="fat" placeholder="C:\Cases\26Fall_Project2.img">
+<label for="key">Optional: your own findings, to compare (answer key .csv)</label>
+<input type="text" id="key" placeholder="proof\project2_answer_key.csv">
+<p class="hint">If you give an answer key, a second page shows where the tool ranked each item you found by hand.</p>
 <button onclick="run('fat','fat')">Run on this image</button>
 </div>
 <div id="log"></div>
@@ -244,7 +260,8 @@ function run(kind,inputId){
   if(!path){log.appendChild(el('div','step err','Please enter a path first.'));return}
   log.appendChild(el('div','step','<span class="spin"></span>Starting…'));
   fetch('/run',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:'kind='+encodeURIComponent(kind)+'&path='+encodeURIComponent(path)+'&t='+TOKEN})
+    body:'kind='+encodeURIComponent(kind)+'&path='+encodeURIComponent(path)+'&t='+TOKEN+
+      (kind==='fat'?'&key='+encodeURIComponent(document.getElementById('key').value):'')})
    .then(r=>r.json()).then(d=>{
      if(d.error){log.innerHTML='';log.appendChild(el('div','step err',d.error));return}
      poll(d.job);
@@ -263,6 +280,8 @@ function poll(job){
         log.appendChild(done);
         let a=el('a','open','Open the report ▸');a.href=d.report;a.target='_blank';
         log.appendChild(a);
+        if(d.proof){let b=el('a','open','Open the comparison with your findings ▸');b.href=d.proof;b.target='_blank';
+          b.style.marginLeft='18px';log.appendChild(b);}
       }
     });
   },600);

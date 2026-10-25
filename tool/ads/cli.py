@@ -169,6 +169,14 @@ def cmd_triage(a):
             pass
 
 
+def cmd_proof(a):
+    from . import proof
+    path, s = proof.write(a.results, a.key, a.out)
+    print("%d of %d evidence files on the list (%d in the top 10); %d decoys listed of %d."
+          % (s["found"], s["evidence"], s["top10"], s["decoys_flagged"], s["decoys"]))
+    print("open the plain-language proof page:", path)
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="ads", description="Artifact Disagreement Scorer")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -207,6 +215,12 @@ def main(argv=None):
                    help="choose theta on these (calibration-set) results and store it")
     s.add_argument("--target-fpr", type=float, default=0.01)
     s.set_defaults(fn=cmd_evaluate)
+
+    s = sub.add_parser("proof", help="compare a run with the examiner's own findings (an answer key)")
+    s.add_argument("--results", required=True, help="folder of a first-look report (triage.json) or date report (scores.csv)")
+    s.add_argument("--key", required=True, help="answer key CSV, e.g. proof/project2_answer_key.csv")
+    s.add_argument("--out", help="where to write proof.html and proof.csv (default: the results folder)")
+    s.set_defaults(fn=cmd_proof)
 
     s = sub.add_parser("gui", help="open a point-and-click control panel in the browser")
     s.add_argument("port", nargs="?", help="port to listen on (default 8765)")

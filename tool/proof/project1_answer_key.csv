@@ -1,0 +1,10 @@
+item,question,path,kind,found_manually_by,note
+Password A (QwF3p2Jir9oRt7b),Password A,transit/Constants.java,evidence,EnCase keyword search then narrowed phrases,Password written in a source file
+Manual.docx (locked),Q1 and Q2,docs/Manual.docx,evidence,"EnCase ""Protected"" condition",Password-protected Word document
+Password B (kohaku123),Password B,bin/cref_t1.exe,evidence,EnCase narrowed phrase search,Password inside a program file at byte 18967
+High Times cover disguised as ReadMe.txt,Q5 and Q6,legal/ReadMe.txt,evidence,EnCase signature analysis and custom condition,JPEG named .txt
+Sales.xls inside hello_world.zip (locked),Q4,hello_world.zip › hello_world/Sales.xls,evidence,"EnCase Find Archives, then reading the email",Locked Excel workbook inside an archive
+Koala.jpg with JamesCooper.jpg appended,Q7,figures/Koala.jpg,evidence,"EnCase GREP for FF D8 FF, after a TA hint",RAR holding JamesCooper.jpg hidden after the photo
+hello_world.zip holding hello.eml,Q3,hello_world.zip,evidence,"EnCase Find Archives, sorted by extension",Archive holding the email and the locked workbook
+Password C (wannabeamillionaire),Password C (decoy),sys/apt/methods/ssh,decoy,EnCase phrase search,Planted password that opens nothing
+TEMP.GIF (locked Office file named .gif),Decoy,temp.gif,decoy,"EnCase ""Protected"" condition",OLE file named .gif

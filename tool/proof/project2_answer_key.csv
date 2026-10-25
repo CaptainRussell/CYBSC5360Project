@@ -1,0 +1,20 @@
+item,question,path,kind,found_manually_by,note
+Envelope 1 (Sid Wirta),QA,bin/gzip,evidence,FTK filter: Graphics over 20 KB; viewed each,JPEG named like a Linux program with no extension
+Envelope 2 (Jerrold Marine),QA,lib/security/hello.png,evidence,FTK filter: Graphics over 20 KB; viewed each,Real PNG among PAM security modules
+Envelope 3 (Edwardo Freed),QA,lost+found/found/win32/graphicssystems/ps_done.jpeg,evidence,FTK filter: Graphics over 20 KB; viewed each,Real JPEG among Windows DLLs
+Envelope 4 (Wiley Randell) in mypuppy2.7z,QA,usr/others/mypuppy2.7z,evidence,FTK filter: Archives over 20 KB; extension 7z but category RAR,RAR archive renamed .7z holding puppy0.jpeg
+Envelope 5 (Sergio Ell) on page 7 of template.pdf,QA,tmp/.font-unix/fs-1/ini/template.pdf,evidence,"Paged through all 12 PDFs; confirmed by index search ""Emma White""",Last page of a PDF in a hidden dot-folder
+Firefox browsing history,QB,home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,evidence,FTK Internet tab; Text view of places.sqlite,Browser history database in its normal place
+Firefox cookies,QC,home/drosen/.mozilla/firefox/lzxeaerw.default/cookies.sqlite,evidence,FTK Internet tab; Firefox Cookies Database,Cookie database in its normal place
+Website login (lorien / cpre536at17F),QD,home/httpd/html/index.html,evidence,"FTK index search username AND password; phrase ""password is""",Credentials typed into the Apache test page
+Unsent email signed Wendy,QE,movie.eml,evidence,FTK Email Status category,Real first name in the signature
+Email with Content-ID @wendyPC,QE,test.eml,evidence,FTK Email Status; Text view,Computer name wendyPC
+tracking.log naming wendy-pc,QE,tracking.log,evidence,"FTK index search ""wendy""",Machine name in a log
+Word document last saved by wendy,QE,NIST Hard Disk Write Block Tool specification.doc,evidence,"FTK index search ""wendy""; Office metadata",LastSavedBy = wendy
+mypuppy.zip (locked; password HACHI),Extra,usr/others/mypuppy.gz|usr/others/mypuppy.zip,evidence,FTK Encrypted Files category,Locked archive holding the dog photo the email promised
+white.zip (locked; password d0gD0G),Extra,lib/modules/2.2.14-5.0/net/others/white.zip,evidence,FTK Encrypted Files category,Locked archive holding white.bmp
+Password for white.zip in sunflower.html,Extra,home/httpd/html/more/sunflower.html,evidence,"FTK Live Search ""pswd"" (the index search missed it)",pswd = 'd0gD0G' in an HTML meta tag
+Planted password in a fake shadow file,Extra,home/ftp/etc/shad,evidence,FTK Live Search,passwd: k1tt3n@p (opens nothing found)
+Sleeping-dog GIF with no extension,Decoy,bin/error,decoy,FTK Bad Extensions and viewing,Disguised picture that is not an envelope
+Puppy JPEG named .html,Decoy,home/httpd/html/attr.html,decoy,FTK Bad Extensions with the graphics filter,Disguised picture that is not an envelope
+Huskies picture named .log,Decoy,change.log,decoy,FTK Bad Extensions with the graphics filter,Adobe graphic named .log

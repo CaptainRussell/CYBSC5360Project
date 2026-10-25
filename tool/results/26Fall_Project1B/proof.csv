@@ -1,0 +1,10 @@
+item,question,kind,answer_key_path,found_by_ads,rank,score_out_of_100,level,checks,ads_path,found_manually_by
+Password A (QwF3p2Jir9oRt7b),Password A,evidence,transit/Constants.java,yes,2,63,Look first,C4 Password written down; F1 Changed at an unusual time,/samples/reference_apps/Transit/Transit/client/src/com/sun/jcclassic/clients/transit/Constants.java,EnCase keyword search then narrowed phrases
+Manual.docx (locked),Q1 and Q2,evidence,docs/Manual.docx,yes,4,47,Look first,C3 Locked with a password; F1 Changed at an unusual time,/docs/Manual.docx,"EnCase ""Protected"" condition"
+Password B (kohaku123),Password B,evidence,bin/cref_t1.exe,yes,5,46,Look first,C4 Password written down; F1 Changed at an unusual time,/bin/cref_t1.exe,EnCase narrowed phrase search
+High Times cover disguised as ReadMe.txt,Q5 and Q6,evidence,legal/ReadMe.txt,yes,6,37,Look first,C1 Disguised file,/legal/ReadMe.txt,EnCase signature analysis and custom condition
+Sales.xls inside hello_world.zip (locked),Q4,evidence,hello_world.zip › hello_world/Sales.xls,yes,8,33,Look first,C3 Locked with a password,/hello_world.zip › hello_world/Sales.xls,"EnCase Find Archives, then reading the email"
+Koala.jpg with JamesCooper.jpg appended,Q7,evidence,figures/Koala.jpg,yes,3,49,Look first,C2 Something hidden at the end; C5 Stands out from its neighbors; C6 Never mentioned,/docs/UserGuide_html/figures/Koala.jpg,"EnCase GREP for FF D8 FF, after a TA hint"
+hello_world.zip holding hello.eml,Q3,evidence,hello_world.zip,yes,16,27,Worth a look,C7 Archive with personal files; F1 Changed at an unusual time,/hello_world.zip,"EnCase Find Archives, sorted by extension"
+Password C (wannabeamillionaire),Password C (decoy),decoy,sys/apt/methods/ssh,yes,7,35,Look first,C4 Password written down,/sys/apt/methods/ssh,EnCase phrase search
+TEMP.GIF (locked Office file named .gif),Decoy,decoy,temp.gif,yes,1,63,Look first,C1 Disguised file; C3 Locked with a password; C5 Stands out from its neighbors,/temp.gif,"EnCase ""Protected"" condition"
