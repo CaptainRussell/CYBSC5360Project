@@ -77,13 +77,14 @@ class TestReaderMatchesSleuthKit(NTFSFixture):
 
 class TestNTFSInThePipeline(NTFSFixture):
     def test_first_look_report_opens_ntfs_images(self):
-        t = Triage(self.img).collect().run()
+        t = Triage(self.img)
+        self.addCleanup(t.close)          # closed even if a step fails (Windows cannot delete open files)
+        t.collect().run()
         self.assertEqual(t.vol.summary()["fs_type"], "NTFS")
         paths = {i["path"] for i in t.items}
         self.assertIn("/Disk/bin/gzip", paths)
         self.assertIn("/Disk/tmp/.font-unix/fs-1/ini/template.pdf", paths)
         data = t.to_json()
-        t.close()
         self.assertIn("NTFS volume", data["not_applicable"])
 
     def test_date_rules_run_straight_from_the_image(self):

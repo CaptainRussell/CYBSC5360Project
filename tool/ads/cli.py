@@ -165,7 +165,8 @@ def cmd_triage(a):
     if not a.no_open:
         import webbrowser
         try:
-            webbrowser.open("file://" + html)
+            from pathlib import Path
+            webbrowser.open(Path(html).resolve().as_uri())   # file:///C:/... on Windows, file:///... elsewhere
         except Exception:
             pass
 

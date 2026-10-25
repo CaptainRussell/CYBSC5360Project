@@ -145,12 +145,22 @@ def human_size(n):
         n /= 1024
 
 
+_MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
+
+
 def human_time(s):
+    """'2011-09-06 03:21:58' -> '6 Sep 2011, 3:21:58 AM'.
+
+    Built by hand rather than with strftime's "%-d"/"%-I", which only Linux and macOS
+    understand (Windows raises ValueError), and with fixed English month names and AM/PM
+    so the wording does not change with the computer's language settings.
+    """
     try:
         d = datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
     except (TypeError, ValueError):
         return s or "unknown"
-    return d.strftime("%-d %b %Y, %-I:%M:%S %p")
+    return "%d %s %d, %d:%02d:%02d %s" % (d.day, _MONTHS[d.month - 1], d.year, d.hour % 12 or 12,
+                                         d.minute, d.second, "AM" if d.hour < 12 else "PM")
 
 
 def _and(items):

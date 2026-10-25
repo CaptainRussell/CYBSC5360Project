@@ -28,9 +28,12 @@ class FatTriage(unittest.TestCase):
         cls.tmp = tempfile.mkdtemp()
         cls.img = os.path.join(cls.tmp, "test.img")
         make_fat_fixture.build(cls.img)
-        cls.t = Triage(cls.img).collect().run()
+        cls.t = Triage(cls.img)
+        try:
+            cls.t.collect().run()
+        finally:
+            cls.t.close()
         cls.by = {i["path"]: i for i in cls.t.items}
-        cls.t.close()
 
     def fired(self, path):
         return self.by[path]["fired"]

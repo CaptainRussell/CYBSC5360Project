@@ -154,6 +154,18 @@ class TestChartsBestCheck(unittest.TestCase):
             self.assertIn(explain.rule_name("R8"), page.split("</p>")[0])
 
 
+class TestPortableTimes(unittest.TestCase):
+    """Times in the first-look sentences must format on every system (Windows has no "%-d")."""
+
+    def test_human_time_on_any_platform(self):
+        from ads.triage import human_time
+        self.assertEqual(human_time("2011-09-06 03:21:58"), "6 Sep 2011, 3:21:58 AM")
+        self.assertEqual(human_time("2011-10-04 00:05:09"), "4 Oct 2011, 12:05:09 AM")
+        self.assertEqual(human_time("2011-10-04 12:00:00"), "4 Oct 2011, 12:00:00 PM")
+        self.assertEqual(human_time("2011-10-04 13:07:01"), "4 Oct 2011, 1:07:01 PM")
+        self.assertEqual(human_time(None), "unknown")
+
+
 class TestPlainWording(unittest.TestCase):
     def test_r4_name_matches_what_the_rule_flags(self):
         self.assertIn("after", explain.rule_name("R4"))

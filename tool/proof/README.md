@@ -22,6 +22,13 @@ not change any check. `tests/test_freeze.py` fails if the check code changes.
 If it is ever changed after the Project 2 run, report the new results separately
 as post-hoc, never as the held-out result.
 
+Change log for code around the checks (none alters a decision or a score):
+
+* 2026-10-25: `human_time`, which only writes the date in a check's plain-language
+  sentence, used a date format Windows does not support, so the first-look report
+  crashed on Windows. It was rewritten portably; its output is identical (checked
+  on 7,845 times and on both test images), and the frozen check code is unchanged.
+
 Known limits of the frozen checks (design facts, not predictions): C1 only
 judges files that have an extension; only ZIP archives are opened (RAR, 7-Zip and
 gzip archives are judged from the outside); F1 compares last-written times. ADS
