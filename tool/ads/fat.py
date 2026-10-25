@@ -84,6 +84,7 @@ class FATVolume:
         if offset is None:
             offs = find_fat_offsets(self.f)
             if not offs:
+                self.f.close()   # not FAT: let the caller try another reader without leaving the file open
                 raise NotFAT("no FAT volume found in %s" % path)
             offset = offs[0]
         self.offset = offset

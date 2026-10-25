@@ -14,6 +14,11 @@ TAMPERED = os.path.join(HERE, "fixtures", "tampered")
 TRUTH = os.path.join(HERE, "fixtures", "ground_truth.csv")
 
 
+def _read(path):
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 class TestExplain(unittest.TestCase):
     def test_every_rule_has_plain_words(self):
         for rid in RULE_IDS:
@@ -42,7 +47,7 @@ class TestPipelineAndBriefing(unittest.TestCase):
             r = pipeline.analyze_db(db, out, cfg)
             self.assertGreater(r["scored"], 0)
             # The plain-language briefing is written and is a full HTML page.
-            html = open(os.path.join(out, "briefing.html"), encoding="utf-8").read()
+            html = _read(os.path.join(out, "briefing.html"))
             self.assertIn("<!doctype html>", html)
             self.assertIn("Flagged files", html)
             # No stray template tokens survived substitution.
@@ -67,7 +72,7 @@ class TestCharts(unittest.TestCase):
             pipeline.analyze_db(db, out, cfg)
             res = evaluate(out, TRUTH)
             path = charts.render(res, out)
-            page = open(path, encoding="utf-8").read()
+            page = _read(path)
             self.assertIn("<svg", page)
             self.assertNotIn("@verdict@", page)
             self.assertTrue(os.path.exists(os.path.join(out, "roc.svg")))
@@ -88,9 +93,9 @@ class TestCalibrationRecorded(unittest.TestCase):
             main(["ingest", "--db", db, "--mft", TAMPERED + "/mft.csv", "--usn", TAMPERED + "/usn.csv"])
             main(["calibrate", "--db", db, "--out", cal])
             main(["analyze", "--db", db, "--out", out, "--calibration", cal])
-            run = json.load(open(os.path.join(out, "run.json"), encoding="utf-8"))
+            run = json.loads(_read(os.path.join(out, "run.json")))
             self.assertEqual(run["calibration"], cal)
-            md = open(os.path.join(out, "report.md"), encoding="utf-8").read()
+            md = _read(os.path.join(out, "report.md"))
             self.assertNotIn("no baseline calibration", md)
 
 
@@ -145,7 +150,7 @@ class TestChartsBestCheck(unittest.TestCase):
             {"detector": "R8 only", "auc": 0.70, "tpr_at_fpr_0.01": 0.5, "points": [(0, 0), (1, 1)], "precision": 1},
         ]
         with tempfile.TemporaryDirectory() as d:
-            page = open(charts.render({"tampered": 2, "benign": 9, "detectors": rows}, d), encoding="utf-8").read()
+            page = _read(charts.render({"tampered": 2, "benign": 9, "detectors": rows}, d))
             self.assertIn(explain.rule_name("R8"), page.split("</p>")[0])
 
 

@@ -7,3 +7,6 @@
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Case databases made by "ads ingest" (rebuildable from the image; can be large)
+*.sqlite

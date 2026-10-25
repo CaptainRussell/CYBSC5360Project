@@ -148,6 +148,7 @@ def cmd_triage(a):
         say("  Step 3 of 4  Asking eight questions   done")
     say("  Step 4 of 4  Writing the report")
     data, html = write_triage(t, out, a.top)
+    t.close()
     c = data["counts"]
     first = [l for l in data["leads"] if l["score"] >= data["tiers"]["strong"]]
     say("")

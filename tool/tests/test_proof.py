@@ -14,6 +14,11 @@ P1_KEY = os.path.join(TOOL, "proof", "project1_answer_key.csv")
 P2_KEY = os.path.join(TOOL, "proof", "project2_answer_key.csv")
 
 
+def _read(path):
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 class TestProjectOneReproduced(unittest.TestCase):
     def test_ranks_match_the_published_comparison(self):
         # comparison.md (written by hand from the same run): ranks of each item.
@@ -29,7 +34,7 @@ class TestProjectOneReproduced(unittest.TestCase):
             path, s = proof.write(P1_RESULTS, P1_KEY, d)
             self.assertEqual((s["found"], s["evidence"], s["top10"], s["deepest"]), (7, 7, 6, 16))
             self.assertEqual((s["decoys_flagged"], s["decoys"]), (2, 2))
-            page = open(path, encoding="utf-8").read()
+            page = _read(path)
             self.assertNotIn("@verdict@", page)
             with open(os.path.join(d, "proof.csv"), encoding="utf-8") as fh:
                 self.assertEqual(len(list(csv.DictReader(fh))), 9)

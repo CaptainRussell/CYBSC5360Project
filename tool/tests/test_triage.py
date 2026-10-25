@@ -30,12 +30,14 @@ class FatTriage(unittest.TestCase):
         make_fat_fixture.build(cls.img)
         cls.t = Triage(cls.img).collect().run()
         cls.by = {i["path"]: i for i in cls.t.items}
+        cls.t.close()
 
     def fired(self, path):
         return self.by[path]["fired"]
 
     def test_reader(self):
         v = FATVolume(self.img)
+        self.addCleanup(v.close)
         self.assertEqual(v.fat_type, 16)
         names = {e.path: e for e in v.walk()}
         self.assertIn("/docs/figures/photo.jpg", names)            # long names

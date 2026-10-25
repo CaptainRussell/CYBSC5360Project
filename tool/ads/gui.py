@@ -73,6 +73,7 @@ def _run_image(jid, image, key=""):
         _step(jid, "Opened the drive (%s). Reading files and asking eight questions of each" % t.vol.summary()["fs_type"])
         t.collect().run()
         data, html = write_triage(t, out)
+        t.close()
         _step(jid, "Checked %d files; %d had a clue" % (data["counts"]["examined"], data["counts"]["with_findings"]))
         if key:
             from . import proof

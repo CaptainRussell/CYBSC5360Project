@@ -528,6 +528,10 @@ class Triage:
             i["evaluable"] = sum(1 for o, _ in i["outcomes"].values() if o != NOT_EVALUABLE)
         return self
 
+    def close(self):
+        """Release the image file (Windows cannot delete or move a file that is still open)."""
+        self.vol.close()
+
     def image_sha256(self):
         if not hasattr(self, "_sha"):
             self._sha = sha256_file(self.image_path)

@@ -77,6 +77,7 @@ class CleanCase(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.mkdtemp()
         cls.ctx = build_case(cls.tmp, "clean")
+        cls.addClassCleanup(cls.ctx.con.close)
         cls.o = outcome_map(cls.ctx)
 
     def expect(self, key, table):
@@ -137,6 +138,7 @@ class TamperedCase(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.mkdtemp()
         cls.ctx = build_case(cls.tmp, "tampered")
+        cls.addClassCleanup(cls.ctx.con.close)
         cls.o = outcome_map(cls.ctx)
         cls.ind = {i["id"]: i for i in evaluate_indicators(cls.ctx)}
 
