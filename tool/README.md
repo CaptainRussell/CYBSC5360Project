@@ -2,6 +2,21 @@
 
 Working implementation of the tool in Section III of the term paper draft. It reads the CSV output of Eric Zimmerman's MFTECmd, PECmd, LECmd and EvtxECmd, loads it into one SQLite database with every time as a UTC FILETIME, evaluates rules R1 to R11 and indicators S1 to S5, and writes a ranked, explainable report. It uses only the Python 3 standard library.
 
+## The easy way: a point-and-click window
+
+You need Python 3 (python.org). Nothing else to install.
+
+```
+python3 -m ads gui
+```
+
+This opens a small control panel in your browser (only your own computer can reach it). It has two choices:
+
+* **Windows drive** — give it the folder that holds the record files made by `scripts/run_parsers.ps1` (`mft.csv`, `usn.csv`, and so on). Press Run and the plain-language report opens.
+* **USB or memory-card image** — give it a FAT drive image (`.img`, `.dd`, `.raw`).
+
+Everything below is the same thing from the command line, for scripting and for the experiments in the paper.
+
 ## First-look report on a drive image (easiest way to use ADS)
 
 You need Python 3 (python.org). Nothing else to install.
@@ -24,9 +39,11 @@ The FAT reader (`ads/fat.py`) matched The Sleuth Kit byte for byte on all 4,923 
 
 ## Quick start (NTFS timeline rules)
 
+Every `analyze` run writes **`briefing.html`**, a single self-contained page that explains each flagged file in one plain sentence ("the date shown says 2019, but the change journal records the file being created in 2026"), with the exact dates and technical detail folded away for an examiner. It also writes `report.md` and the CSVs below. Every `evaluate` run writes **`evaluation.html`** with a drawn ROC chart and a plain-language "did combining the checks help?" summary.
+
 ```
 cd "Term Paper/tool"
-python3 -m unittest discover -s tests -v          # 24 tests on synthetic fixtures
+python3 -m unittest discover -s tests -v          # 30 tests on synthetic fixtures
 
 # 1. On Windows: parse an exported image (see scripts/run_parsers.ps1)
 # 2. Anywhere with Python 3:
@@ -38,6 +55,13 @@ python3 -m ads evaluate  --results results/calib01 --truth gt_calib01.csv \
                          --set-theta calibration.json --target-fpr 0.01  # calibration set C -> theta
 python3 -m ads analyze   --db test01.sqlite --out results/test01 --calibration calibration.json
 python3 -m ads evaluate  --results results/test01 --truth gt_test01.csv  # test set T -> metrics
+```
+
+## Running the experiment (Section IV)
+
+The `experiment/` folder has the kit for the lab study and a step-by-step guide in `experiment/README.md`:
+
+* `apply_scenario.ps1` applies one tampering scenario (T1 to T8) inside the test VM and records the answer key in the exact format `evaluate --truth` reads, so the correct answer is known before the tool runs.
 ```
 
 `analyze --weight-mode equal|specificity|full` gives the three variants of experiment E4. `evaluate` always reports every single rule ("R1 only" and so on) beside ADS from the same outcomes, which is experiment E1.

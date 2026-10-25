@@ -52,6 +52,13 @@ def write_outputs(out_dir, ctx, outcome_rows, scored, indicators, clusters, weig
     _write_markdown(os.path.join(out_dir, "report.md"), ctx, outcome_rows, scored, indicators,
                     clusters, weights, sys_score, meta)
 
+    # Plain-language HTML briefing for a non-specialist reader.
+    from . import ntfs_briefing
+    bmeta = dict(meta, generated=now_utc_iso())
+    data = ntfs_briefing.build_data(ctx, outcome_rows, scored, indicators, clusters, sys_score, bmeta)
+    with open(os.path.join(out_dir, "briefing.html"), "w", encoding="utf-8") as fh:
+        fh.write(ntfs_briefing.render(data))
+
 
 def _write_markdown(path, ctx, outcome_rows, scored, indicators, clusters, weights, sys_score, meta):
     outcomes = {}

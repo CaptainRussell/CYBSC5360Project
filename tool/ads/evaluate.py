@@ -98,7 +98,8 @@ def evaluate(results_dir, truth_path, fprs=(0.01, 0.001), theta=None):
     rows = []
     for name, scores in detectors.items():
         pts = roc(scores, labels)
-        row = {"detector": name, "auc": auc(scores, labels)}
+        row = {"detector": name, "auc": auc(scores, labels),
+               "points": [(round(fpr, 5), round(tpr, 5)) for fpr, tpr, _ in pts]}
         for f in fprs:
             row["tpr_at_fpr_%g" % f] = tpr_at_fpr(pts, f)
         t = theta if name == "ADS" and theta is not None else 0.5
@@ -109,7 +110,8 @@ def evaluate(results_dir, truth_path, fprs=(0.01, 0.001), theta=None):
 
 
 def write_evaluation(result, out_path):
-    cols = ["detector", "auc"] + sorted(k for k in result["detectors"][0] if k.startswith("tpr_at")) + \
+    cols = ["detector", "auc"] + sorted(k for k in result["detectors"][0]
+                                        if k.startswith("tpr_at")) + \
            ["tp", "fp", "fn", "tn", "tpr", "fpr", "precision"]
     with open(out_path, "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)

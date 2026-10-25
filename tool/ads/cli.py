@@ -14,13 +14,11 @@ import json
 import os
 import sys
 
-from . import db, loaders
+from . import db, loaders, pipeline
 from .config import load_config
 from .evaluate import choose_theta, evaluate, label, load_results, load_truth, write_evaluation
-from .indicators import evaluate_indicators
-from .report import write_outputs
 from .rules import Context, evaluate_all
-from .scoring import baseline_rates, cluster, compute_weights, score_files, system_score
+from .scoring import baseline_rates
 
 
 def cmd_ingest(a):
@@ -63,27 +61,15 @@ def cmd_calibrate(a):
 
 
 def cmd_analyze(a):
-    cfg, ctx = _context(a)
+    cfg = load_config(a.config)
     calibration = None
     if a.calibration:
         with open(a.calibration, encoding="utf-8") as fh:
             calibration = json.load(fh)
-    theta = a.theta if a.theta is not None else (calibration or {}).get("theta", cfg["theta"])
-    mode = a.weight_mode or cfg["weight_mode"]
-    weights = compute_weights(cfg, calibration, mode)
-    rows = list(evaluate_all(ctx))
-    indicators = evaluate_indicators(ctx)
-    scored = score_files(ctx, rows, weights, indicators, theta, cfg["min_evaluable"])
-    clusters = cluster(ctx, scored, indicators, cfg)
-    sys_score = system_score(indicators, cfg)
-    inputs = [dict(r) for r in ctx.con.execute("SELECT * FROM inputs")]
-    meta = {"db": os.path.abspath(a.db), "theta": theta, "weight_mode": mode,
-            "calibration": a.calibration, "config": cfg, "inputs": inputs}
-    write_outputs(a.out, ctx, rows, scored, indicators, clusters, weights, sys_score, meta)
-    ctx.con.close()
-    flagged = sum(r["flagged"] for r in scored)
+    r = pipeline.analyze_db(a.db, a.out, cfg, calibration, a.theta, a.weight_mode)
     print("scored %d files, flagged %d, %d cluster(s), system score %.2f -> %s"
-          % (len(scored), flagged, len(clusters), sys_score[0], a.out))
+          % (r["scored"], r["flagged"], r["clusters"], r["system_score"], a.out))
+    print("open the plain-language report: %s" % os.path.join(a.out, "briefing.html"))
 
 
 def cmd_evaluate(a):
@@ -108,6 +94,9 @@ def cmd_evaluate(a):
     out = a.out or os.path.join(a.results, "evaluation.csv")
     print(write_evaluation(res, out))
     print("written", out)
+    from . import charts
+    html_path = charts.render(res, os.path.dirname(out) or ".")
+    print("open the plain-language summary:", html_path)
 
 
 def cmd_triage(a):
@@ -229,6 +218,10 @@ def main(argv=None):
                    help="choose theta on these (calibration-set) results and store it")
     s.add_argument("--target-fpr", type=float, default=0.01)
     s.set_defaults(fn=cmd_evaluate)
+
+    s = sub.add_parser("gui", help="open a point-and-click control panel in the browser")
+    s.add_argument("port", nargs="?", help="port to listen on (default 8765)")
+    s.set_defaults(fn=lambda a: __import__("ads.gui", fromlist=["main"]).main([a.port] if a.port else None))
 
     s = sub.add_parser("triage", help="first-stop triage of a raw FAT image, with an interactive briefing")
     s.add_argument("image", help="the drive image file (.img, .dd, .raw)")
