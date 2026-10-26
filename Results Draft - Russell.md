@@ -119,7 +119,7 @@ missed; on inspection it is a distraction an examiner would still need to rule
 out, not case evidence. #5 (`bin/bx`) is a false lead: a program
 containing the template text "Password is [$2]". #12 (`etc/nmh/digestcomps`) is a
 mailing-list template, which I had also set aside by hand as not a real email.
-#13 is an IEEE guide PDF that ADS reports as encrypted (*to complete: check in FTK whether it needs a password to open, or only restricts printing or editing*).
+#13 is a false lead: an IEEE guide PDF that carries an encryption setting, so C3 reports it as locked, but it opens and displays normally in FTK and is not in FTK's Encrypted Files list; the setting only restricts what can be done with it.
 
 **Each check alone against the combination (RQ2).**
 
@@ -213,9 +213,15 @@ the trace of a bulk copy. R6 on its own (the check commercial tools offer) flags
 report did not say that the whole drive's dates disagree. That is a gap in how
 system-wide findings are reported, discussed in Section VI.
 
-*To complete: in FTK, open one file's properties (for example `bin/gzip`) and
-confirm its Standard Information created time (2 Oct 2011, 6:57:01 AM Central)
-and File Name created time (4 Oct 2011, 10:42:54 PM Central).*
+**Confirmed in FTK.** For `bin/gzip` (MFT record 78), FTK's NTFS properties show
+the File Name dates as 5 Oct 2011 03:42:54 UTC, the same second ADS reads, and the
+record's last change as 2 Oct 2017 11:57:32 UTC. The folder's own index keeps a
+third copy of the file's dates (FTK's "Index Entry" times): created 2 Oct 2011
+11:57:01.62 UTC, the visible date's second, and changed 2 Oct 2017 11:57:32.45
+UTC. The ".62" in my FTK report was this index copy. So on one file, FTK itself
+shows 2011 and 2017 dates that cannot all be true. FTK gives the File Name
+fraction of a second as .17 where ADS reads .39; *to complete: whether the file
+has two name records (long and short) with different fractions*.
 
 Sources: `tool/results/26Fall_Project2_dates/` (`briefing.html`, `scores.csv`,
 `outcomes.csv`, `run.json`).
@@ -223,9 +229,10 @@ Sources: `tool/results/26Fall_Project2_dates/` (`briefing.html`, `scores.csv`,
 ## D. Understandability and Run Time (RQ4)
 
 On both projects every check that fired on the top twenty files carries a
-plain-language sentence, with the exact values under it. *To complete: run times
-(the "Done in N seconds" line of each run), and my own read of whether each
-top-twenty sentence makes sense without the raw records.*
+plain-language sentence, with the exact values under it. On a Windows PC, the
+first-look report read and checked all 4,818 files of Project 2's 1.3 GB image in
+34 seconds. *To complete: the date checks' run time, the processor, and my own read
+of whether each top-twenty sentence makes sense without the raw records.*
 
 ## E. Observations Made After Seeing the Answers (Not Part of the Held-Out Result)
 
