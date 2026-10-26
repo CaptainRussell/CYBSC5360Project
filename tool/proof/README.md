@@ -28,6 +28,11 @@ Change log for code around the checks (none alters a decision or a score):
   sentence, used a date format Windows does not support, so the first-look report
   crashed on Windows. It was rewritten portably; its output is identical (checked
   on 7,845 times and on both test images), and the frozen check code is unchanged.
+* 2026-10-26: the browser edition was added (a JavaScript port, tested to give the
+  same answers). Its tests found that a *blank* time in a parser CSV stopped the
+  Windows date checks: R1, R2, R3, R8, R9, R10 and S2 now report "could not check"
+  for that file instead. Times read from an image are never blank, so the Project 2
+  date results are unchanged; the first-look checks were not touched.
 
 Known limits of the frozen checks (design facts, not predictions): C1 only
 judges files that have an extension; only ZIP archives are opened (RAR, 7-Zip and
@@ -88,6 +93,25 @@ answer key (fired, looked and found nothing, or could not check, with the reason
 ```
 python3 -m ads why 26Fall_Project2.img --key proof/project2_answer_key.csv --out results/26Fall_Project2/why.csv
 ```
+
+### 2c. The browser edition gives the same answers on both projects
+
+`Artifact Disagreement Scorer.html` runs a JavaScript port of the same checks. The
+proof-of-function numbers come from the Python version (whose first-look checks are
+frozen); this step shows the browser edition reproduces them on the real images.
+
+1. Run steps 1 and 2 above with the current version (so the saved results are fresh).
+2. Open `Artifact Disagreement Scorer.html`, drop `26Fall_Project2.img`, and when the
+   report opens choose *Save results* → *Everything (.zip)*. Unzip it into `results/browser/`.
+3. Compare, first look and date checks:
+
+```
+python3 -m ads compare "results/browser/26Fall_Project2 report" results/26Fall_Project2
+python3 -m ads compare "results/browser/26Fall_Project2 Windows report" results/26Fall_Project2_dates
+```
+
+Each prints "Same answers" or lists every field that differs. Repeat with
+`26Fall_Project1B.img` and `results/26Fall_Project1B` (FAT: no date checks).
 
 ### 3. What to keep for the paper
 

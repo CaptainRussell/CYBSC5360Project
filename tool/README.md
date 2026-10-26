@@ -9,7 +9,22 @@ Working implementation of the tool in the term paper. It looks for places where 
 
 It uses only the Python 3 standard library. The image is only read, never changed.
 
-## The easy way: a point-and-click window
+## The easiest way: open the page, drop the image
+
+Double-click **`Artifact Disagreement Scorer.html`** (in this folder). It opens in Chrome, Edge or Firefox and needs nothing else: no Python, no installation, no internet.
+
+1. **Drop a drive image** (`.img`, `.dd`, `.raw`) on the left box, or press *Choose an image*. For Windows record files (the CSVs from `scripts/run_parsers.ps1`), use the right box and select all of them.
+2. **Watch it work.** The page reads the boot sector and decodes it field by field, lights up a map of the drive as each file is read, counts each of the eight questions' findings as they come in with a feed of what was found, shows how much each clue weighs, ranks the leads, and fingerprints the whole image (SHA-256). NTFS drives then get the Windows date checks too. *Skip animation* jumps to the report as soon as it is ready.
+3. **Read the report.** The same report pages as below, inside the page; *First look* and *Date checks* switch between them.
+4. **Save results.** Any single file, or *Everything (.zip)*: the same files, in the same folders, that the command line writes (`briefing.html`, `triage.json`, `leads.csv`; `scores.csv`, `outcomes.csv`, `indicators.json`, `clusters.csv`, `run.json`). They work with `ads proof`, `ads rerender` and `ads compare`.
+
+The image is read on your computer and never uploaded or changed. A 1.3 GB NTFS image with 17,000 files takes about a minute.
+
+**Same answers as the command line.** The page runs a JavaScript port of the Python modules (`web/src/`); the tables it uses (check wording, file-type tables, signatures, settings) are generated from the Python modules when the page is built. `tests/test_webapp.py` runs the browser engine under Node on the test drives, seeded stress drives full of awkward and broken files (ZIPs with bad CRCs, overlapping entries and ZIP64, damaged Office files, every "password is" variant, fuzzed signatures), the synthetic Windows record sets and 60 garbled variants of them, and requires every result to match the Python version field by field. To check a real case yourself, save *Everything (.zip)* from the page, unzip it, and run `python3 -m ads compare "BROWSER FOLDER" "COMMAND-LINE FOLDER"`. One known difference: ZIP members compressed with bzip2 or LZMA (rare) are not opened in the browser; the page says so when it meets one.
+
+After changing anything in `ads/` or `web/`, rebuild the page with `python3 -m ads build-web` (a test fails if the committed page is out of date).
+
+## The point-and-click window (Python)
 
 You need Python 3 (python.org). Nothing else to install. Double-click `Run ADS (Windows).bat` or `Run ADS (Mac).command`, or run:
 
@@ -62,7 +77,7 @@ Every `analyze` run writes **`briefing.html`**, a single page that explains each
 
 ```
 cd "Term Paper/tool"
-python3 -m unittest discover -s tests -v          # 53 tests
+python3 -m unittest discover -s tests -v          # 59 tests
 
 # Straight from an NTFS image (MFT-only rules R6, R7, R11):
 python3 -m ads ingest  --db case.sqlite --image drive.img

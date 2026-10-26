@@ -187,6 +187,23 @@ def cmd_proof(a):
     print("open the plain-language proof page:", path)
 
 
+def cmd_build_web(a):
+    from .webapp import build
+    print("written", build(a.out))
+
+
+def cmd_compare(a):
+    from .compare import compare
+    kind, diffs = compare(a.browser, a.python)
+    if not diffs:
+        print("Same answers: the browser version's %s results match the command line's exactly." % kind)
+        return
+    print("%d difference(s) in the %s results:" % (len(diffs), kind))
+    for d in diffs:
+        print("  " + d)
+    sys.exit(1)
+
+
 def cmd_rerender(a):
     from .rerender import rerender
     for folder in a.folders:
@@ -253,6 +270,15 @@ def main(argv=None):
     s = sub.add_parser("rerender", help="rebuild the report page(s) in saved results folders (no image needed)")
     s.add_argument("folders", nargs="+", help="results folder(s) holding triage.json or scores.csv")
     s.set_defaults(fn=cmd_rerender)
+
+    s = sub.add_parser("build-web", help="build the browser version: one offline HTML file that runs the whole tool")
+    s.add_argument("--out", help="where to write it (default: 'Artifact Disagreement Scorer.html' in the tool folder)")
+    s.set_defaults(fn=cmd_build_web)
+
+    s = sub.add_parser("compare", help="check that a browser run gave the same answers as a command-line run")
+    s.add_argument("browser", help="results folder (or triage.json) saved from the browser version")
+    s.add_argument("python", help="results folder (or triage.json) from the command line")
+    s.set_defaults(fn=cmd_compare)
 
     s = sub.add_parser("triage", help="first-stop triage of a raw FAT image, with an interactive briefing")
     s.add_argument("image", help="the drive image file (.img, .dd, .raw)")

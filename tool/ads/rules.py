@@ -168,7 +168,7 @@ def r1(ctx, key):
     if not ctx.has_usn:
         return _ne("no $J data")
     f = ctx.mft[key]
-    bics = [u for u in ctx.usn_by_key.get(key, []) if _has(u["reasons"], "basicinfochange")]
+    bics = [u for u in ctx.usn_by_key.get(key, []) if _has(u["reasons"], "basicinfochange") and u["ts"] is not None]
     if not bics:
         return _ne("no BasicInfoChange record for file in $J")
     if f["si_e"] is None:
@@ -197,6 +197,8 @@ def r2(ctx, key):
     if own["e"] is None:
         return _ne("LNK file's own MFT record not found (SIA-E unavailable)", lnk=lnk["source_file"])
     t = ctx.mft[key]
+    if t["si_e"] is None:
+        return _ne("SIA-E missing")
     diff = diff_seconds(own["e"], t["si_e"])
     tau = ctx.cfg["tau_lnk_s"]
     return (VIOLATED if abs(diff) > tau else CONSISTENT), {
@@ -211,6 +213,8 @@ def r3(ctx, key):
     if not lnks:
         return _ne("no LNK file references this file")
     t = ctx.mft[key]
+    if t["si_c"] is None:
+        return _ne("SIA-C missing")
     tau = seconds(ctx.cfg["tau_lnk_s"])
     checked, bad = [], []
     for lnk in lnks:
@@ -322,7 +326,7 @@ def r8(ctx, key):
     if not ctx.has_usn:
         return _ne("no $J data")
     recs = ctx.usn_by_key.get(key, [])
-    creates = [u for u in recs if _has(u["reasons"], "filecreate")]
+    creates = [u for u in recs if _has(u["reasons"], "filecreate") and u["ts"] is not None]
     if not creates:
         return _ne("no FileCreate record for file in $J")
     f = ctx.mft[key]
@@ -347,6 +351,8 @@ def r9(ctx, key):
     if not lnks:
         return _ne("no LNK file references this file")
     f = ctx.mft[key]
+    if f["si_c"] is None:
+        return _ne("SIA-C missing")
     tau = ctx.cfg["tau_lnk_s"]
     checked, bad = 0, []
     for lnk in lnks:
@@ -370,7 +376,7 @@ def r10(ctx, key):
         return _ne("no $J data")
     if not ctx.has_prefetch:
         return _ne("no Prefetch data")
-    bics = [u for u in ctx.usn_by_key.get(key, []) if _has(u["reasons"], "basicinfochange")]
+    bics = [u for u in ctx.usn_by_key.get(key, []) if _has(u["reasons"], "basicinfochange") and u["ts"] is not None]
     if not bics:
         return _ne("no BasicInfoChange record for file in $J")
     f = ctx.mft[key]

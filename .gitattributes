@@ -1,0 +1,2 @@
+# The browser edition is generated; keep its line endings fixed so the "page is current" test holds on every platform.
+tool/*.html text eol=lf

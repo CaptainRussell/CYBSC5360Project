@@ -54,11 +54,12 @@ def s2_journal_reset(ctx):
     fired = bool(hits)
     if ctx.has_usn:
         install, src = _install_time(ctx)
-        first = min(ctx.usn_rows, key=lambda u: u["ts"])
-        min_usn = min(u["usn"] for u in ctx.usn_rows if u["usn"] is not None)
+        timed = [u for u in ctx.usn_rows if u["ts"] is not None]
+        first = min(timed, key=lambda u: u["ts"]) if timed else {"ts": None}
+        min_usn = min((u["usn"] for u in ctx.usn_rows if u["usn"] is not None), default=None)
         details.update(journal_first_record=fmt_ts(first["ts"]), journal_min_usn=min_usn,
                        install_time=fmt_ts(install), install_time_source=src)
-        if install is not None:
+        if install is not None and first["ts"] is not None and min_usn is not None:
             gap_days = (first["ts"] - install) / TICKS_PER_SECOND / 86400
             details["journal_start_after_install_days"] = round(gap_days, 2)
             # A journal that never wrapped (low first USN) should reach back to installation.

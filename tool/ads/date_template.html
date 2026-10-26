@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Artifact Disagreement Scorer · Date Checks</title>
+<style>/*__THEME_CSS__*/
+.lead-row{display:grid;grid-template-columns:44px 92px minmax(0,1fr) auto auto 18px;align-items:center;gap:12px;width:100%}
+.rank{font:700 13px var(--mono);color:var(--dim)}
+.score{display:grid;gap:4px}.score .v{font:700 16px/1 var(--mono)}.score .v small{font-size:11px;color:var(--dim)}
+.fname{min-width:0}.fname b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fname span{display:block;font:12px var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cicons{display:flex;gap:4px}
+.cic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-ink);flex:none}
+.cic .ico{width:15px;height:15px}
+.why ul{margin:12px 0 0;padding:0;display:grid;gap:8px}.why li{list-style:none;display:grid;grid-template-columns:26px 1fr;gap:10px}
+.why .t{font-weight:650}.why .s{color:var(--muted);font-size:14px}
+.checks11{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:5px;margin-top:8px}
+.c8{border:1px solid var(--line);border-radius:8px;padding:6px 2px;text-align:center;font:700 11px var(--mono);background:var(--panel)}
+.c8 i{display:block;width:8px;height:8px;border-radius:50%;margin:0 auto 4px;background:var(--dim)}
+.c8.fired{border-color:var(--hot);color:var(--hot)}.c8.fired i{background:var(--hot)}.c8.clean i{background:var(--ok)}.c8.na{color:var(--dim)}
+.cbar{display:grid;grid-template-columns:30px minmax(0,1fr) 168px;gap:10px;align-items:center;padding:5px 6px;border-radius:8px}
+.cbar .nm{font-size:13px}
+.mini{display:grid;grid-template-columns:34px 46px minmax(0,1fr) 0;gap:10px;align-items:center;padding:8px 6px;border-radius:8px;cursor:pointer}
+.mini:hover{background:var(--panel2)}
+.ctx{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px;font-size:12px;overflow-wrap:anywhere}
+.empty{color:var(--dim);font-style:italic}
+.card.kpi .go{position:absolute;top:12px;right:12px;font:700 11px var(--mono);color:var(--dim);opacity:0;transition:opacity .15s}
+.card.kpi[data-nav]:hover .go{opacity:1;color:var(--accent-ink)}
+.cbar[data-nav]:hover{background:var(--panel2)}
+.srcs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.src{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2);display:grid;gap:4px}
+.src b{font:700 13px var(--mono);color:var(--accent-ink)}.src span{font-size:13px;color:var(--muted)}.src div{display:flex;gap:4px;flex-wrap:wrap}
+@media (max-width:760px){.srcs{grid-template-columns:minmax(0,1fr)}}
+.capx{font:700 11px var(--ui);letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin-top:12px}
+.tech-steps{counter-reset:st;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.tech-steps li{list-style:none;display:grid;grid-template-columns:24px 1fr;gap:10px;font-size:14px}
+.tech-steps li::before{counter-increment:st;content:counter(st);width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--accent2-soft);color:var(--accent2);font:700 11px var(--mono)}
+.math{font:12px var(--mono);color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:10px}
+.math b{color:var(--text)}
+@media (max-width:760px){.lead-row{grid-template-columns:34px 70px minmax(0,1fr) 18px}.lead-row .cicons,.lead-row .badge{display:none}
+  .checks11{grid-template-columns:repeat(6,minmax(0,1fr))}.cbar{grid-template-columns:30px minmax(0,1fr)}.cbar .note{grid-column:2}}
+</style></head><body>
+<header class="top"><div class="wrap">/*__BRAND__*/
+<div class="case"><span class="pill acc">NTFS</span><span class="pill hide-s" id="gen"></span></div><div class="spacer"></div>
+<button class="iconbtn" data-act="theme" title="Light or dark" id="b-sun"></button><button class="iconbtn" data-act="print" title="Print every tab" id="b-print"></button></div></header>
+<nav class="tabs" aria-label="Report sections"><div class="wrap" id="tabbar"></div></nav>
+<main class="wrap" id="body"></main>
+<footer class="foot"><div class="wrap">/*__CREDIT__*/</div></footer>
+<script>const C = /*__CONST__*/null, D = /*__DATA__*/null;</script>
+<script>
+/* The Windows date report, drawn from its data. The same page is written by the command line and by the browser
+   version: both fill in only D, the results. C holds the fixed parts (icons, how each check works, the record sources). */
+(function(){
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#x27;"}[c]));
+const num = n => Number(n).toLocaleString("en-US");
+const icon = (name, cls) => '<svg class="' + (cls || "ico") + '" viewBox="0 0 24 24" aria-hidden="true">' + (C.icons[name] || "") + '</svg>';
+const chev = () => icon("chev", "ico chev");
+/* "%.nf": correctly rounded, ties to even, as Python formats */
+function fixed(x, n) {
+  const dv = new DataView(new ArrayBuffer(8)); dv.setFloat64(0, Math.abs(x));
+  const hi = dv.getUint32(0), lo = dv.getUint32(4), ex = (hi >>> 20) & 0x7ff;
+  let m = (BigInt(hi & 0xfffff) << 32n) | BigInt(lo), e = ex ? ex - 1075 : -1074; if (ex) m |= 1n << 52n;
+  let q;
+  if (e >= 0) q = (m << BigInt(e)) * 10n ** BigInt(n);
+  else { const k = -e, N = m * 5n ** BigInt(k); if (k <= n) q = N * 10n ** BigInt(n - k); else { const dvs = 10n ** BigInt(k - n); q = N / dvs; const r2 = 2n * (N % dvs); if (r2 > dvs || (r2 === dvs && (q & 1n))) q += 1n; } }
+  let s = q.toString().padStart(n + 1, "0"); if (n) s = s.slice(0, -n) + "." + s.slice(-n);
+  return (x < 0 ? "-" : "") + s;
+}
+const round = x => Number(fixed(x, 0));
+/* "{name:g}".format(cfg): Python's general number format, enough for the settings shown */
+const fmtG = v => { if (typeof v !== "number") return String(v); let s = v.toPrecision(6); if (s.includes("e")) return s.replace(/\.?0+e/, "e").replace(/e([+-])(\d)$/, "e$10$2"); return s.includes(".") ? s.replace(/\.?0+$/, "") : s; };
+const fmt = (t, cfg) => t.replace(/\{(\w+)(?::g)?\}/g, (m, k) => (k in cfg ? (m.endsWith(":g}") ? fmtG(cfg[k]) : String(cfg[k])) : m));
+const MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
+const nice = ts => { const t = String(ts || ""); const m = /^(\d+)-(\d+)-(\d+) ([^ .]+)/.exec(t); if (!m || +m[2] < 1 || +m[2] > 12) return t || "?"; return parseInt(m[3], 10) + " " + MONTHS[+m[2] - 1] + " " + m[1] + ", " + m[4] + " UTC"; };
+const niceText = s => String(s).replace(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?/g, x => nice(x));
+const nameDir = path => { const p = String(path).split("/").join("\\"); const s = p.replace(/^\\+|\\+$/g, ""); if (s.includes("\\")) { const i = p.lastIndexOf("\\"); return [p.slice(i + 1), p.slice(0, i) || "\\"]; } return [s || p, "\\"]; };
+/* json.dumps(obj, sort_keys=?, indent=?) */
+function pyJson(v, sortKeys, ind, lvl) {
+  lvl = lvl || 0;
+  if (v === null || v === undefined) return "null";
+  if (typeof v === "boolean") return v ? "true" : "false";
+  if (typeof v === "number") return String(v);
+  if (typeof v === "string") return '"' + v.replace(/[\\"\u0000-\u001f\u0080-\uffff]/g, c => ({'"': '\\"', "\\": "\\\\", "\n": "\\n", "\r": "\\r", "\t": "\\t"}[c] || "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"))) + '"';
+  const nl = ind == null ? "" : "\n" + " ".repeat(ind * (lvl + 1)), close = ind == null ? "" : "\n" + " ".repeat(ind * lvl), sep = ind == null ? ", " : ",";
+  if (Array.isArray(v)) return v.length ? "[" + nl + v.map(x => pyJson(x, sortKeys, ind, lvl + 1)).join(sep + nl) + close + "]" : "[]";
+  let k = Object.keys(v); if (!k.length) return "{}"; if (sortKeys) k.sort();
+  return "{" + nl + k.map(x => pyJson(x) + ": " + pyJson(v[x], sortKeys, ind, lvl + 1)).join(sep + nl) + close + "}";
+}
+const d = D, c = d.counts, sysd = d.system, cfg = d.config || C.default_config;
+const strong = Math.max(Number(d.theta), C.STRONG);
+const theta100 = round(Number(d.theta) * 100);
+const RIDS = Object.keys(d.rules);
+
+function strip(status) {
+  return '<div class="checks11">' + RIDS.map(rid => {
+    const [o, reason] = status[rid] || ["not_evaluable", ""];
+    const k = {violated: "fired", consistent: "clean"}[o] || "na";
+    const tip = {fired: "Disagreement found", clean: "Checked: records agree"}[k] || ("Could not check" + (reason ? ": " + reason : ""));
+    return '<div class="c8 ' + k + '" data-tip="<b>' + rid + " " + esc(d.rules[rid].name) + "</b><br>" + esc(tip) + '"><i></i>' + rid + "</div>";
+  }).join("") + "</div>";
+}
+function leadHtml(i, l) {
+  const [name, folder] = nameDir(l.path);
+  const chips = l.fired.map(f => '<span class="chip" data-tip="' + esc(f.name) + '"><b>' + f.id + "</b></span>").join("");
+  const why = l.fired.map(f => '<li><span class="cic">' + icon("time") + '</span><div><div class="t">' + f.id + " · " + esc(f.name) + '</div><div class="s">' + esc(f.say) + "</div></div></li>").join("");
+  const tech = l.fired.map(f => "<dt>" + f.id + "</dt><dd>" + esc(pyJson(f.tech, true)) + "</dd>").join("");
+  const weak = l.weak.length ? '<div class="note" style="color:var(--warn);margin-top:8px">Some of this rests on records a warning reports as damaged (' + esc(l.weak.join(", ")) + "); treat it with care.</div>" : "";
+  return '<div class="acc-item" data-text="' + esc(l.path.toLowerCase()) + '"><button class="acc-head" aria-expanded="false"><div class="lead-row">' +
+    '<span class="rank">#' + i + '</span><div class="score"><div class="v">' + l.score + '<small>/100</small></div>' +
+    '<div class="bar ' + l.cls + '"><i data-w="' + l.score + '"></i></div></div><div class="fname"><b>' + esc(name) + "</b><span>" + esc(folder) + "</span></div>" +
+    '<div class="cicons">' + chips + '</div><span class="badge ' + l.cls + '">' + esc(l.tier) + "</span>" + chev() + "</div></button>" +
+    '<div class="acc-body"><div><div class="acc-inner"><div class="why"><ul>' + why + "</ul></div>" + weak +
+    '<details class="more"><summary>Technical detail</summary><dl class="kv"><dt>Full path</dt><dd>' + esc(l.path) + "</dd>" +
+    "<dt>MFT record</dt><dd>" + l.entry + "-" + l.seq + "</dd><dt>Checks run</dt><dd>" + l.evaluable + " of 11 (" + l.confidence + "% on undamaged records)</dd>" +
+    (l.cluster ? "<dt>Event</dt><dd>" + l.cluster + "</dd>" : "") + tech + "</dl>" +
+    '<div class="note" style="margin-top:10px">All eleven date checks for this file:</div>' + strip(l.status) + "</details></div></div></div></div>";
+}
+
+// ---- check activity (drive-wide patterns) ----
+let act = "", wide = [];
+for (const rid of RIDS) {
+  const a = (d.activity || {})[rid] || {evaluable: 0, violated: 0}, ev = a.evaluable, vi = a.violated, share = ev ? vi / ev : 0;
+  const isWide = ev >= C.DRIVE_WIDE_MIN && share >= C.DRIVE_WIDE;
+  if (isWide) wide.push([rid, vi, ev]);
+  const cls = isWide ? "hot" : vi ? "warn" : "ok";
+  const label = !ev ? "not checkable" : num(vi) + " / " + num(ev) + " · " + fixed(100 * share, 1).replace(/0+$/, "").replace(/\.$/, "") + "%";
+  act += '<div class="cbar" data-nav="how" data-target="#q-' + rid + '" data-tip="<b>' + rid + " " + esc(d.rules[rid].name) + "</b><br>" + esc(d.rules[rid].what) + '"><span class="cic">' + icon("time") +
+    '</span><div><div class="nm">' + rid + " · " + esc(d.rules[rid].name) + '</div><div class="bar ' + (ev ? cls : "minor") + '"><i data-w="' + fixed(ev ? 100 * share : 0, 1) + '"></i></div></div>' +
+    '<span class="mono note" style="text-align:right">' + label + "</span></div>";
+}
+const wideHtml = wide.length ? '<div class="card" style="border-color:var(--hot);margin-top:14px"><h3 style="color:var(--hot)">' + icon("events") + "Drive-wide pattern</h3>" +
+  "<p>These checks disagree on nearly every file, so they cannot single any file out, but they say something about the whole drive, for example that every visible date was set at once.</p>" +
+  '<ul class="note" style="margin:8px 0 0">' + wide.map(w => "<li><b>" + w[0] + "</b> " + esc(d.rules[w[0]].name) + " fired on " + num(w[1]) + " of " + num(w[2]) + " files</li>").join("") + "</ul></div>" : "";
+const leads = d.leads.map((l, i) => leadHtml(i + 1, l)).join("") ||
+  '<div class="card"><div class="empty">No file crossed the flag line. See Check activity on the Overview for drive-wide patterns.</div></div>';
+const events = d.clusters.map((cl, i) => {
+  const start = nice(cl.start), end = nice(cl.end), when = start === end ? start : start + " → " + end;
+  const pf = cl.prefetch.map(p => '<span class="chip">' + esc(niceText(p).split(" @ ").join(" at ")) + "</span> ").join("");
+  const inds = cl.indicators.map(x => '<span class="badge warn">' + esc(x) + "</span> ").join("");
+  return '<div class="acc-item"><button class="acc-head"><span class="cic">' + icon("events") + '</span><div style="flex:1;min-width:0"><b>Event ' + (i + 1) + "</b>" +
+    '<div class="note mono">' + esc(when) + '</div></div><span class="chip"><b>' + cl.files + "</b>&nbsp;file" + (cl.files === 1 ? "" : "s") + "</span>" + chev() + "</button>" +
+    '<div class="acc-body"><div><div class="acc-inner"><div style="margin-top:10px">' + cl.paths.map(p => '<div class="mono note">' + esc(p) + "</div>").join("") + "</div>" +
+    (pf ? '<div class="note" style="margin-top:8px">Programs that ran then: ' + pf + "</div>" : "") + (inds ? '<div class="note" style="margin-top:8px">Warnings then: ' + inds + "</div>" : "") + "</div></div></div></div>";
+}).join("") || '<div class="card"><div class="empty">No flagged files were changed close enough together to form an event.</div></div>';
+const recs = d.warnings.map(w => {
+  const st = {fired: ["hot", "Found"], clear: ["ok", "Clear"], not_evaluable: ["minor", "Not checked"]}[w.status] || ["minor", w.status];
+  const det = w.details && Object.keys(w.details).length ? '<details class="more"><summary>Detail</summary><div class="ctx mono" style="margin-top:6px;white-space:pre-wrap">' + esc(pyJson(w.details, false, 1)) + "</div></details>" : "";
+  return '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>' + w.id + " · " + esc(w.name) + "</b>" +
+    '<span class="badge ' + st[0] + '">' + st[1] + '</span></div><p class="note" style="margin-top:6px">' + esc(w.plain) + "</p>" + det + "</div>";
+}).join("");
+const rules = RIDS.map(rid => {
+  const r = d.rules[rid], a = (d.activity || {})[rid] || {evaluable: 0, violated: 0};
+  return '<div class="acc-item" style="margin:0" id="q-' + rid + '"><button class="acc-head"><span class="cic">' + icon("time") + '</span><div style="flex:1;min-width:0">' +
+    "<b>" + rid + " · " + esc(r.name) + '</b><div class="note">' + esc(r.what) + '</div></div><span class="chip"><b>' + num(a.violated) + "</b>&nbsp;files</span>" + chev() + "</button>" +
+    '<div class="acc-body"><div><div class="acc-inner"><div class="capx">How the tool checks it</div><ol class="tech-steps">' +
+    (C.RULE_TECH[rid] || []).map(t => "<li><div>" + fmt(t, cfg) + "</div></li>").join("") + "</ol>" +
+    '<div class="math"><b>On this drive:</b> could check ' + num(a.evaluable) + " files, found a disagreement in " + num(a.violated) + ".</div></div></div></div></div>";
+}).join("");
+const sources = C.SOURCES.map(s => '<div class="src"><b>' + esc(s[0]) + "</b><span>" + esc(s[1]) + "</span><div>" +
+  s[2].split(" ").map(x => '<span class="chip" data-nav="how" data-target="#q-' + x + '"><b>' + x + "</b></span>").join("") + "</div></div>").join("");
+const inputs = d.inputs.map(i => "<tr><td>" + esc(i.kind) + '</td><td class="mono">' + esc(String(i.path).split("\\").join("/").split("/").pop()) + '</td><td class="num">' + num(i.rows) +
+  '</td><td class="mono note">' + esc(String(i.sha256).slice(0, 16)) + "…</td></tr>").join("");
+const tops = d.leads.slice(0, 5).map((l, i) => '<div class="mini" data-go="flagged"><span class="rank">#' + (i + 1) + '</span><span class="badge ' + l.cls + '">' + l.score +
+  '</span><div class="fname"><b>' + esc(nameDir(l.path)[0]) + "</b><span>" + esc(nameDir(l.path)[1]) + "</span></div><span></span></div>").join("");
+const tabs = [["overview", "Overview", "overview", ""], ["flagged", "Flagged files", "leads", c.flagged], ["events", "Events", "events", d.clusters.length],
+  ["records", "Records", "shield", ""], ["how", "How it works", "how", ""]];
+document.getElementById("tabbar").innerHTML = tabs.map((t, i) => '<a class="tab" href="#' + t[0] + '" data-tab="' + t[0] + '" role="tab">' + icon(t[2]) + t[1] +
+  (t[3] !== "" ? ' <span class="n">' + t[3] + "</span>" : "") + " <kbd>" + (i + 1) + "</kbd></a>").join("");
+const recNote = sysd.level === "clear" ? "No sign that the records themselves were damaged." : "Some records look cleared, reset or incomplete.";
+document.getElementById("gen").textContent = d.generated || "";
+document.getElementById("b-sun").innerHTML = icon("sun");
+document.getElementById("b-print").innerHTML = icon("print");
+document.getElementById("body").innerHTML =
+  '<section class="panel" id="p-overview"><div class="ph"><div><h2>Overview</h2><div class="sub">All times are UTC.</div></div>' +
+  '<div class="note">Click any number to go to its files.</div></div><div class="grid g4">' +
+  '<div class="card kpi acc" data-nav="how" data-target="#rules"><span class="go">open ›</span><div class="v" data-count="' + c.scored + '">0</div><div class="l">files checked</div></div>' +
+  '<div class="card kpi warn" data-nav="flagged"><span class="go">open ›</span><div class="v" data-count="' + c.flagged + '">0</div><div class="l">flagged</div></div>' +
+  '<div class="card kpi hot" data-nav="flagged"><span class="go">open ›</span><div class="v" data-count="' + c.look_first + '">0</div><div class="l">look first</div></div>' +
+  '<div class="card kpi ' + (sysd.level !== "clear" ? "hot" : "ok") + '" data-nav="records"><span class="go">open ›</span><div class="v" data-count="' + sysd.score + '">0</div><div class="l">record damage /100</div></div></div>' +
+  wideHtml + '<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Check activity</h3>' + act +
+  '<div class="note" style="margin-top:6px">How often each date check found a disagreement. Click a check to see how it works.</div></div>' +
+  '<div class="card"><h3>Top flagged files</h3>' + (tops || '<div class="empty">None.</div>') + '<p class="note" style="margin-top:8px">' + esc(recNote) + "</p></div></div></section>" +
+  '<section class="panel" id="p-flagged"><div class="ph"><div><h2>Flagged files</h2><div class="sub">Files whose own records disagree. Open one to see why.</div></div></div>' +
+  '<div class="toolbar"><label class="search">' + icon("search") + '<input id="fq" placeholder="Search path" aria-label="Search flagged files"></label></div><div id="fl">' + leads + "</div></section>" +
+  '<section class="panel" id="p-events"><div class="ph"><div><h2>Events</h2><div class="sub">Flagged files changed within minutes of each other.</div></div></div>' + events + "</section>" +
+  '<section class="panel" id="p-records"><div class="ph"><div><h2>Records</h2><div class="sub">Were the records themselves cleared, reset or removed?</div></div></div><div class="grid g2">' + recs + "</div></section>" +
+  '<section class="panel" id="p-how"><div class="ph"><div><h2>How it works</h2><div class="sub">Eleven checks compare the dates Windows keeps in different places. Open a check to see exactly what the tool does.</div></div></div>' +
+  '<div class="card"><h3>Where the dates come from</h3><div class="srcs">' + sources + "</div>" +
+  '<div class="note" style="margin-top:8px">One file, several witnesses. Changing a date in one place is easy; changing it consistently in all of them is not. Each check compares two witnesses.</div></div>' +
+  '<h3 style="margin:22px 0 10px;font-size:15px" id="rules">The eleven checks</h3><div class="grid g2" style="align-items:start">' + rules + "</div>" +
+  '<div class="grid g2" style="margin-top:14px"><div class="card"><h3>The score</h3><p>The weighted share of checks that found a disagreement, out of 100. Flagged above ' + theta100 +
+  "; “Look first” at " + round(strong * 100) + "+ with two or more checks.</p>" +
+  '<dl class="kv"><dt>Weighting</dt><dd>' + esc(d.weight_mode) + "</dd><dt>Rates from</dt><dd>" + esc(d.calibration || "defaults") + "</dd></dl></div>" +
+  '<div class="card"><h3>Inputs</h3><div class="scroll-x"><table class="t"><thead><tr><th>Record</th><th>File</th><th class="num">Rows</th><th>SHA-256</th></tr></thead><tbody>' + inputs + "</tbody></table></div></div></div></section>";
+})();
+</script>
+<script>/*__THEME_JS__*/</script>
+<script>
+document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){e.preventDefault();ADS_SHOW(g.dataset.go);}});
+document.addEventListener('click',e=>{const h=e.target.closest('.acc-head');if(h)setTimeout(()=>ADS_ANIMATE(h.closest('.acc-item')),10);});
+const fq=document.getElementById('fq');if(fq)fq.addEventListener('input',()=>{const q=fq.value.trim().toLowerCase();
+  document.querySelectorAll('#fl .acc-item').forEach(it=>it.style.display=(!q||it.dataset.text.includes(q))?'':'none');});
+</script>
+</body></html>

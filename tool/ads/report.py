@@ -108,7 +108,7 @@ def _write_markdown(path, ctx, outcome_rows, scored, indicators, clusters, weigh
         L.append("None.\n")
     for r in flagged:
         key = (r["entry"], r["seq"])
-        L.append("### `%s` (MFT %d-%d)\n" % (r["path"], r["entry"], r["seq"]))
+        L.append("### `%s` (MFT %s-%s)\n" % (r["path"], r["entry"], r["seq"]))
         L.append("D(f) = **%.3f**, %d of %d rules evaluable, confidence %.2f%s.\n" % (
             r["score"], r["evaluable"], len(RULE_IDS), r["confidence"],
             ", cluster %s" % r["cluster"] if r.get("cluster") else ""))
