@@ -1,0 +1,161 @@
+item,kind,path_in_image,type,check,answer,why
+Envelope 1 (Sid Wirta),evidence,/Disk/bin/gzip,jpeg,C1,could not check,extension not judged
+Envelope 1 (Sid Wirta),evidence,/Disk/bin/gzip,jpeg,C2,could not check,end marker not found
+Envelope 1 (Sid Wirta),evidence,/Disk/bin/gzip,jpeg,C3,could not check,not an encryptable container
+Envelope 1 (Sid Wirta),evidence,/Disk/bin/gzip,jpeg,C4,looked; nothing unusual,
+Envelope 1 (Sid Wirta),evidence,/Disk/bin/gzip,jpeg,C5,fired,"It is the only photo among the 89 files in its folder. The others are mostly Linux programs, text files and pictures."
+Envelope 1 (Sid Wirta),evidence,/Disk/bin/gzip,jpeg,C6,could not check,siblings are not usually referenced (referenced=0)
+Envelope 1 (Sid Wirta),evidence,/Disk/bin/gzip,jpeg,C7,could not check,not an opened archive
+Envelope 1 (Sid Wirta),evidence,/Disk/bin/gzip,jpeg,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Envelope 1 (Sid Wirta),evidence,/Disk/home/ftp/bin/gzip,elf,C1,could not check,extension not judged
+Envelope 1 (Sid Wirta),evidence,/Disk/home/ftp/bin/gzip,elf,C2,could not check,format has no end marker checked
+Envelope 1 (Sid Wirta),evidence,/Disk/home/ftp/bin/gzip,elf,C3,could not check,not an encryptable container
+Envelope 1 (Sid Wirta),evidence,/Disk/home/ftp/bin/gzip,elf,C4,looked; nothing unusual,
+Envelope 1 (Sid Wirta),evidence,/Disk/home/ftp/bin/gzip,elf,C5,looked; nothing unusual,folder_files=6
+Envelope 1 (Sid Wirta),evidence,/Disk/home/ftp/bin/gzip,elf,C6,could not check,siblings are not usually referenced (referenced=0)
+Envelope 1 (Sid Wirta),evidence,/Disk/home/ftp/bin/gzip,elf,C7,could not check,not an opened archive
+Envelope 1 (Sid Wirta),evidence,/Disk/home/ftp/bin/gzip,elf,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Envelope 2 (Jerrold Marine),evidence,/Disk/lib/security/hello.png,png,C1,looked; nothing unusual,type=png
+Envelope 2 (Jerrold Marine),evidence,/Disk/lib/security/hello.png,png,C2,looked; nothing unusual,"end_offset=21733, trailing_bytes=0"
+Envelope 2 (Jerrold Marine),evidence,/Disk/lib/security/hello.png,png,C3,could not check,not an encryptable container
+Envelope 2 (Jerrold Marine),evidence,/Disk/lib/security/hello.png,png,C4,looked; nothing unusual,
+Envelope 2 (Jerrold Marine),evidence,/Disk/lib/security/hello.png,png,C5,looked; nothing unusual,folder_files=37
+Envelope 2 (Jerrold Marine),evidence,/Disk/lib/security/hello.png,png,C6,could not check,siblings are not usually referenced (referenced=13)
+Envelope 2 (Jerrold Marine),evidence,/Disk/lib/security/hello.png,png,C7,could not check,not an opened archive
+Envelope 2 (Jerrold Marine),evidence,/Disk/lib/security/hello.png,png,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Envelope 3 (Edwardo Freed),evidence,/Disk/lost+found/found/win32/graphicssystems/ps_done.jpeg,jpeg,C1,looked; nothing unusual,type=jpeg
+Envelope 3 (Edwardo Freed),evidence,/Disk/lost+found/found/win32/graphicssystems/ps_done.jpeg,jpeg,C2,could not check,end marker not found
+Envelope 3 (Edwardo Freed),evidence,/Disk/lost+found/found/win32/graphicssystems/ps_done.jpeg,jpeg,C3,could not check,not an encryptable container
+Envelope 3 (Edwardo Freed),evidence,/Disk/lost+found/found/win32/graphicssystems/ps_done.jpeg,jpeg,C4,looked; nothing unusual,
+Envelope 3 (Edwardo Freed),evidence,/Disk/lost+found/found/win32/graphicssystems/ps_done.jpeg,jpeg,C5,could not check,fewer than 5 files in folder (files=2)
+Envelope 3 (Edwardo Freed),evidence,/Disk/lost+found/found/win32/graphicssystems/ps_done.jpeg,jpeg,C6,could not check,too few siblings
+Envelope 3 (Edwardo Freed),evidence,/Disk/lost+found/found/win32/graphicssystems/ps_done.jpeg,jpeg,C7,could not check,not an opened archive
+Envelope 3 (Edwardo Freed),evidence,/Disk/lost+found/found/win32/graphicssystems/ps_done.jpeg,jpeg,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Envelope 4 (Wiley Randell) in mypuppy2.7z,evidence,/Disk/usr/others/mypuppy2.7z,rar,C1,fired,"The name ends in “.7z”, which means a .7z file, but the file is really a RAR archive (a bundle of files)."
+Envelope 4 (Wiley Randell) in mypuppy2.7z,evidence,/Disk/usr/others/mypuppy2.7z,rar,C2,could not check,format has no end marker checked
+Envelope 4 (Wiley Randell) in mypuppy2.7z,evidence,/Disk/usr/others/mypuppy2.7z,rar,C3,looked; nothing unusual,
+Envelope 4 (Wiley Randell) in mypuppy2.7z,evidence,/Disk/usr/others/mypuppy2.7z,rar,C4,looked; nothing unusual,
+Envelope 4 (Wiley Randell) in mypuppy2.7z,evidence,/Disk/usr/others/mypuppy2.7z,rar,C5,could not check,fewer than 5 files in folder (files=2)
+Envelope 4 (Wiley Randell) in mypuppy2.7z,evidence,/Disk/usr/others/mypuppy2.7z,rar,C6,could not check,too few siblings
+Envelope 4 (Wiley Randell) in mypuppy2.7z,evidence,/Disk/usr/others/mypuppy2.7z,rar,C7,could not check,not an opened archive
+Envelope 4 (Wiley Randell) in mypuppy2.7z,evidence,/Disk/usr/others/mypuppy2.7z,rar,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Envelope 5 (Sergio Ell) on page 7 of template.pdf,evidence,/Disk/tmp/.font-unix/fs-1/ini/template.pdf,pdf,C1,looked; nothing unusual,type=pdf
+Envelope 5 (Sergio Ell) on page 7 of template.pdf,evidence,/Disk/tmp/.font-unix/fs-1/ini/template.pdf,pdf,C2,looked; nothing unusual,"end_offset=370479, trailing_bytes=1"
+Envelope 5 (Sergio Ell) on page 7 of template.pdf,evidence,/Disk/tmp/.font-unix/fs-1/ini/template.pdf,pdf,C3,looked; nothing unusual,
+Envelope 5 (Sergio Ell) on page 7 of template.pdf,evidence,/Disk/tmp/.font-unix/fs-1/ini/template.pdf,pdf,C4,looked; nothing unusual,
+Envelope 5 (Sergio Ell) on page 7 of template.pdf,evidence,/Disk/tmp/.font-unix/fs-1/ini/template.pdf,pdf,C5,could not check,fewer than 5 files in folder (files=1)
+Envelope 5 (Sergio Ell) on page 7 of template.pdf,evidence,/Disk/tmp/.font-unix/fs-1/ini/template.pdf,pdf,C6,could not check,too few siblings
+Envelope 5 (Sergio Ell) on page 7 of template.pdf,evidence,/Disk/tmp/.font-unix/fs-1/ini/template.pdf,pdf,C7,could not check,not an opened archive
+Envelope 5 (Sergio Ell) on page 7 of template.pdf,evidence,/Disk/tmp/.font-unix/fs-1/ini/template.pdf,pdf,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Firefox browsing history,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,sqlite,C1,looked; nothing unusual,type=sqlite
+Firefox browsing history,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,sqlite,C2,could not check,format has no end marker checked
+Firefox browsing history,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,sqlite,C3,could not check,not an encryptable container
+Firefox browsing history,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,sqlite,C4,looked; nothing unusual,
+Firefox browsing history,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,sqlite,C5,fired,"At 5.0 MB it is about 25 times bigger than the other sqlite files in its folder, which are around 208 KB each."
+Firefox browsing history,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,sqlite,C6,could not check,siblings are not usually referenced (referenced=0)
+Firefox browsing history,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,sqlite,C7,could not check,not an opened archive
+Firefox browsing history,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,sqlite,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Firefox cookies,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/cookies.sqlite,sqlite,C1,looked; nothing unusual,type=sqlite
+Firefox cookies,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/cookies.sqlite,sqlite,C2,could not check,format has no end marker checked
+Firefox cookies,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/cookies.sqlite,sqlite,C3,could not check,not an encryptable container
+Firefox cookies,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/cookies.sqlite,sqlite,C4,looked; nothing unusual,
+Firefox cookies,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/cookies.sqlite,sqlite,C5,looked; nothing unusual,folder_files=31
+Firefox cookies,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/cookies.sqlite,sqlite,C6,could not check,siblings are not usually referenced (referenced=0)
+Firefox cookies,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/cookies.sqlite,sqlite,C7,could not check,not an opened archive
+Firefox cookies,evidence,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/cookies.sqlite,sqlite,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Website login (lorien / cpre536at17F),evidence,/Disk/home/httpd/html/index.html,html,C1,looked; nothing unusual,type=html
+Website login (lorien / cpre536at17F),evidence,/Disk/home/httpd/html/index.html,html,C2,could not check,format has no end marker checked
+Website login (lorien / cpre536at17F),evidence,/Disk/home/httpd/html/index.html,html,C3,could not check,not an encryptable container
+Website login (lorien / cpre536at17F),evidence,/Disk/home/httpd/html/index.html,html,C4,fired,"This file contains the sentence “password is ""cpre536at17F""”. It looks like a password someone wrote down."
+Website login (lorien / cpre536at17F),evidence,/Disk/home/httpd/html/index.html,html,C5,looked; nothing unusual,folder_files=5
+Website login (lorien / cpre536at17F),evidence,/Disk/home/httpd/html/index.html,html,C6,could not check,siblings are not usually referenced (referenced=2)
+Website login (lorien / cpre536at17F),evidence,/Disk/home/httpd/html/index.html,html,C7,could not check,not an opened archive
+Website login (lorien / cpre536at17F),evidence,/Disk/home/httpd/html/index.html,html,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Unsent email signed Wendy,evidence,/Disk/home/httpd/icons/small/movie.eml,email,C1,looked; nothing unusual,type=email
+Unsent email signed Wendy,evidence,/Disk/home/httpd/icons/small/movie.eml,email,C2,could not check,format has no end marker checked
+Unsent email signed Wendy,evidence,/Disk/home/httpd/icons/small/movie.eml,email,C3,could not check,not an encryptable container
+Unsent email signed Wendy,evidence,/Disk/home/httpd/icons/small/movie.eml,email,C4,looked; nothing unusual,
+Unsent email signed Wendy,evidence,/Disk/home/httpd/icons/small/movie.eml,email,C5,fired,It is the only email among the 34 files in its folder. The others are mostly pictures and text files.
+Unsent email signed Wendy,evidence,/Disk/home/httpd/icons/small/movie.eml,email,C6,fired,"The guides and web pages on this drive mention 21 of the 33 other files in this folder by name, but never this one."
+Unsent email signed Wendy,evidence,/Disk/home/httpd/icons/small/movie.eml,email,C7,could not check,not an opened archive
+Unsent email signed Wendy,evidence,/Disk/home/httpd/icons/small/movie.eml,email,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Email with Content-ID @wendyPC,evidence,/Disk/lost+found/found/win32/related/test.eml,email,C1,looked; nothing unusual,type=email
+Email with Content-ID @wendyPC,evidence,/Disk/lost+found/found/win32/related/test.eml,email,C2,could not check,format has no end marker checked
+Email with Content-ID @wendyPC,evidence,/Disk/lost+found/found/win32/related/test.eml,email,C3,could not check,not an encryptable container
+Email with Content-ID @wendyPC,evidence,/Disk/lost+found/found/win32/related/test.eml,email,C4,looked; nothing unusual,
+Email with Content-ID @wendyPC,evidence,/Disk/lost+found/found/win32/related/test.eml,email,C5,could not check,fewer than 5 files in folder (files=1)
+Email with Content-ID @wendyPC,evidence,/Disk/lost+found/found/win32/related/test.eml,email,C6,could not check,too few siblings
+Email with Content-ID @wendyPC,evidence,/Disk/lost+found/found/win32/related/test.eml,email,C7,could not check,not an opened archive
+Email with Content-ID @wendyPC,evidence,/Disk/lost+found/found/win32/related/test.eml,email,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+tracking.log naming wendy-pc,evidence,/System Volume Information/tracking.log,binary,C1,could not check,content has no strong signature (type=binary)
+tracking.log naming wendy-pc,evidence,/System Volume Information/tracking.log,binary,C2,could not check,format has no end marker checked
+tracking.log naming wendy-pc,evidence,/System Volume Information/tracking.log,binary,C3,could not check,not an encryptable container
+tracking.log naming wendy-pc,evidence,/System Volume Information/tracking.log,binary,C4,looked; nothing unusual,
+tracking.log naming wendy-pc,evidence,/System Volume Information/tracking.log,binary,C5,could not check,fewer than 5 files in folder (files=1)
+tracking.log naming wendy-pc,evidence,/System Volume Information/tracking.log,binary,C6,could not check,too few siblings
+tracking.log naming wendy-pc,evidence,/System Volume Information/tracking.log,binary,C7,could not check,not an opened archive
+tracking.log naming wendy-pc,evidence,/System Volume Information/tracking.log,binary,F1,fired,"Almost every file on this drive (4,564 of them) was last changed at the same moment, 2 Oct 2011, 11:57:01 AM, when they were copied together. This file was changed at a different time, 5 Oct 2011, 1:59:05 AM, along with only 0 other files."
+Word document last saved by wendy,evidence,/Disk/mnt/floppy/info/NIST Hard Disk Write Block Tool specification.doc,word97,C1,looked; nothing unusual,type=word97
+Word document last saved by wendy,evidence,/Disk/mnt/floppy/info/NIST Hard Disk Write Block Tool specification.doc,word97,C2,could not check,format has no end marker checked
+Word document last saved by wendy,evidence,/Disk/mnt/floppy/info/NIST Hard Disk Write Block Tool specification.doc,word97,C3,looked; nothing unusual,type=word97
+Word document last saved by wendy,evidence,/Disk/mnt/floppy/info/NIST Hard Disk Write Block Tool specification.doc,word97,C4,looked; nothing unusual,
+Word document last saved by wendy,evidence,/Disk/mnt/floppy/info/NIST Hard Disk Write Block Tool specification.doc,word97,C5,could not check,fewer than 5 files in folder (files=1)
+Word document last saved by wendy,evidence,/Disk/mnt/floppy/info/NIST Hard Disk Write Block Tool specification.doc,word97,C6,could not check,too few siblings
+Word document last saved by wendy,evidence,/Disk/mnt/floppy/info/NIST Hard Disk Write Block Tool specification.doc,word97,C7,could not check,not an opened archive
+Word document last saved by wendy,evidence,/Disk/mnt/floppy/info/NIST Hard Disk Write Block Tool specification.doc,word97,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+mypuppy.zip (locked; password HACHI),evidence,/Disk/usr/others/mypuppy.gz,gzip,C1,looked; nothing unusual,type=gzip
+mypuppy.zip (locked; password HACHI),evidence,/Disk/usr/others/mypuppy.gz,gzip,C2,could not check,format has no end marker checked
+mypuppy.zip (locked; password HACHI),evidence,/Disk/usr/others/mypuppy.gz,gzip,C3,could not check,not an encryptable container
+mypuppy.zip (locked; password HACHI),evidence,/Disk/usr/others/mypuppy.gz,gzip,C4,looked; nothing unusual,
+mypuppy.zip (locked; password HACHI),evidence,/Disk/usr/others/mypuppy.gz,gzip,C5,could not check,fewer than 5 files in folder (files=2)
+mypuppy.zip (locked; password HACHI),evidence,/Disk/usr/others/mypuppy.gz,gzip,C6,could not check,too few siblings
+mypuppy.zip (locked; password HACHI),evidence,/Disk/usr/others/mypuppy.gz,gzip,C7,could not check,not an opened archive
+mypuppy.zip (locked; password HACHI),evidence,/Disk/usr/others/mypuppy.gz,gzip,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+white.zip (locked; password d0gD0G),evidence,/Disk/lib/modules/2.2.14-5.0/net/others/white.zip,zip,C1,looked; nothing unusual,type=zip
+white.zip (locked; password d0gD0G),evidence,/Disk/lib/modules/2.2.14-5.0/net/others/white.zip,zip,C2,looked; nothing unusual,"end_offset=445467, trailing_bytes=0"
+white.zip (locked; password d0gD0G),evidence,/Disk/lib/modules/2.2.14-5.0/net/others/white.zip,zip,C3,fired,Files inside this archive are locked with a password: white.bmp.
+white.zip (locked; password d0gD0G),evidence,/Disk/lib/modules/2.2.14-5.0/net/others/white.zip,zip,C4,looked; nothing unusual,
+white.zip (locked; password d0gD0G),evidence,/Disk/lib/modules/2.2.14-5.0/net/others/white.zip,zip,C5,could not check,fewer than 5 files in folder (files=1)
+white.zip (locked; password d0gD0G),evidence,/Disk/lib/modules/2.2.14-5.0/net/others/white.zip,zip,C6,could not check,too few siblings
+white.zip (locked; password d0gD0G),evidence,/Disk/lib/modules/2.2.14-5.0/net/others/white.zip,zip,C7,fired,"This archive is a bundle of files. Inside it are personal items: white.bmp (empty file, locked with a password)."
+white.zip (locked; password d0gD0G),evidence,/Disk/lib/modules/2.2.14-5.0/net/others/white.zip,zip,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Password for white.zip in sunflower.html,evidence,/Disk/home/httpd/html/more/sunflower.html,html,C1,looked; nothing unusual,type=html
+Password for white.zip in sunflower.html,evidence,/Disk/home/httpd/html/more/sunflower.html,html,C2,could not check,format has no end marker checked
+Password for white.zip in sunflower.html,evidence,/Disk/home/httpd/html/more/sunflower.html,html,C3,could not check,not an encryptable container
+Password for white.zip in sunflower.html,evidence,/Disk/home/httpd/html/more/sunflower.html,html,C4,looked; nothing unusual,
+Password for white.zip in sunflower.html,evidence,/Disk/home/httpd/html/more/sunflower.html,html,C5,could not check,fewer than 5 files in folder (files=3)
+Password for white.zip in sunflower.html,evidence,/Disk/home/httpd/html/more/sunflower.html,html,C6,could not check,too few siblings
+Password for white.zip in sunflower.html,evidence,/Disk/home/httpd/html/more/sunflower.html,html,C7,could not check,not an opened archive
+Password for white.zip in sunflower.html,evidence,/Disk/home/httpd/html/more/sunflower.html,html,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Planted password in a fake shadow file,evidence,/Disk/home/ftp/etc/shad,text,C1,could not check,extension not judged
+Planted password in a fake shadow file,evidence,/Disk/home/ftp/etc/shad,text,C2,could not check,format has no end marker checked
+Planted password in a fake shadow file,evidence,/Disk/home/ftp/etc/shad,text,C3,could not check,not an encryptable container
+Planted password in a fake shadow file,evidence,/Disk/home/ftp/etc/shad,text,C4,looked; nothing unusual,
+Planted password in a fake shadow file,evidence,/Disk/home/ftp/etc/shad,text,C5,could not check,fewer than 5 files in folder (files=4)
+Planted password in a fake shadow file,evidence,/Disk/home/ftp/etc/shad,text,C6,could not check,too few siblings
+Planted password in a fake shadow file,evidence,/Disk/home/ftp/etc/shad,text,C7,could not check,not an opened archive
+Planted password in a fake shadow file,evidence,/Disk/home/ftp/etc/shad,text,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Sleeping-dog GIF with no extension,decoy,/Disk/bin/error,gif,C1,could not check,extension not judged
+Sleeping-dog GIF with no extension,decoy,/Disk/bin/error,gif,C2,looked; nothing unusual,"end_offset=79888, trailing_bytes=0"
+Sleeping-dog GIF with no extension,decoy,/Disk/bin/error,gif,C3,could not check,not an encryptable container
+Sleeping-dog GIF with no extension,decoy,/Disk/bin/error,gif,C4,looked; nothing unusual,
+Sleeping-dog GIF with no extension,decoy,/Disk/bin/error,gif,C5,looked; nothing unusual,folder_files=89
+Sleeping-dog GIF with no extension,decoy,/Disk/bin/error,gif,C6,could not check,siblings are not usually referenced (referenced=0)
+Sleeping-dog GIF with no extension,decoy,/Disk/bin/error,gif,C7,could not check,not an opened archive
+Sleeping-dog GIF with no extension,decoy,/Disk/bin/error,gif,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Puppy JPEG named .html,decoy,/Disk/home/httpd/html/attr.html,jpeg,C1,fired,"The name ends in “.html”, which means a web page, but the file is really a photo (JPEG)."
+Puppy JPEG named .html,decoy,/Disk/home/httpd/html/attr.html,jpeg,C2,could not check,end marker not found
+Puppy JPEG named .html,decoy,/Disk/home/httpd/html/attr.html,jpeg,C3,could not check,not an encryptable container
+Puppy JPEG named .html,decoy,/Disk/home/httpd/html/attr.html,jpeg,C4,looked; nothing unusual,
+Puppy JPEG named .html,decoy,/Disk/home/httpd/html/attr.html,jpeg,C5,fired,"It is the only photo among the 5 files in its folder. The others are mostly web pages, pictures and text files."
+Puppy JPEG named .html,decoy,/Disk/home/httpd/html/attr.html,jpeg,C6,fired,"The guides and web pages on this drive mention 3 of the 4 other files in this folder by name, but never this one."
+Puppy JPEG named .html,decoy,/Disk/home/httpd/html/attr.html,jpeg,C7,could not check,not an opened archive
+Puppy JPEG named .html,decoy,/Disk/home/httpd/html/attr.html,jpeg,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
+Huskies picture named .log,decoy,/Disk/var/log/uucp/change.log,binary,C1,could not check,content has no strong signature (type=binary)
+Huskies picture named .log,decoy,/Disk/var/log/uucp/change.log,binary,C2,could not check,format has no end marker checked
+Huskies picture named .log,decoy,/Disk/var/log/uucp/change.log,binary,C3,could not check,not an encryptable container
+Huskies picture named .log,decoy,/Disk/var/log/uucp/change.log,binary,C4,looked; nothing unusual,
+Huskies picture named .log,decoy,/Disk/var/log/uucp/change.log,binary,C5,could not check,fewer than 5 files in folder (files=1)
+Huskies picture named .log,decoy,/Disk/var/log/uucp/change.log,binary,C6,could not check,too few siblings
+Huskies picture named .log,decoy,/Disk/var/log/uucp/change.log,binary,C7,could not check,not an opened archive
+Huskies picture named .log,decoy,/Disk/var/log/uucp/change.log,binary,F1,looked; nothing unusual,"modified=2011-10-02 11:57:01, files_with_this_time=4564"
