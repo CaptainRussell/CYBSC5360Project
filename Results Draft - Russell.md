@@ -219,9 +219,13 @@ record's last change as 2 Oct 2017 11:57:32 UTC. The folder's own index keeps a
 third copy of the file's dates (FTK's "Index Entry" times): created 2 Oct 2011
 11:57:01.62 UTC, the visible date's second, and changed 2 Oct 2017 11:57:32.45
 UTC. The ".62" in my FTK report was this index copy. So on one file, FTK itself
-shows 2011 and 2017 dates that cannot all be true. FTK gives the File Name
-fraction of a second as .17 where ADS reads .39; *to complete: whether the file
-has two name records (long and short) with different fractions*.
+shows 2011 and 2017 dates that cannot all be true. The two tools agree to the second.
+They differ only in the fraction: the file has a single name record (long and
+short name combined), whose raw value is 03:42:54.3938891 UTC, which is what ADS
+reports, while FTK displays .17. ADS's reader agrees with The Sleuth Kit to the
+microsecond on the test images; why FTK shows a different fraction for this field
+is unresolved, and it does not affect the finding, which rests on dates years
+apart.
 
 Sources: `tool/results/26Fall_Project2_dates/` (`briefing.html`, `scores.csv`,
 `outcomes.csv`, `run.json`).
