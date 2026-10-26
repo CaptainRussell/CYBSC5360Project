@@ -159,7 +159,7 @@ Two images are a small sample. Each answer key is one examiner's findings and ma
 
 ## Status and Schedule
 
-The tool, both readers, the answer keys, and the Project 1 run are done. Project 2 will be run (Nov 2–8), followed by the date checks on it and the single-check comparison (Nov 9–15), and the final paper (by Dec 6).
+The tool, both readers, the answer keys, and the runs on both projects (October 26) are done; the Project 1 result reproduced exactly on a second computer. Project 2's results, including the date checks, are reported in Section V of the final paper (by Dec 6).
 
 # References
 

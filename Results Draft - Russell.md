@@ -6,9 +6,10 @@ author: "Captain Scott Russell"
 
 # V. Results
 
-This section reports the proof of function described in Section IV. Part A is
-complete. Parts B and C are laid out ready to fill in once Project 2 is run
-(see `tool/proof/README.md`); no Project 2 numbers have been entered yet.
+This section reports the proof of function described in Section IV. Both projects
+were run with tool version `5997b4e` on 2026-10-26, on Windows; the freeze test
+passed, so the first-look checks are the ones committed on 2026-10-20, before
+Project 2 was examined. Items still to complete are marked *To complete*.
 
 ## A. Project 1: Development Case
 
@@ -69,39 +70,165 @@ open locked files or answer the case questions; it points to files, and the
 examiner still reads them. hello.eml itself is not scored, because no check
 applies to a plain email; it surfaces only through its zip.
 
+**Reproducibility.** The original run (Linux, 2026-10-20) and a re-run on
+Windows with version `5997b4e` (2026-10-26) produced identical results: the same
+image fingerprint, the same 76 files in the same order with the same scores, and
+the same counts.
+
 Sources: `tool/results/26Fall_Project1B/` (`proof.html`, `proof.csv`,
-`briefing.html`, `comparison.md`).
+`briefing.html`, `comparison.md`) and `tool/results/26Fall_Project1B_rerun/`.
 
 ## B. Project 2: Held-Out Test
 
-*To complete after the run. The checks were frozen on 2026-10-20, before Project 2
-was examined; confirm `python3 -m unittest tests.test_freeze` passes on the
-version used, and record that version here.*
+**Image.** `26Fall_Project2.img`, one NTFS volume named "Disk" (1,299,558,400
+bytes) holding a copied Red Hat Linux file system, examined by hand in FTK. ADS
+found 5,607 entries (567 folders, 4,789 files and 251 files inside ZIP archives),
+set aside 222 as clutter (221 empty files and one Windows folder-settings file),
+and asked its eight questions of the 4,818 files left. 164 had at least one
+finding. Answer key: 16 evidence files and 3 decoys.
 
-**Image.** `26Fall_Project2.img`, one NTFS volume (about 1.3 GB) holding a copied
-Red Hat Linux file system, examined by hand in FTK. Answer key: 16 evidence
-files (five envelope labels, browser history and cookies, the website login,
-four files naming the suspect's real first name, two locked archives and two
-written-down passwords) and 3 decoys.
+**Pointing to the evidence (RQ1, RQ3).** ADS listed **7 of the 16** evidence files,
+**5 of them in its top 10**. To reach all seven, an examiner reads the top 15
+files, 7 of which are not in the answer key. One of the three decoys was listed.
 
-**Pointing to the evidence (RQ1, RQ3).** *From `proof.html`: evidence files
-listed (of 16), how many in the top ten, review depth, files above it not in the
-key, decoys listed (of 3), and the item-by-item table.*
+| Evidence found by hand | Question | ADS rank | Score | Check that fired |
+|---|---|---|---|---|
+| `System Volume Information/tracking.log` (names wendy-pc) | QE | #4 | 49 | F1: written at a different time from the bulk copy |
+| `white.zip`, locked (password d0gD0G) | Extra | #6 | 33 | C3 locked; C7 archive with a locked file |
+| `home/httpd/icons/small/movie.eml`, signed Wendy | QE | #8 | 28 | C5 the only email among 34 files; C6 never mentioned |
+| `home/httpd/html/index.html`, website login | QD | #9 | 28 | C4 password written down |
+| `usr/others/mypuppy2.7z`, envelope 4 | QA | #10 | 26 | C1 named .7z but really a RAR archive |
+| `bin/gzip`, envelope 1 | QA | #11 | 25 | C5 the only photo among 89 files |
+| `places.sqlite`, Firefox history | QB | #15 | 18 | C5 about 25 times bigger than the other databases in its folder |
+| *Decoy:* `home/httpd/html/attr.html`, a JPEG named .html | Decoy | #2 | 52 | C1, C5, C6 |
 
-**Each check alone against the combination (RQ2).** *From the second table in
-`proof.html`.*
+ADS's first file (#1, score 100) is `white.bmp`, the locked file *inside*
+`white.zip`. The answer key names the archive, and the matching rule fixed before
+the run counts the archive's own rank (#6), so the table above uses #6.
 
-**Misses.** *For every evidence file not on the list, say why from what ADS
-examines (success criterion 4).*
+**Files ranked high that are not in the answer key.** #3 and #7 are a deleted
+JPEG in the Recycle Bin (`$RECYCLE.BIN/…/$RZB47AA.jpg`, 35,837 bytes, and its
+record `$IZB47AA.jpg`), written on 5 Oct 2011 between 03:44 and 04:10 UTC, after
+the bulk copy. My FTK examination did not look at the Recycle Bin. *To complete:
+open it in FTK and record what it is.* #5 (`bin/bx`) is a false lead: a program
+containing the template text "Password is [$2]". #12 (`etc/nmh/digestcomps`) is a
+mailing-list template, which I had also set aside by hand as not a real email.
+#13 is an IEEE guide PDF that ADS reports as encrypted (*to complete: check in FTK whether it needs a password to open, or only restricts printing or editing*).
+
+**Each check alone against the combination (RQ2).**
+
+| Check alone | Files it flags | Evidence it catches | ADS, same number of files |
+|---|---|---|---|
+| C1 Disguised file | 2 | 1 | 0 |
+| C3 Locked with a password | 3 | 1 | 0 |
+| C4 Password written down | 2 | 1 | 0 |
+| C5 Stands out from its neighbors | 33 | 3 | 7 |
+| C6 Never mentioned | 125 | 1 | 7 |
+| C7 Archive with personal files | 1 | 1 | 0 |
+| F1 Changed at an unusual time | 3 | 1 | 0 |
+
+As on Project 1, the combination clearly beats the broad checks (C5 alone catches
+3 evidence files in 33 flagged; ADS's top 33 hold 7) but loses to the narrow ones
+at a budget of one to three files, because ADS's top three are the locked file
+inside `white.zip`, a decoy, and the Recycle Bin record, none of which the
+matching rule counts as evidence. C2 fired on no file.
+
+**Success criteria (Section IV-D).**
+
+1. *ADS lists at least half of the evidence files:* **not met** (7 of 16, 44%).
+2. *ADS's top files hold at least as many evidence files as each single check
+   with the same budget:* **not met** (C1, C3, C4, C7 and F1 at budgets of 1 to
+   3 files), as on Project 1.
+3. *Every top-twenty flag is explained by the report alone:* **met.** Every check
+   that fired on the top twenty files has its plain-language sentence.
+4. *Every missed evidence file is explained:* see the table below.
+
+**Misses.**
+
+| Evidence not listed | Why, from what ADS examines |
+|---|---|
+| `home/httpd/html/more/sunflower.html` (pswd = 'd0gD0G') | C4 looks only for sentences such as "password is …"; "pswd =" has neither a listed word nor "is" |
+| `home/ftp/etc/shad` (passwd: k1tt3n@p) | Same: "passwd:" has no "is" |
+| `usr/others/mypuppy.gz` holding the locked `mypuppy.zip` | Only ZIP archives are opened; the locked ZIP is inside a gzip file |
+| `NIST Hard Disk Write Block Tool specification.doc` | The evidence is the author name in its metadata; no check reads document metadata |
+| `lib/security/hello.png`, envelope 2 | *To complete from `why.csv`* |
+| `…/graphicssystems/ps_done.jpeg`, envelope 3 | *To complete from `why.csv`* |
+| `tmp/.font-unix/fs-1/ini/template.pdf`, envelope 5 | *To complete from `why.csv`* |
+| `cookies.sqlite` | *To complete from `why.csv`* |
+| `test.eml` | *To complete from `why.csv`* |
+
+Sources: `tool/results/26Fall_Project2/` (`proof.html`, `proof.csv`,
+`briefing.html`, `triage.json`).
 
 ## C. Windows Date Checks on Project 2
 
-*To complete after the run. Report how many files R6, R7 and R11 could check,
-what they flagged, and whether any flagged files are in the answer key (from the
-date report's `proof.html`). The other rules cannot be checked on this image,
-which holds no shortcuts, Prefetch or Windows event logs.*
+ADS read 5,379 MFT records straight from the image and scored 4,797 files. Only
+the MFT-only rules could run (R6, R7, R11); the others cannot be checked on a
+drive with no shortcuts, Prefetch or Windows event logs.
+
+| Rule | Files checked | Fired |
+|---|---|---|
+| R6 visible creation date earlier than the protected (FN) copy | 4,797 | 4,785 |
+| R7 date exactly on a whole second | 4,797 | 4,786 |
+| R11 much older than neighboring MFT records | 4,797 | 0 |
+
+Because R6 and R7 fire on almost every file, measuring each rule's rate on the
+image itself gave them almost no weight (p ≈ 0.997), and no file was flagged.
+That is the weighting working as designed for ranking: a check that fires on
+every file cannot single any one out. The date report therefore points to no
+individual file. (Its proof page lists 15 of the 16 evidence files only because
+every file has a near-zero score; none is flagged.)
+
+**What R6 and R7 found: the whole volume's visible dates were set back.** 4,785
+files share exactly the same visible created and modified time, 2 Oct 2011
+11:57:01.0000000 UTC (06:57:01 US Central, the shared "Created" time FTK showed).
+Their protected FN creation dates are all different and all later: 2,689 files on
+5 Oct 2011, 2,105 files on 2 Oct 2017, and 3 on 4 Oct 2011. Two independent facts
+confirm that the FN dates are the true ones:
+
+* 1,689 Eclipse plug-in files carry their software build date in their folder
+  names (2015 and 2016). Their visible created date, 2011, is years before that
+  software existed; their FN date (2 Oct 2017) is after the build date in all
+  1,689 cases.
+* The Firefox history and cookie databases show a visible date of 2011 but an FN
+  date of 2 Oct 2017 09:07 UTC, matching the cookie I decoded by hand that dates
+  the browser's first use to 1 Oct 2017, 5:37 PM US Central.
+
+So the image was assembled in two batches, six years apart, and every visible date
+was then set to one moment. In FTK I saw the shared Created time and read it as
+the trace of a bulk copy. R6 on its own (the check commercial tools offer) flags
+4,785 files and cannot rank them; ADS correctly declined to rank on it, but its
+report did not say that the whole drive's dates disagree. That is a gap in how
+system-wide findings are reported, discussed in Section VI.
+
+*To complete: in FTK, open one file's properties (for example `bin/gzip`) and
+confirm its Standard Information created time (2 Oct 2011, 6:57:01 AM Central)
+and File Name created time (4 Oct 2011, 10:42:54 PM Central).*
+
+Sources: `tool/results/26Fall_Project2_dates/` (`briefing.html`, `scores.csv`,
+`outcomes.csv`, `run.json`).
 
 ## D. Understandability and Run Time (RQ4)
 
-*For each project: whether every top-twenty flag is explained by the report
-alone, and the run time.*
+On both projects every check that fired on the top twenty files carries a
+plain-language sentence, with the exact values under it. *To complete: run times
+(the "Done in N seconds" line of each run), and my own read of whether each
+top-twenty sentence makes sense without the raw records.*
+
+## E. Observations Made After Seeing the Answers (Not Part of the Held-Out Result)
+
+These came from looking at Project 2's results with the answer key in hand. They
+suggest improvements, but any check built from them would have to be tested on
+new data, not on these two images.
+
+* **True creation order.** Ordered by FN creation time, envelopes 4, 2 and 3 are
+  the first three files written on 2 Oct 2017 (positions 2,693 to 2,695 of 4,797,
+  right after the 2,692-file 2011 batch), minutes before the Firefox and Eclipse
+  content. Two of them were first-look misses. A check on the true creation order
+  ("the first files of a later batch") would have pointed to them.
+* **System-wide findings.** When a check fires on nearly every file, the report
+  should say so as a warning about the whole drive rather than only giving it
+  less weight.
+* **Narrow misses in the frozen checks.** C4's phrase list misses "pswd =" and
+  "passwd:"; only ZIP archives are opened; C1 does not judge files with no
+  extension (`bin/gzip` was found through C5 instead).

@@ -75,6 +75,22 @@ class TestReaderMatchesSleuthKit(NTFSFixture):
                          [(0x100, 8), (0xF0, 4), (None, 3)])
 
 
+class TestWhy(NTFSFixture):
+    def test_every_check_answers_for_each_key_file(self):
+        import csv
+        from ads.why import explain
+        key = os.path.join(os.path.dirname(HERE), "proof", "project2_answer_key.csv")
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "why.csv")
+            lines = explain(self.img, key, out)
+            with open(out, encoding="utf-8") as fh:
+                rows = list(csv.DictReader(fh))
+        gzip_rows = [r for r in rows if r["path_in_image"] == "/Disk/bin/gzip"]
+        self.assertEqual([r["check"] for r in gzip_rows], ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "F1"])
+        self.assertTrue(all(r["answer"] in ("fired", "could not check", "looked; nothing unusual") for r in gzip_rows))
+        self.assertTrue(any("not found in the image" in l for l in lines), "key items absent from this image are reported")
+
+
 class TestNTFSInThePipeline(NTFSFixture):
     def test_first_look_report_opens_ntfs_images(self):
         t = Triage(self.img)

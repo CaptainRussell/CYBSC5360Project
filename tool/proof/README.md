@@ -80,6 +80,15 @@ journal (`$Extend\$UsnJrnl`), export `$MFT` and `$J` with FTK Imager, run
 MFTECmd on both (see `../scripts/run_parsers.ps1`), and give that folder to the
 Windows drive card instead of the image.
 
+### 2b. Why each missed file was missed
+
+For success criterion 4, list what every check answered for every file in the
+answer key (fired, looked and found nothing, or could not check, with the reason):
+
+```
+python3 -m ads why 26Fall_Project2.img --key proof/project2_answer_key.csv --out results/26Fall_Project2/why.csv
+```
+
 ### 3. What to keep for the paper
 
 * `proof.html` and `proof.csv` from step 1 (the numbers for the results section)

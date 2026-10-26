@@ -171,6 +171,14 @@ def cmd_triage(a):
             pass
 
 
+def cmd_why(a):
+    from .why import explain
+    out = a.out or os.path.join(os.path.splitext(os.path.basename(a.image))[0] + " why.csv")
+    for line in explain(a.image, a.key, out):
+        print(line)
+    print("\nwritten", out)
+
+
 def cmd_proof(a):
     from . import proof
     path, s = proof.write(a.results, a.key, a.out)
@@ -225,6 +233,12 @@ def main(argv=None):
     s.add_argument("--key", required=True, help="answer key CSV, e.g. proof/project2_answer_key.csv")
     s.add_argument("--out", help="where to write proof.html and proof.csv (default: the results folder)")
     s.set_defaults(fn=cmd_proof)
+
+    s = sub.add_parser("why", help="every first-look check's answer for the files in an answer key")
+    s.add_argument("image", help="the drive image (.img, .dd, .raw)")
+    s.add_argument("--key", required=True, help="answer key CSV, e.g. proof/project2_answer_key.csv")
+    s.add_argument("--out", help="CSV to write (default: '<image name> why.csv')")
+    s.set_defaults(fn=cmd_why)
 
     s = sub.add_parser("gui", help="open a point-and-click control panel in the browser")
     s.add_argument("port", nargs="?", help="port to listen on (default 8765)")
