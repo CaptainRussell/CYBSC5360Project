@@ -233,11 +233,11 @@ Sources: `tool/results/26Fall_Project2_dates/` (`briefing.html`, `scores.csv`,
 ## D. Understandability and Run Time (RQ4)
 
 On both projects every check that fired on the top twenty files carries a
-plain-language sentence, with the exact values under it. On a Windows PC, the
+plain-language sentence, with the exact values under it. On a Windows PC (Intel Core i7-7800X, 3.5 GHz), the
 first-look report read and checked all 4,818 files of Project 2's 1.3 GB image in
 34 seconds, and the date checks read its 5,379 MFT records and scored 4,797 files
-in 4.9 seconds. *To complete: the processor, and my own read of whether each
-top-twenty sentence makes sense without the raw records.*
+in 4.9 seconds. *To complete: my own read of whether each top-twenty sentence
+makes sense without the raw records.*
 
 ## E. Observations Made After Seeing the Answers (Not Part of the Held-Out Result)
 
