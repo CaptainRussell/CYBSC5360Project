@@ -298,7 +298,7 @@ class NTFSVolume:
         if vol:
             for atype, _name, nonres, _fl, _hdr, val in vol["attrs"]:
                 if atype == AT_VOLUME_NAME and not nonres:
-                    self.label = val.decode("utf-16-le", "replace")
+                    self.label = val.decode("utf-16-le", "replace").rstrip("\x00 ")
 
     def _entry(self, n, r):
         si = fn = None

@@ -35,7 +35,16 @@ python3 -m ads proof --results results/26Fall_Project1B --key proof/project1_ans
 
 The report goes in a folder called "IMAGE report" (choose another with `--out FOLDER`; add `--no-open` to skip opening the browser). It holds:
 
-* `briefing.html`: the report itself, one self-contained page that opens in any browser. Seven sections (summary, how it works, files to look at first, passwords and locked files, timing, everything found, words and method) with a Next button and a plain-language explanation of every clue. Technical detail is folded away under each file.
+* `briefing.html`: the report itself, one self-contained page that opens in any browser, with no internet needed. Seven tabs along the top (keys 1 to 7 switch between them):
+  * **Overview:** the headline numbers, the top leads and which questions found something.
+  * **Leads:** one row per file, which opens to show why it was flagged and a picture of the evidence. Examples: the first bytes of a disguised file beside what its name claims, or the hidden member of an archive. Search, level and check filters sit above the list.
+  * **Drive:** the first sector of the drive as a hex map. Hover a byte or a field to see what it means (drive type, sector size and so on).
+  * **Keys & Locks:** passwords found, and the locked files they may open.
+  * **Timeline:** when files were last written, grouped into periods.
+  * **All findings:** one searchable table.
+  * **How it works:** each check explained.
+
+  Technical detail is folded away under each file. A sun/moon button switches between dark and light, and the page prints cleanly.
 * `leads.csv`: every file with a clue, its score out of 100, its level and what was found, in plain words. Opens in Excel.
 * `triage.json`: the same results as data.
 
@@ -43,11 +52,11 @@ The eight questions are C1 to C7 and F1 in `ads/triage.py`. The FAT reader (`ads
 
 ## Windows date checks from the command line
 
-Every `analyze` run writes **`briefing.html`**, a single page that explains each flagged file in one plain sentence ("the date shown says 1 Mar 2019, but the change journal records the file being created on 10 Oct 2026"), with the exact values folded away for an examiner. It also writes `report.md` and the CSVs below.
+Every `analyze` run writes **`briefing.html`**, a single page that explains each flagged file in one plain sentence ("the date shown says 1 Mar 2019, but the change journal records the file being created on 10 Oct 2026"), with the exact values folded away for an examiner. It has tabs for an overview (including any check that fires on nearly every file, which describes the drive rather than singling files out), the flagged files, events, record damage and how the checks work. It also writes `report.md` and the CSVs below.
 
 ```
 cd "Term Paper/tool"
-python3 -m unittest discover -s tests -v          # 50 tests
+python3 -m unittest discover -s tests -v          # 53 tests
 
 # Straight from an NTFS image (MFT-only rules R6, R7, R11):
 python3 -m ads ingest  --db case.sqlite --image drive.img
@@ -56,6 +65,8 @@ python3 -m ads ingest  --db case.sqlite --mft mft.csv --usn usn.csv --lnk lnk.cs
                        --prefetch prefetch.csv --evtx evtx_system.csv evtx_security.csv evtx_application.csv
 python3 -m ads analyze --db case.sqlite --out results/case
 ```
+
+To rebuild a saved report page after a design change, without the image, run `python3 -m ads rerender RESULTS_FOLDER` (it reads `triage.json`, or `scores.csv` and the files beside it; nothing is re-checked).
 
 `calibrate`, `evaluate` and `analyze --weight-mode equal|specificity|full` remain for measuring the rules against a ground-truth list of tampered files (they are exercised on the synthetic test cases). `evaluate` reports every single rule ("R1 only" and so on) beside ADS and writes `evaluation.html` with an ROC chart.
 

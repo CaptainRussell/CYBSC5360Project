@@ -147,91 +147,106 @@ def _e(s):
 
 
 def render(scored, summ, facts, key_name):
-    verdict = ("ADS put %d of the %d evidence files the examiner found by hand on its list, %d of them in its top "
-               "10. To reach every one it found, an examiner would review the top %d of %s files checked, %d of "
-               "which are not in the answer key." % (
-                   summ["found"], summ["evidence"], summ["top10"], summ["deepest"], format(summ["examined"], ","),
-                   summ["others_above"]))
+    from .theme import THEME_CSS, THEME_JS, icon
+    ev = summ["evidence"]
+    verdict = ("ADS listed %d of the %d evidence files found by hand, %d in its top 10. Reaching all of them means "
+               "reviewing its top %d of %s files." % (summ["found"], ev, summ["top10"], summ["deepest"],
+                                                    format(summ["examined"], ",")))
     if summ["found"] == 0:
-        verdict = ("ADS did not put any of the %d evidence files the examiner found on its list. See each row for why."
-                   % summ["evidence"])
+        verdict = "ADS listed none of the %d evidence files found by hand. Each row says why." % ev
+    chev = icon("chev", "ico chev")
     rows = ""
-    for s in sorted(scored, key=lambda s: (s["kind"] != "evidence", s["rank"] is None, s["rank"] or 0)):
-        if s["found"]:
-            status = '<span class="yes">#%d</span>' % s["rank"]
-            why = "; ".join("%s (%s)" % (n, c) for c, n in s["checks"])
-            detail = "%s · score %s/100 · %s" % (_e(s["level"]), s["score"], _e(why))
-        else:
-            status = '<span class="no">not listed</span>'
-            detail = ("None of the checks fired on this file. ADS points to files whose records or contents "
-                      "disagree; evidence that looks ordinary on its own (for example a browser history file in "
-                      "its normal place) is outside what it looks for.")
-        rows += ('<tr class="%s"><td>%s</td><td><b>%s</b><div class="q">%s</div><div class="p">%s</div></td>'
-                 '<td>%s<div class="d">%s</div></td><td class="m">%s</td></tr>'
-                 % (s["kind"], status, _e(s.get("item") or s["path"]), _e(s.get("question", "")),
-                    _e(s["matched"] or s["path"]), "Decoy" if s["kind"] == "decoy" else "Evidence", detail,
-                    _e(s.get("found_manually_by", ""))))
+    for s_ in sorted(scored, key=lambda s: (s["kind"] != "evidence", s["rank"] is None, s["rank"] or 0)):
+        found = s_["found"]
+        rank = ('<span class="rk ok">#%d</span>' % s_["rank"]) if found else '<span class="rk no">—</span>'
+        badge = '<span class="badge %s">%s</span>' % (("ok", "listed") if found else ("hot", "missed"))
+        if s_["kind"] == "decoy":
+            badge = '<span class="badge minor">decoy%s</span>' % (" · listed" if found else "")
+        chips = "".join('<span class="chip"><b>%s</b></span>' % _e(c) for c, _n in s_["checks"])
+        saw = ("<dt>Score</dt><dd>%s / 100 · %s</dd>" % (s_["score"], _e(s_["level"])) +
+               "".join("<dt>%s</dt><dd>%s</dd>" % (_e(c), _e(n)) for c, n in s_["checks"])) if found else \
+            ("<dt>ADS</dt><dd>No check fired. ADS points to files whose records or contents disagree; evidence that "
+             "looks ordinary on its own is outside what it looks for.</dd>")
+        rows += ('<div class="acc-item" data-kind="{kind}" data-found="{f}"><button class="acc-head" aria-expanded="false">{rank}'
+                 '<div style="flex:1;min-width:0"><b>{item}</b><div class="note mono" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{path}</div></div>'
+                 '<span class="chip">{q}</span><span class="cicons hide-s">{chips}</span>{badge}{chev}</button>'
+                 '<div class="acc-body"><div><div class="acc-inner"><dl class="kv"><dt>In the image</dt><dd>{path}</dd>{saw}'
+                 '<dt>Found by hand</dt><dd>{how}</dd>{note}</dl></div></div></div></div>'
+                 ).format(kind=s_["kind"], f=int(found), rank=rank, item=_e(s_.get("item") or s_["path"]),
+                          path=_e(s_["matched"] or s_["path"]), q=_e(s_.get("question", "")), chips=chips, badge=badge, chev=chev,
+                          saw=saw, how=_e(s_.get("found_manually_by", "")),
+                          note=("<dt>Note</dt><dd>%s</dd>" % _e(s_["note"])) if s_.get("note") else "")
     singles = ""
     for c in summ.get("singles", []):
         better = c["ads_same_budget"] > c["found"]
-        singles += ('<tr><td><b>%s</b> %s</td><td>%s</td><td>%d of %d</td><td class="%s">%d of %d</td></tr>'
-                    % (_e(c["check"]), _e(c["name"]), format(c["flags"], ","), c["found"], summ["evidence"],
-                       "yes" if better else "", c["ads_same_budget"], summ["evidence"]))
-    return (PAGE.replace("@verdict@", _e(verdict)).replace("@rows@", rows).replace("@singles@", singles)
-            .replace("@found@", str(summ["found"])).replace("@evidence@", str(summ["evidence"]))
-            .replace("@top10@", str(summ["top10"])).replace("@leads@", format(summ["leads"], ","))
-            .replace("@examined@", format(summ["examined"], ",")).replace("@kind@", _e(facts["kind"]))
-            .replace("@image@", _e(facts["image"] or "")).replace("@fs@", _e(facts["fs"]))
-            .replace("@key@", _e(key_name)).replace("@decoys@", "%d of %d" % (summ["decoys_flagged"], summ["decoys"])))
+        worse = c["ads_same_budget"] < c["found"]
+        singles += ('<tr><td><b class="mono">{id}</b> {name}</td><td class="num">{flags}</td>'
+                    '<td><div class="duo"><div class="bar"><i data-w="{a:.0f}"></i></div><span class="mono">{found}</span></div></td>'
+                    '<td><div class="duo"><div class="bar {cls}"><i data-w="{b:.0f}"></i></div><span class="mono">{ads}</span></div></td>'
+                    '<td>{tag}</td></tr>').format(
+            id=_e(c["check"]), name=_e(c["name"]), flags=format(c["flags"], ","), a=100 * c["found"] / max(1, ev), found=c["found"],
+            b=100 * c["ads_same_budget"] / max(1, ev), ads=c["ads_same_budget"], cls="ok" if better else ("hot" if worse else ""),
+            tag='<span class="badge ok">ADS better</span>' if better else ('<span class="badge hot">check better</span>' if worse else '<span class="badge minor">tie</span>'))
+    pct = 100 * summ["found"] / max(1, ev)
+    r = 54
+    circ = 2 * 3.14159 * r
+    donut = ('<svg viewBox="0 0 140 140" width="150" height="150" aria-label="share of evidence listed"><circle cx="70" cy="70" r="{r}" '
+             'style="fill:none;stroke:var(--panel2);stroke-width:14"/><circle cx="70" cy="70" r="{r}" class="dn" style="fill:none;'
+             'stroke:var(--accent);stroke-width:14;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%" '
+             'stroke-dasharray="{c:.1f}" stroke-dashoffset="{c:.1f}" data-off="{o:.1f}"/><text x="70" y="68" text-anchor="middle" '
+             'style="font:700 26px var(--mono);fill:var(--text)">{f}/{e}</text><text x="70" y="90" text-anchor="middle" '
+             'style="font:12px var(--ui);fill:var(--muted)">evidence listed</text></svg>').format(r=r, c=circ, o=circ * (1 - pct / 100), f=summ["found"], e=ev)
+    return (PAGE.replace("@css@", THEME_CSS).replace("@js@", THEME_JS)
+            .replace("@verdict@", _e(verdict)).replace("@rows@", rows).replace("@singles@", singles).replace("@donut@", donut)
+            .replace("@found@", str(summ["found"])).replace("@evidence@", str(ev)).replace("@top10@", str(summ["top10"]))
+            .replace("@depth@", str(summ["deepest"])).replace("@others@", str(summ["others_above"]))
+            .replace("@leads@", format(summ["leads"], ",")).replace("@examined@", format(summ["examined"], ","))
+            .replace("@kind@", _e(facts["kind"])).replace("@image@", _e(facts["image"] or "")).replace("@fs@", _e(facts["fs"]))
+            .replace("@key@", _e(key_name)).replace("@decoys@", "%d of %d" % (summ["decoys_flagged"], summ["decoys"]))
+            .replace("@ico_overview@", icon("overview")).replace("@ico_leads@", icon("leads")).replace("@ico_how@", icon("all"))
+            .replace("@sun@", icon("sun")).replace("@print@", icon("print")))
 
 
 PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>ADS Proof of Function</title>
-<style>
-:root{--cardinal:#C8102E;--gold:#F1BE48;--ink:#1A1A1A;--muted:#5E5A5A;--line:#DAD6D6;--paper:#fff;--panel:#F7F4F2;--ok:#2E7D4F;--soft:#FBECEE;
---head:Cambria,Georgia,serif;--body:Calibri,"Segoe UI",Arial,sans-serif}
-@media(prefers-color-scheme:dark){:root{--cardinal:#E2304C;--ink:#EDE8E6;--muted:#ADA5A3;--line:#3A3434;--paper:#151212;--panel:#1F1A1A;--ok:#6CC596;--soft:#2A1A1D;color-scheme:dark}}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 var(--body)}
-.wrap{max-width:1000px;margin:0 auto;padding:0 16px}
-.band{background:var(--cardinal);color:#fff;border-bottom:8px solid var(--gold)}.band .wrap{padding:26px 16px}
-.eyebrow{color:var(--gold);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:13px}
-h1{font-family:var(--head);font-size:clamp(24px,4vw,38px);margin:6px 0}
-h2{font-family:var(--head);color:var(--cardinal);font-size:22px;margin:26px 0 6px}
-.verdict{font-size:19px;background:var(--panel);border-left:6px solid var(--cardinal);border-radius:8px;padding:14px 16px;margin:18px 0}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
-.stat{background:var(--panel);border-radius:10px;padding:12px}.stat .n{font:700 30px/1 var(--head)}.stat .l{font-size:14px;color:var(--muted)}
-@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
-table{border-collapse:collapse;width:100%;font-size:15px}
-th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-th{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.05em}
-.yes{font:700 18px var(--head);color:var(--ok)}
-td.yes{font-size:16px}.no{font-weight:700;color:var(--cardinal)}
-.q{color:var(--muted);font-size:14px}.p{font-family:Consolas,monospace;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
-.d{font-size:14px;color:var(--muted)}.m{font-size:14px}
-tr.decoy td{background:var(--soft)}
-footer{color:var(--muted);font-size:14px;padding:26px 0 50px}
+<style>@css@
+.rk{font:700 16px var(--mono);min-width:44px}.rk.ok{color:var(--ok)}.rk.no{color:var(--dim)}
+.cicons{display:flex;gap:4px}
+.duo{display:grid;grid-template-columns:minmax(60px,1fr) 24px;gap:8px;align-items:center}
+.vbig{font-size:18px;line-height:1.5}
+@media (max-width:620px){.hide-s{display:none!important}}
 </style></head><body>
-<div class="band"><div class="wrap"><div class="eyebrow">Artifact Disagreement Scorer · proof of function</div>
-<h1>Did ADS point to what the examiner found by hand?</h1>
-<p>@image@ · @fs@ drive · compared with the answer key @key@ · from the @kind@</p></div></div>
-<div class="wrap">
-<p class="verdict">@verdict@</p>
-<div class="stats">
-<div class="stat"><div class="n">@found@ / @evidence@</div><div class="l">evidence files on ADS's list</div></div>
-<div class="stat"><div class="n">@top10@</div><div class="l">of them in the top 10</div></div>
-<div class="stat"><div class="n">@leads@</div><div class="l">files on the list, of @examined@ checked</div></div>
-<div class="stat"><div class="n">@decoys@</div><div class="l">decoys also listed</div></div>
-</div>
-<h2>Item by item</h2>
-<p>Each row is something the examiner found by hand. “#3” means it was third on ADS's list. Decoys (shaded) are
-files planted to mislead; listing them is not an error, since the examiner had to rule them out too.</p>
-<table><tr><th>ADS rank</th><th>What the examiner found</th><th>What ADS saw</th><th>How it was found by hand</th></tr>@rows@</table>
-<h2>Each check on its own, against all of them together</h2>
-<p>A single check flags every file it fires on, in no order, so an examiner would have to review all of them.
-The last column gives ADS the same number of files to review (its top files) and counts the evidence files
-among them. Where it is higher, combining the checks found more for the same effort.</p>
-<table><tr><th>Check on its own</th><th>Files it flags</th><th>Evidence it catches</th><th>ADS, same number of files</th></tr>@singles@</table>
-</div>
-<footer><div class="wrap">ADS points to files for an examiner to review; it does not answer the case questions itself.
-A file not on the list was not flagged by any check.</div></footer>
-</body></html>"""
+<header class="top"><div class="wrap"><div class="brand"><span class="dot"></span>ADS // PROOF</div>
+<div class="case"><b>@image@</b><span class="pill acc">@fs@</span><span class="pill hide-s">@key@</span></div><div class="spacer"></div>
+<button class="iconbtn" data-act="theme" title="Light or dark">@sun@</button><button class="iconbtn" data-act="print" title="Print every tab">@print@</button></div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap">
+<a class="tab" href="#summary" data-tab="summary">@ico_overview@Summary <kbd>1</kbd></a>
+<a class="tab" href="#items" data-tab="items">@ico_leads@Item by item <span class="n">@evidence@</span> <kbd>2</kbd></a>
+<a class="tab" href="#checks" data-tab="checks">@ico_how@Each check alone <kbd>3</kbd></a></div></nav>
+<main class="wrap">
+<section class="panel" id="p-summary"><div class="ph"><div><h2>Did ADS point to what was found by hand?</h2><div class="sub">Compared with the examiner's own findings, from the @kind@.</div></div></div>
+<div class="grid" style="grid-template-columns:auto minmax(0,1fr);align-items:center">
+<div class="card" style="display:grid;place-items:center">@donut@</div>
+<div class="card"><p class="vbig">@verdict@</p></div></div>
+<div class="grid g4" style="margin-top:14px">
+<div class="card kpi ok"><div class="v" data-count="@top10@">0</div><div class="l">evidence files in the top 10</div></div>
+<div class="card kpi acc"><div class="v" data-count="@depth@">0</div><div class="l">files to review to reach them</div></div>
+<div class="card kpi warn"><div class="v" data-count="@others@">0</div><div class="l">of those not in the key</div></div>
+<div class="card kpi"><div class="v" style="font-size:26px">@decoys@</div><div class="l">decoys also listed</div></div></div>
+<p class="note" style="margin-top:12px">ADS listed @leads@ of @examined@ files. Files it lists that are not in the key are not necessarily false: the key is one examiner's findings.</p>
+</section>
+<section class="panel" id="p-items"><div class="ph"><div><h2>Item by item</h2><div class="sub">Each thing found by hand. Open one for detail.</div></div></div>
+<div class="toolbar"><div class="seg" id="kf"><button aria-pressed="true" data-k="">All</button><button aria-pressed="false" data-k="1">Listed</button><button aria-pressed="false" data-k="0">Missed</button><button aria-pressed="false" data-k="decoy">Decoys</button></div></div>
+<div id="il">@rows@</div></section>
+<section class="panel" id="p-checks"><div class="ph"><div><h2>Each check alone, against all of them together</h2><div class="sub">A check alone flags files in no order. ADS gets the same number of files: its top ones.</div></div></div>
+<div class="card scroll-x"><table class="t"><thead><tr><th>Check alone</th><th class="num">Files it flags</th><th>Evidence it catches</th><th>ADS, same budget</th><th></th></tr></thead><tbody>@singles@</tbody></table></div></section>
+</main>
+<footer class="foot"><div class="wrap">ADS points to files for an examiner to review; it does not answer the case questions itself.</div></footer>
+<script>@js@</script>
+<script>
+document.querySelectorAll('#kf button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#kf button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');const k=b.dataset.k;
+  document.querySelectorAll('#il .acc-item').forEach(it=>{const ok=!k||(k==='decoy'?it.dataset.kind==='decoy':(it.dataset.kind==='evidence'&&it.dataset.found===k));it.style.display=ok?'':'none';});}));
+document.addEventListener('ads:tab',e=>{if(e.detail!=='summary')return;document.querySelectorAll('.dn').forEach(c=>{c.style.transition='stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1)';
+  c.style.strokeDashoffset=c.getAttribute('stroke-dasharray');requestAnimationFrame(()=>requestAnimationFrame(()=>c.style.strokeDashoffset=c.dataset.off));});});
+</script></body></html>"""

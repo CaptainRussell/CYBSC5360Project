@@ -18,6 +18,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .config import load_config
+from .theme import THEME_CSS, THEME_JS
 
 JOBS = {}
 _LOCK = threading.Lock()
@@ -124,7 +125,7 @@ class Handler(BaseHTTPRequestHandler):
         u = urllib.parse.urlparse(self.path)
         q = urllib.parse.parse_qs(u.query)
         if u.path == "/":
-            return self._send(200, PAGE.replace("@TOKEN@", TOKEN))
+            return self._send(200, PAGE.replace("@TOKEN@", TOKEN).replace("@css@", THEME_CSS).replace("@js@", THEME_JS))
         if not self._token_ok(q.get("t", [""])[0]):
             return self._send(403, "forbidden")
         if u.path == "/status":
@@ -199,58 +200,48 @@ def main(argv=None):
 
 
 PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>ADS</title>
-<style>
-:root{--cardinal:#C8102E;--gold:#F1BE48;--ink:#1A1A1A;--muted:#5E5A5A;--line:#DAD6D6;--paper:#fff;--panel:#F7F4F2;--ok:#2E7D4F;
---head:Cambria,Georgia,serif;--body:Calibri,"Segoe UI",Arial,sans-serif;--mono:Consolas,monospace}
-@media(prefers-color-scheme:dark){:root{--cardinal:#E2304C;--ink:#EDE8E6;--muted:#ADA5A3;--line:#3A3434;--paper:#151212;--panel:#1F1A1A;--ok:#6CC596;color-scheme:dark}}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 var(--body)}
-.wrap{max-width:760px;margin:0 auto;padding:0 16px}
-.band{background:var(--cardinal);color:#fff;border-bottom:8px solid var(--gold)}
-.band .wrap{padding:28px 16px}
-.band .eyebrow{color:var(--gold);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:13px}
-h1{font-family:var(--head);font-size:clamp(26px,5vw,40px);margin:6px 0 4px}
-h2{font-family:var(--head);color:var(--cardinal);font-size:22px;margin:0 0 4px}
-.band p{max-width:52ch;margin:0}
-.card{border:1px solid var(--line);border-left:6px solid var(--cardinal);border-radius:12px;padding:18px;margin:18px 0;background:var(--paper)}
-label{display:block;font-weight:700;margin:10px 0 4px;font-size:15px}
-input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:15px var(--mono);background:var(--panel);color:var(--ink)}
-.hint{color:var(--muted);font-size:14px;margin:6px 0 0}
-button{font:700 16px var(--body);border:0;border-radius:999px;padding:10px 22px;background:var(--cardinal);color:#fff;cursor:pointer;margin-top:12px}
-button:hover{background:#9E0B23}
-#log{margin:18px 0}
-.step{padding:7px 12px;border-left:3px solid var(--gold);background:var(--panel);border-radius:4px;margin:6px 0;font-size:15px}
-.err{border-left-color:var(--cardinal);color:var(--cardinal)}
-.done{border-left-color:var(--ok)}
-a.open{display:inline-block;margin-top:10px;font-weight:700}
-.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px;margin-right:6px}
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>ADS Control Panel</title>
+<style>@css@
+label{display:block;font-weight:600;margin:12px 0 5px;font-size:13px;color:var(--muted)}
+input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;font:14px var(--mono);background:var(--panel2);color:var(--text)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+.run{font:700 14px var(--ui);border:0;border-radius:8px;padding:11px 18px;background:var(--accent);color:#06121f;cursor:pointer;margin-top:14px;
+  display:inline-flex;gap:8px;align-items:center}
+.run:hover{filter:brightness(1.1)}
+.card h2{font-size:18px;display:flex;gap:10px;align-items:center}
+.card .lead{color:var(--muted);font-size:14px;margin-top:6px}
+#log{margin-top:16px;background:#060a14;border:1px solid var(--line);border-radius:12px;padding:14px;font:13px/1.7 var(--mono);color:#cfe8ff;min-height:70px}
+#log:empty::before{content:"> waiting for a job";color:var(--dim)}
+.step::before{content:"> ";color:var(--accent)}
+.err{color:var(--hot)}.done{color:var(--ok)}
+a.open{display:inline-block;margin:10px 16px 0 0;font:700 14px var(--ui);color:var(--accent-ink)}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:s .8s linear infinite;vertical-align:-1px;margin-right:6px}
 @keyframes s{to{transform:rotate(360deg)}}
 </style></head><body>
-<div class="band"><div class="wrap">
-<div class="eyebrow">Artifact Disagreement Scorer</div>
-<h1>First-look report</h1>
-<p>Point the tool at a drive, and it writes a plain-language report of anything worth a second look. The drive is only read, never changed.</p>
-</div></div>
-<div class="wrap">
+<header class="top"><div class="wrap"><div class="brand"><span class="dot"></span>ADS // CONTROL PANEL</div>
+<div class="case"><span class="pill">read-only · this computer only</span></div><div class="spacer"></div>
+<button class="iconbtn" data-act="theme" title="Light or dark"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button></div></header>
+<main class="wrap">
+<div class="ph"><div><h2>Point the tool at a drive</h2><div class="sub">It reads the drive without changing it and opens a report.</div></div></div>
+<div class="grid g2">
 <div class="card">
-<h2>Windows drive</h2>
-<p class="hint">Checks the dates Windows keeps for each file. Give either an NTFS drive image (quickest: reads the file table directly), or the folder of record files made by scripts/run_parsers.ps1 (adds the change journal, shortcuts, Prefetch and event logs).</p>
-<label for="ntfs">NTFS drive image, or folder with the record files</label>
-<input type="text" id="ntfs" placeholder="C:\Cases\Case01\parsed">
-<button onclick="run('ntfs','ntfs')">Run on this folder</button>
-</div>
-<div class="card">
-<h2>First look at a drive image</h2>
-<p class="hint">Asks eight questions of every file (disguised, hidden, locked, password written down, and so on). Works on FAT and NTFS images (.img, .dd, .raw).</p>
-<label for="fat">Drive image file</label>
+<h2><svg class="ico" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 15h.01M10 15h8M6 9h12"/></svg>First look at a drive image</h2>
+<p class="lead">Eight questions of every file: disguised, hidden, locked, password written down… FAT or NTFS (.img, .dd, .raw).</p>
+<label for="fat">Drive image</label>
 <input type="text" id="fat" placeholder="C:\Cases\26Fall_Project2.img">
-<label for="key">Optional: your own findings, to compare (answer key .csv)</label>
+<label for="key">Optional: your own findings to compare with (answer key .csv)</label>
 <input type="text" id="key" placeholder="proof\project2_answer_key.csv">
-<p class="hint">If you give an answer key, a second page shows where the tool ranked each item you found by hand.</p>
-<button onclick="run('fat','fat')">Run on this image</button>
+<button class="run" onclick="run('fat','fat')">Run first look ›</button>
 </div>
+<div class="card">
+<h2><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Windows date checks</h2>
+<p class="lead">Compares the dates Windows keeps in different places. An NTFS image, or the folder made by scripts/run_parsers.ps1 (adds more records).</p>
+<label for="ntfs">NTFS image, or folder of record files</label>
+<input type="text" id="ntfs" placeholder="C:\Cases\Case01\parsed">
+<button class="run" onclick="run('ntfs','ntfs')">Run date checks ›</button>
+</div></div>
 <div id="log"></div>
-</div>
+</main>
 <script>
 const TOKEN='@TOKEN@';
 let timer=null;
@@ -279,13 +270,13 @@ function poll(job){
       if(d.status==='done'){clearInterval(timer);
         let done=el('div','step done','Done. The report is saved in: '+d.folder);
         log.appendChild(done);
-        let a=el('a','open','Open the report ▸');a.href=d.report;a.target='_blank';
+        let a=el('a','open','Open the report ›');a.href=d.report;a.target='_blank';
         log.appendChild(a);
-        if(d.proof){let b=el('a','open','Open the comparison with your findings ▸');b.href=d.proof;b.target='_blank';
-          b.style.marginLeft='18px';log.appendChild(b);}
+        if(d.proof){let b=el('a','open','Open the comparison with your findings ›');b.href=d.proof;b.target='_blank';log.appendChild(b);}
       }
     });
   },600);
 }
 </script>
+<script>@js@</script>
 </body></html>"""

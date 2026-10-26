@@ -13,7 +13,9 @@ def render(data, standalone=True):
     with open(TEMPLATE, encoding="utf-8") as fh:
         page = fh.read()
     # File names come from the evidence: keep them inert inside the script element.
+    from .theme import THEME_CSS, THEME_JS
     blob = json.dumps(data, ensure_ascii=False, default=str).replace("</", "<\\/").replace("<!--", "<\\!--")
+    page = page.replace("/*__THEME_CSS__*/", THEME_CSS, 1).replace("/*__THEME_JS__*/", THEME_JS, 1)
     page = page.replace("/*__DATA__*/null", blob, 1)
     return (HEAD + page + "\n</html>\n") if standalone else page
 

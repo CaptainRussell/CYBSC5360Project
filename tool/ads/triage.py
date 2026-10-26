@@ -581,7 +581,7 @@ class Triage:
             "image": {"path": os.path.abspath(self.image_path), "name": os.path.basename(self.image_path),
                       "bytes": os.path.getsize(self.image_path), "sha256": self.image_sha256(),
                       **self.vol.summary()},
-            "boot_hex": self.vol._read(0, 64).hex(),   # first bytes of the volume, shown in the briefing
+            "boot_hex": self.vol._read(0, 512).hex(),   # the volume's boot sector, mapped field by field in the report
             "strata": strata,
             "keys": keys,
             "locked": locked,

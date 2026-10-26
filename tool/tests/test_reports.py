@@ -3,6 +3,7 @@ usable, non-technical interface: the NTFS briefing, the evaluation charts, the
 folder-based ingest, and the explanation wording."""
 
 import os
+import re
 import tempfile
 import unittest
 
@@ -53,6 +54,13 @@ class TestPipelineAndBriefing(unittest.TestCase):
             # No stray template tokens survived substitution.
             self.assertNotIn("@leads@", html)
             self.assertNotIn("@palette@", html)
+            self.assertNotRegex(html, r"@[a-z]+@")
+            # Rebuilding the page from the saved files gives the same page.
+            from ads.rerender import rerender
+            os.rename(os.path.join(out, "briefing.html"), os.path.join(d, "first.html"))
+            rerender(out)
+            strip = lambda s: re.sub(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", "", s)
+            self.assertEqual(strip(_read(os.path.join(out, "briefing.html"))), strip(html))
 
     def test_ingest_without_mft_is_a_clear_error(self):
         cfg = load_config(None)

@@ -213,6 +213,12 @@ the trace of a bulk copy. R6 on its own (the check commercial tools offer) flags
 report did not say that the whole drive's dates disagree. That is a gap in how
 system-wide findings are reported, discussed in Section VI.
 
+*Change made after the Project 2 run (presentation only).* The date report now has
+a "Drive-wide pattern" panel that names any check firing on at least 50 files and
+90% of the files it could check (here R6 and R7). No check, weight or score
+changed; the saved Project 2 results were redrawn with `ads rerender`, and the
+panel's numbers are the counts in the table above.
+
 **Confirmed in FTK.** For `bin/gzip` (MFT record 78), FTK's NTFS properties show
 the File Name dates as 5 Oct 2011 03:42:54 UTC, the same second ADS reads, and the
 record's last change as 2 Oct 2017 11:57:32 UTC. The folder's own index keeps a

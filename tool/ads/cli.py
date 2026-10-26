@@ -187,6 +187,12 @@ def cmd_proof(a):
     print("open the plain-language proof page:", path)
 
 
+def cmd_rerender(a):
+    from .rerender import rerender
+    for folder in a.folders:
+        print("rebuilt", rerender(folder))
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="ads", description="Artifact Disagreement Scorer")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -243,6 +249,10 @@ def main(argv=None):
     s = sub.add_parser("gui", help="open a point-and-click control panel in the browser")
     s.add_argument("port", nargs="?", help="port to listen on (default 8765)")
     s.set_defaults(fn=lambda a: __import__("ads.gui", fromlist=["main"]).main([a.port] if a.port else None))
+
+    s = sub.add_parser("rerender", help="rebuild the report page(s) in saved results folders (no image needed)")
+    s.add_argument("folders", nargs="+", help="results folder(s) holding triage.json or scores.csv")
+    s.set_defaults(fn=cmd_rerender)
 
     s = sub.add_parser("triage", help="first-stop triage of a raw FAT image, with an interactive briefing")
     s.add_argument("image", help="the drive image file (.img, .dd, .raw)")
