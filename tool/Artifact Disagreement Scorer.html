@@ -296,16 +296,37 @@ body.app{overflow-x:hidden}
 .btn.alt{background:var(--panel2);color:var(--text);border:1px solid var(--line2)}
 .btn:hover{filter:brightness(1.08)}
 /* report view */
-.rbar{position:sticky;top:0;z-index:25;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 18px;background:var(--panel);border-bottom:1px solid var(--line)}
-.rbar .spacer{flex:1}
-.rbar .seg button{height:32px}
 .menu{position:relative}
-.menu .list{position:absolute;right:0;top:40px;min-width:270px;background:var(--panel);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--shadow);padding:6px;display:none;z-index:30}
+.menu .list{position:absolute;right:0;top:40px;max-height:70vh;overflow:auto;min-width:270px;background:var(--panel);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--shadow);padding:6px;display:none;z-index:30}
 .menu.open .list{display:block;animation:enter .2s ease}
 .menu .list button{display:flex;width:100%;gap:10px;align-items:center;text-align:left;border:0;background:none;color:var(--text);font:14px var(--ui);padding:8px 10px;border-radius:7px;cursor:pointer}
 .menu .list button:hover{background:var(--panel2)}
 .menu .list small{display:block;color:var(--dim);font-size:12px}
-#frame{display:block;width:100%;border:0;height:calc(100vh - 50px);background:var(--bg)}
+#frame{display:block;width:100%;border:0;height:calc(100vh - var(--bar, 104px));background:var(--bg)}
+.appbar[hidden]{display:none}
+.iconbtn.wide{display:inline-flex;align-items:center;gap:6px}
+@media (max-width:760px){.appbar .hide-s,.appbar .lbl{display:none}.appbar .case{display:none}}
+@media (max-width:520px){.appbar .brand .nm{display:none}.appbar .wrap{gap:6px}}
+.donebar{margin-bottom:14px;border-color:color-mix(in srgb,var(--ok) 45%,var(--line));animation:enter .5s ease both}
+.donebar .donebox{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center;text-align:left;padding:2px 4px}
+.donebar .donebox .tick{margin:0}
+.donebar #done-btns{justify-content:flex-end!important;margin-top:0!important}
+@media (max-width:760px){.donebar .donebox{grid-template-columns:minmax(0,1fr);text-align:center}.donebar .donebox .tick{margin:0 auto}.donebar #done-btns{justify-content:center!important}}
+.apptabs{border-top:1px solid var(--line)}
+.top .apptabs .wrap{height:auto;align-items:stretch}
+.apptabs .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.atab{display:inline-flex;align-items:center;gap:8px;padding:10px 14px 9px;border:0;border-bottom:2px solid transparent;background:none;color:var(--muted);font:600 14px var(--ui);cursor:pointer;white-space:nowrap;position:relative}
+.atab:hover:not([disabled]){color:var(--text)}
+.atab.on{color:var(--accent-ink);border-bottom-color:var(--accent)}
+.atab[disabled]{opacity:.45;cursor:default}
+.atab .ready{display:none;font:700 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:999px;background:var(--ok-soft);color:var(--ok)}
+.atab.fresh .ready{display:inline-block;animation:pulse 1.6s ease-in-out infinite}
+.atab.fresh{color:var(--text)}
+.atab.fresh::after{content:"";position:absolute;inset:4px 2px;border-radius:8px;box-shadow:0 0 0 1px var(--ok-soft),0 0 18px var(--ok-soft);pointer-events:none;animation:pulse 1.6s ease-in-out infinite}
+.atab .live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 1s ease-in-out infinite}
+.atab .live-dot.off{display:none}
+.view.on.from-r{animation:enterR .4s ease both}.view.on.from-l{animation:enterL .4s ease both}
+.flyer{position:fixed;z-index:60;pointer-events:none;border:2px solid var(--accent);border-radius:12px;background:var(--accent-soft);box-shadow:0 0 24px var(--accent);transition:all .45s cubic-bezier(.6,0,.2,1)}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--accent);border-radius:999px;padding:8px 16px;font-size:13px;box-shadow:var(--shadow);z-index:80;display:none}
 .toast.on{display:block;animation:enter .25s ease}
 </style>
@@ -360,15 +381,28 @@ body.app{overflow-x:hidden}
 <footer class="foot"><div class="wrap"><div class="credit"><b>Artifact Disagreement Scorer</b><span>· Created by Captain Scott Russell for CPRE 5360</span></div>Version 0.2.0. The same analysis as the command-line tool, run in your browser.</div></footer>
 </div>
 
-<div class="view" id="v-live">
-<header class="top"><div class="wrap">
-  <div class="brand" title="Created by Captain Scott Russell for CPRE 5360"><span class="dot"></span><span class="nm">ARTIFACT DISAGREEMENT SCORER<small>ANALYSING</small></span></div>
+<header class="top appbar" id="appbar" hidden><div class="wrap">
+  <div class="brand" title="Created by Captain Scott Russell for CPRE 5360"><span class="dot"></span><span class="nm">ARTIFACT DISAGREEMENT SCORER<small id="a-state">ANALYSING</small></span></div>
   <div class="case"><b id="l-name"></b><span class="pill acc" id="l-fs"></span><span class="pill hide-s" id="l-size"></span></div>
   <div class="spacer"></div>
-  <button class="iconbtn" id="skip" title="Skip the animation and show the report as soon as it is ready">Skip animation ›</button>
-</div></header>
+  <button class="iconbtn" id="skip" title="Skip the animation and finish as soon as the results are ready">Skip animation ›</button>
+  <button class="iconbtn wide" id="print" title="Print this report" style="display:none"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg></button>
+  <button class="iconbtn" data-act="theme" id="a-theme" title="Light or dark"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+  <button class="iconbtn wide" id="replay" title="Play the analysis again" style="display:none"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="lbl">Replay</span></button>
+  <div class="menu" id="save" style="display:none"><button class="btn" id="save-btn"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6M4 20h16"/></svg><span class="hide-s">Save results</span></button><div class="list" id="save-list"></div></div>
+  <button class="iconbtn" id="new" title="Analyse another image">New</button>
+</div>
+<nav class="apptabs" aria-label="Pages"><div class="wrap" id="apptabs">
+  <button class="atab on" data-p="analysis"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Analysis<span class="live-dot"></span></button>
+  <button class="atab" data-p="first" disabled><svg class="ico" viewBox="0 0 24 24"><path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/></svg>First look<span class="ready">ready</span></button>
+  <button class="atab" data-p="dates" disabled><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Date checks<span class="ready">ready</span></button>
+</div></nav></header>
+<div class="view" id="v-live">
 <main class="wrap">
   <div class="steps" id="steps"></div>
+      <div class="card donebar" id="card-done" style="display:none"><div class="donebox"><div class="tick"><svg class="ico" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg></div>
+        <div><h2 style="font-size:20px">Analysis complete</h2><p class="note" id="l-summary" style="margin-top:4px"></p><div class="note" style="margin-top:4px">This page stays: come back with the Analysis tab, or press Replay to watch it again.</div></div>
+        <div id="done-btns" style="display:flex;gap:8px;flex-wrap:wrap"></div></div></div>
   <div class="live">
     <div class="grid c1">
       <div class="card"><h3>Start of the drive</h3><div class="lhex" id="l-hex"></div><div class="lfields" id="l-fields"></div></div>
@@ -385,21 +419,12 @@ body.app{overflow-x:hidden}
       <div class="card" id="card-hash" style="display:none"><h3>Fingerprint (SHA-256)</h3><div class="hash" id="l-hash"></div><div class="progress"><i id="p-hash"></i></div>
         <div class="note" style="margin-top:6px">The whole image's fingerprint, so anyone can confirm they examined the same evidence.</div></div>
       <div class="card" id="card-dates" style="display:none"><h3>Windows date checks</h3><div class="qtiles" id="l-dq" style="grid-template-columns:repeat(6,minmax(0,1fr))"></div><div class="progress"><i id="p-dates"></i></div><div class="note" id="l-dnote" style="margin-top:6px"></div></div>
-      <div class="card" id="card-done" style="display:none"><div class="donebox"><div class="tick"><svg class="ico" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg></div>
-        <h2 style="font-size:20px">Report ready</h2><p class="note" id="l-summary" style="margin-top:6px"></p><div style="margin-top:12px"><button class="btn" id="open-report">Open the report ›</button></div></div></div>
     </div>
   </div>
 </main>
 </div>
 
 <div class="view" id="v-report">
-  <div class="rbar">
-    <button class="btn alt" id="new" title="Analyse another image">‹ New analysis</button>
-    <b id="r-name" class="mono" style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:36vw"></b>
-    <div class="seg" id="r-which"></div>
-    <div class="spacer"></div>
-    <div class="menu" id="save"><button class="btn" id="save-btn"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6M4 20h16"/></svg>Save results</button><div class="list" id="save-list"></div></div>
-  </div>
   <iframe id="frame" title="Report"></iframe>
 </div>
 <div class="toast" id="toast"></div>
@@ -3043,7 +3068,44 @@ const CI = {
 const QN = { C1: "Disguised", C2: "Hidden at end", C3: "Locked", C4: "Password", C5: "Odd one out", C6: "Never mentioned", C7: "Archive", F1: "Unusual time" };
 const FAM = { image: "var(--f5)", document: "var(--f3)", archive: "var(--f2)", executable: "var(--f7)", text: "var(--f4)", database: "var(--f6)", media: "var(--f6)", metadata: "var(--minor)", unknown: "var(--minor)" };
 const toast = msg => { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("on"), 2600); };
-const show = id => { $$(".view").forEach(v => v.classList.toggle("on", v.id === id)); window.scrollTo({ top: 0 }); };
+const show = (id, dir) => { $$(".view").forEach(v => { v.classList.remove("from-r", "from-l"); v.classList.toggle("on", v.id === id); if (v.id === id && dir) v.classList.add(dir); }); window.scrollTo({ top: 0 }); };
+/* the pages after a drive is dropped: the analysis itself, then the reports; the analysis page always stays */
+const PAGES = ["analysis", "first", "dates"];
+let page = "analysis";
+function goPage(p) {
+  const tab = $('#apptabs [data-p="' + p + '"]');
+  if (!tab || tab.disabled) return;
+  const dir = PAGES.indexOf(p) > PAGES.indexOf(page) ? "from-r" : PAGES.indexOf(p) < PAGES.indexOf(page) ? "from-l" : "";
+  page = p;
+  $$("#apptabs .atab").forEach(t => t.classList.toggle("on", t.dataset.p === p));
+  tab.classList.remove("fresh");
+  $("#print").style.display = p === "analysis" ? "none" : "";
+  if (p === "analysis") show("v-live", dir);
+  else {
+    current = p;
+    if ($("#frame").dataset.k !== p) { $("#frame").src = reports[p].url; $("#frame").dataset.k = p; }
+    saveMenu();
+    show("v-report", dir);
+  }
+}
+$("#apptabs").addEventListener("click", e => { const b = e.target.closest(".atab"); if (b) goPage(b.dataset.p); });
+/* a highlight travels from what was clicked to the tab it opens */
+function flyTo(from, p) {
+  const tab = $('#apptabs [data-p="' + p + '"]');
+  if (!from || !tab || matchMedia("(prefers-reduced-motion: reduce)").matches) return goPage(p);
+  const a = from.getBoundingClientRect(), b = tab.getBoundingClientRect(), g = document.createElement("div");
+  g.className = "flyer"; Object.assign(g.style, { left: a.left + "px", top: a.top + "px", width: a.width + "px", height: a.height + "px" });
+  document.body.appendChild(g);
+  requestAnimationFrame(() => requestAnimationFrame(() => Object.assign(g.style, { left: b.left + "px", top: b.top + "px", width: b.width + "px", height: b.height + "px", opacity: ".35" })));
+  setTimeout(() => { g.remove(); goPage(p); }, 460);
+}
+const setBar = () => { const h = $("#appbar").offsetHeight; if (h) document.documentElement.style.setProperty("--bar", h + "px"); };
+addEventListener("resize", setBar);
+const theme = () => document.documentElement.dataset.theme || "dark";
+const toFrame = m => { const f = $("#frame").contentWindow; if (f) f.postMessage(m, "*"); };
+$("#frame").addEventListener("load", () => toFrame({ theme: theme() }));
+$("#a-theme").addEventListener("click", () => setTimeout(() => toFrame({ theme: theme() }), 0));
+$("#print").addEventListener("click", () => toFrame({ print: true }));
 
 /* ---------------- start screen ---------------- */
 function wireDrop(zone, input, onFiles) {
@@ -3074,13 +3136,13 @@ function newWorker() {
   const src = $("#engine-src").textContent;
   try { worker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" }))); }
   catch (e) { showError("This browser would not start the background reader (" + e.message + "). Try Chrome, Edge or Firefox."); return null; }
-  worker.onmessage = e => Q.push(e.data);
+  worker.onmessage = e => { Q.push(e.data); if (run) run.log.push(e.data); };
   worker.onerror = e => Q.push({ ev: "error", message: e.message || "The analysis stopped unexpectedly." });
   return worker;
 }
 
 /* ---------------- live view ---------------- */
-let Q = [], fast = false, gateUntil = 0, itemBuf = [], hitBuf = [], run = null;
+let reports = {}, Q = [], fast = false, gateUntil = 0, itemBuf = [], hitBuf = [], run = null;
 const STEPS_IMG = [["open", "Open the drive"], ["read", "Read every file"], ["check", "Ask eight questions"], ["score", "Score and rank"], ["hash", "Fingerprint"], ["dates", "Windows date checks"], ["report", "Report"]];
 const STEPS_REC = [["load", "Load the records"], ["dates", "Eleven date checks"], ["report", "Report"]];
 function setSteps(list) { $("#steps").innerHTML = list.map(s => '<div class="step" data-s="' + s[0] + '">' + s[1] + "</div>").join(""); }
@@ -3090,7 +3152,7 @@ function stepOn(id) {
 }
 function resetLive(name, bytes, steps) {
   Q = []; itemBuf = []; hitBuf = []; fast = false; gateUntil = 0;
-  run = { name, bytes, items: 0, zip: 0, noise: 0, kinds: new Map(), counts: {}, cells: new Uint16Array(384), firstlook: null, dates: null, fs: "", done: false };
+  run = { name, bytes, items: 0, zip: 0, noise: 0, kinds: new Map(), counts: {}, cells: new Uint16Array(384), firstlook: null, dates: null, fs: "", done: false, log: [], steps };
   $("#l-name").textContent = name; $("#l-size").textContent = size(bytes); $("#l-fs").textContent = "…";
   setSteps(steps); stepOn(steps[0][0]);
   $("#l-hex").innerHTML = ""; $("#l-fields").innerHTML = '<div class="note">Waiting for the drive…</div>';
@@ -3102,23 +3164,47 @@ function resetLive(name, bytes, steps) {
   ["#card-rank", "#card-hash", "#card-dates", "#card-done"].forEach(s => $(s).style.display = "none");
   $("#card-q").style.display = steps === STEPS_REC ? "none" : "";
   $("#l-path").innerHTML = "&nbsp;";
-  $("#skip").style.display = "";
+  $("#skip").style.display = ""; $("#replay").style.display = "none";
+  $("#a-state").textContent = "ANALYSING"; $(".atab .live-dot").classList.remove("off");
+  $("#appbar").hidden = false; setBar();
+  page = "analysis"; $$("#apptabs .atab").forEach(t => t.classList.toggle("on", t.dataset.p === "analysis"));
   show("v-live");
 }
+/* play the recorded analysis again; the reports stay as they are */
+function replay() {
+  const saved = run;
+  resetLive(saved.name, saved.bytes, saved.steps);
+  Object.assign(run, { log: saved.log, firstlook: saved.firstlook, dates: saved.dates, replaying: true });
+  setCols(saved.steps === STEPS_REC);
+  if (saved.steps === STEPS_REC) { $("#l-fs").textContent = "Windows records"; $("#card-dates").style.display = ""; dateTiles(); }
+  for (const k of Object.keys(reports)) $('#apptabs [data-p="' + k + '"]').disabled = false;
+  Q = saved.log.slice();
+  requestAnimationFrame(tick);
+}
+$("#replay").addEventListener("click", replay);
+const setCols = rec => { $(".c1").style.display = rec ? "none" : ""; $(".c2").style.display = rec ? "none" : ""; };
 $("#skip").addEventListener("click", () => { fast = true; gateUntil = 0; $("#skip").style.display = "none"; });
 
+function resetTabs() {
+  Object.values(reports).forEach(r => URL.revokeObjectURL(r.url)); reports = {};
+  $$("#apptabs .atab").forEach(t => { if (t.dataset.p !== "analysis") { t.disabled = true; t.classList.remove("fresh"); t.style.display = ""; } });
+  $("#frame").removeAttribute("src"); delete $("#frame").dataset.k;
+  $("#save").style.display = "none";
+}
 function startImage(file) {
   $("#err").classList.remove("on");
+  resetTabs();
   resetLive(file.name, file.size, STEPS_IMG);
-  $(".c1").style.display = ""; $(".c2").style.display = "";
+  setCols(false);
   if (!newWorker()) return;
   worker.postMessage({ cmd: "image", file });
   requestAnimationFrame(tick);
 }
 function startRecords(files) {
   $("#err").classList.remove("on");
+  resetTabs();
   resetLive(files.length + " record file" + (files.length === 1 ? "" : "s"), files.reduce((a, f) => a + f.size, 0), STEPS_REC);
-  $(".c1").style.display = "none"; $(".c2").style.display = "none";
+  setCols(true);
   $("#l-fs").textContent = "Windows records";
   $("#card-dates").style.display = ""; dateTiles();
   if (!newWorker()) return;
@@ -3287,14 +3373,25 @@ function finish() {
   const notes = (run.firstlook && run.firstlook.notes) || [];
   if (notes.length) $("#l-summary").insertAdjacentHTML("beforeend", '<br><span style="color:var(--warn)">' + esc(notes.length + " note" + (notes.length === 1 ? "" : "s") + ": " + notes.slice(0, 3).join(" ")) + "</span>");
   $("#card-done").style.display = "";
-  $("#card-done").scrollIntoView({ behavior: "smooth", block: "center" });
-  buildReports();
-  setTimeout(() => { if ($("#v-live").classList.contains("on")) openReport(); }, fast ? 300 : 1800);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (!run.replaying) buildReports();
+  $("#a-state").textContent = "ANALYSIS COMPLETE"; $(".atab .live-dot").classList.add("off");
+  $("#replay").style.display = ""; $("#save").style.display = ""; saveMenu();
+  // the report tabs light up; nothing moves until you choose
+  for (const k of ["first", "dates"]) { const t = $('#apptabs [data-p="' + k + '"]'); t.disabled = !reports[k]; t.style.display = reports[k] || k === "first" ? "" : "none"; if (reports[k] && !run.replaying) t.classList.add("fresh"); }
+  $("#done-btns").innerHTML = Object.keys(reports).map((k, i) => '<button class="btn' + (i ? " alt" : "") + '" data-open="' + k + '">Open the ' + (k === "first" ? "first-look report" : "date checks") + " ›</button>").join("");
+  setBar();
 }
-$("#open-report").addEventListener("click", () => openReport());
+$("#done-btns").addEventListener("click", e => { const b = e.target.closest("[data-open]"); if (b) flyTo(b, b.dataset.open); });
+
 
 /* ---------------- reports ---------------- */
-let reports = {}, current = null;
+let current = null;
+/* inside the app, a report hides its own title bar (the app bar above it has the same buttons) and takes
+   theme and print requests from the app; the saved file is the plain report */
+const EMBED = '<style>body>header.top{display:none}.tabs{top:0!important}</style><script>addEventListener("message",e=>{const m=e.data||{};' +
+  'if(m.theme)document.documentElement.dataset.theme=m.theme;if(m.print)window.print();});<\/script>';
+const embed = html => { const i = html.lastIndexOf("</body>"); return i < 0 ? html + EMBED : html.slice(0, i) + EMBED + html.slice(i); };
 const inert = obj => JSON.stringify(obj).replace(/<\//g, "<\\/").replace(/<\!--/g, "<\\!--");
 function buildReports() {
   Object.values(reports).forEach(r => URL.revokeObjectURL(r.url));
@@ -3302,28 +3399,16 @@ function buildReports() {
   const stem = run.name.replace(/\.[^.]+$/, "");
   if (run.firstlook) {
     const html = TEMPLATES.firstlook_head + TEMPLATES.firstlook.replace("/*__DATA__*/null", inert(run.firstlook.data)) + "\n</html>\n";
-    reports.first = { label: "First look", html, url: URL.createObjectURL(new Blob([html], { type: "text/html" })), folder: stem + " report",
+    reports.first = { label: "First look", html, url: URL.createObjectURL(new Blob([embed(html)], { type: "text/html" })), folder: stem + " report",
       files: { "briefing.html": html, "triage.json": JSON.stringify(run.firstlook.data, null, 1), "leads.csv": run.firstlook.leads_csv } };
   }
   if (run.dates) {
     const html = TEMPLATES.date.replace("/*__DATA__*/null", inert(run.dates.data));
-    reports.dates = { label: "Date checks", html, url: URL.createObjectURL(new Blob([html], { type: "text/html" })),
+    reports.dates = { label: "Date checks", html, url: URL.createObjectURL(new Blob([embed(html)], { type: "text/html" })), saveUrl: null,
       folder: run.firstlook ? stem + " Windows report" : "Windows report", files: Object.assign({ "briefing.html": html }, run.dates.files) };
   }
 }
-function openReport(which) {
-  which = which || (reports.first ? "first" : "dates");
-  if (!reports[which]) return;
-  current = which;
-  $("#r-name").textContent = run.name;
-  const keys = Object.keys(reports);
-  $("#r-which").innerHTML = keys.length > 1 ? keys.map(k => '<button aria-pressed="' + (k === which) + '" data-k="' + k + '">' + reports[k].label + "</button>").join("") : "";
-  $("#frame").src = reports[which].url;
-  saveMenu();
-  show("v-report");
-}
-$("#r-which").addEventListener("click", e => { const b = e.target.closest("button"); if (b) openReport(b.dataset.k); });
-$("#new").addEventListener("click", () => { if (worker) worker.terminate(); worker = null; show("v-home"); });
+$("#new").addEventListener("click", () => { if (worker) worker.terminate(); worker = null; if (run) run.done = true; $("#appbar").hidden = true; show("v-home"); });
 
 /* ---------------- saving ---------------- */
 function download(name, data, type) {
@@ -3334,7 +3419,7 @@ function download(name, data, type) {
 const ICO = { html: '<path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>', data: '<path d="M4 6h16M4 12h16M4 18h16"/>', zip: '<path d="M3 7h18v13H3zM3 7l2-3h14l2 3M10 12h4"/>', tab: '<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>' };
 const TYPES = { html: "text/html", json: "application/json", csv: "text/csv" };
 function saveMenu() {
-  const items = [["tab", "Open the report in its own tab", "Full window; print or keep it open", () => window.open(reports[current].url, "_blank")]];
+  const items = current && reports[current] ? [["tab", "Open this report in its own tab", "Full window, keep it open", () => window.open(URL.createObjectURL(new Blob([reports[current].html], { type: "text/html" })), "_blank")]] : [];
   for (const [k, r] of Object.entries(reports)) for (const name of Object.keys(r.files)) {
     const ext = name.split(".").pop();
     items.push([ext === "html" ? "html" : "data", r.label + ": " + name, { "briefing.html": "the report page", "triage.json": "every result, as data", "leads.csv": "opens in Excel",

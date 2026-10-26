@@ -19,7 +19,44 @@ const CI = {
 const QN = { C1: "Disguised", C2: "Hidden at end", C3: "Locked", C4: "Password", C5: "Odd one out", C6: "Never mentioned", C7: "Archive", F1: "Unusual time" };
 const FAM = { image: "var(--f5)", document: "var(--f3)", archive: "var(--f2)", executable: "var(--f7)", text: "var(--f4)", database: "var(--f6)", media: "var(--f6)", metadata: "var(--minor)", unknown: "var(--minor)" };
 const toast = msg => { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("on"), 2600); };
-const show = id => { $$(".view").forEach(v => v.classList.toggle("on", v.id === id)); window.scrollTo({ top: 0 }); };
+const show = (id, dir) => { $$(".view").forEach(v => { v.classList.remove("from-r", "from-l"); v.classList.toggle("on", v.id === id); if (v.id === id && dir) v.classList.add(dir); }); window.scrollTo({ top: 0 }); };
+/* the pages after a drive is dropped: the analysis itself, then the reports; the analysis page always stays */
+const PAGES = ["analysis", "first", "dates"];
+let page = "analysis";
+function goPage(p) {
+  const tab = $('#apptabs [data-p="' + p + '"]');
+  if (!tab || tab.disabled) return;
+  const dir = PAGES.indexOf(p) > PAGES.indexOf(page) ? "from-r" : PAGES.indexOf(p) < PAGES.indexOf(page) ? "from-l" : "";
+  page = p;
+  $$("#apptabs .atab").forEach(t => t.classList.toggle("on", t.dataset.p === p));
+  tab.classList.remove("fresh");
+  $("#print").style.display = p === "analysis" ? "none" : "";
+  if (p === "analysis") show("v-live", dir);
+  else {
+    current = p;
+    if ($("#frame").dataset.k !== p) { $("#frame").src = reports[p].url; $("#frame").dataset.k = p; }
+    saveMenu();
+    show("v-report", dir);
+  }
+}
+$("#apptabs").addEventListener("click", e => { const b = e.target.closest(".atab"); if (b) goPage(b.dataset.p); });
+/* a highlight travels from what was clicked to the tab it opens */
+function flyTo(from, p) {
+  const tab = $('#apptabs [data-p="' + p + '"]');
+  if (!from || !tab || matchMedia("(prefers-reduced-motion: reduce)").matches) return goPage(p);
+  const a = from.getBoundingClientRect(), b = tab.getBoundingClientRect(), g = document.createElement("div");
+  g.className = "flyer"; Object.assign(g.style, { left: a.left + "px", top: a.top + "px", width: a.width + "px", height: a.height + "px" });
+  document.body.appendChild(g);
+  requestAnimationFrame(() => requestAnimationFrame(() => Object.assign(g.style, { left: b.left + "px", top: b.top + "px", width: b.width + "px", height: b.height + "px", opacity: ".35" })));
+  setTimeout(() => { g.remove(); goPage(p); }, 460);
+}
+const setBar = () => { const h = $("#appbar").offsetHeight; if (h) document.documentElement.style.setProperty("--bar", h + "px"); };
+addEventListener("resize", setBar);
+const theme = () => document.documentElement.dataset.theme || "dark";
+const toFrame = m => { const f = $("#frame").contentWindow; if (f) f.postMessage(m, "*"); };
+$("#frame").addEventListener("load", () => toFrame({ theme: theme() }));
+$("#a-theme").addEventListener("click", () => setTimeout(() => toFrame({ theme: theme() }), 0));
+$("#print").addEventListener("click", () => toFrame({ print: true }));
 
 /* ---------------- start screen ---------------- */
 function wireDrop(zone, input, onFiles) {
@@ -50,13 +87,13 @@ function newWorker() {
   const src = $("#engine-src").textContent;
   try { worker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" }))); }
   catch (e) { showError("This browser would not start the background reader (" + e.message + "). Try Chrome, Edge or Firefox."); return null; }
-  worker.onmessage = e => Q.push(e.data);
+  worker.onmessage = e => { Q.push(e.data); if (run) run.log.push(e.data); };
   worker.onerror = e => Q.push({ ev: "error", message: e.message || "The analysis stopped unexpectedly." });
   return worker;
 }
 
 /* ---------------- live view ---------------- */
-let Q = [], fast = false, gateUntil = 0, itemBuf = [], hitBuf = [], run = null;
+let reports = {}, Q = [], fast = false, gateUntil = 0, itemBuf = [], hitBuf = [], run = null;
 const STEPS_IMG = [["open", "Open the drive"], ["read", "Read every file"], ["check", "Ask eight questions"], ["score", "Score and rank"], ["hash", "Fingerprint"], ["dates", "Windows date checks"], ["report", "Report"]];
 const STEPS_REC = [["load", "Load the records"], ["dates", "Eleven date checks"], ["report", "Report"]];
 function setSteps(list) { $("#steps").innerHTML = list.map(s => '<div class="step" data-s="' + s[0] + '">' + s[1] + "</div>").join(""); }
@@ -66,7 +103,7 @@ function stepOn(id) {
 }
 function resetLive(name, bytes, steps) {
   Q = []; itemBuf = []; hitBuf = []; fast = false; gateUntil = 0;
-  run = { name, bytes, items: 0, zip: 0, noise: 0, kinds: new Map(), counts: {}, cells: new Uint16Array(384), firstlook: null, dates: null, fs: "", done: false };
+  run = { name, bytes, items: 0, zip: 0, noise: 0, kinds: new Map(), counts: {}, cells: new Uint16Array(384), firstlook: null, dates: null, fs: "", done: false, log: [], steps };
   $("#l-name").textContent = name; $("#l-size").textContent = size(bytes); $("#l-fs").textContent = "…";
   setSteps(steps); stepOn(steps[0][0]);
   $("#l-hex").innerHTML = ""; $("#l-fields").innerHTML = '<div class="note">Waiting for the drive…</div>';
@@ -78,23 +115,47 @@ function resetLive(name, bytes, steps) {
   ["#card-rank", "#card-hash", "#card-dates", "#card-done"].forEach(s => $(s).style.display = "none");
   $("#card-q").style.display = steps === STEPS_REC ? "none" : "";
   $("#l-path").innerHTML = "&nbsp;";
-  $("#skip").style.display = "";
+  $("#skip").style.display = ""; $("#replay").style.display = "none";
+  $("#a-state").textContent = "ANALYSING"; $(".atab .live-dot").classList.remove("off");
+  $("#appbar").hidden = false; setBar();
+  page = "analysis"; $$("#apptabs .atab").forEach(t => t.classList.toggle("on", t.dataset.p === "analysis"));
   show("v-live");
 }
+/* play the recorded analysis again; the reports stay as they are */
+function replay() {
+  const saved = run;
+  resetLive(saved.name, saved.bytes, saved.steps);
+  Object.assign(run, { log: saved.log, firstlook: saved.firstlook, dates: saved.dates, replaying: true });
+  setCols(saved.steps === STEPS_REC);
+  if (saved.steps === STEPS_REC) { $("#l-fs").textContent = "Windows records"; $("#card-dates").style.display = ""; dateTiles(); }
+  for (const k of Object.keys(reports)) $('#apptabs [data-p="' + k + '"]').disabled = false;
+  Q = saved.log.slice();
+  requestAnimationFrame(tick);
+}
+$("#replay").addEventListener("click", replay);
+const setCols = rec => { $(".c1").style.display = rec ? "none" : ""; $(".c2").style.display = rec ? "none" : ""; };
 $("#skip").addEventListener("click", () => { fast = true; gateUntil = 0; $("#skip").style.display = "none"; });
 
+function resetTabs() {
+  Object.values(reports).forEach(r => URL.revokeObjectURL(r.url)); reports = {};
+  $$("#apptabs .atab").forEach(t => { if (t.dataset.p !== "analysis") { t.disabled = true; t.classList.remove("fresh"); t.style.display = ""; } });
+  $("#frame").removeAttribute("src"); delete $("#frame").dataset.k;
+  $("#save").style.display = "none";
+}
 function startImage(file) {
   $("#err").classList.remove("on");
+  resetTabs();
   resetLive(file.name, file.size, STEPS_IMG);
-  $(".c1").style.display = ""; $(".c2").style.display = "";
+  setCols(false);
   if (!newWorker()) return;
   worker.postMessage({ cmd: "image", file });
   requestAnimationFrame(tick);
 }
 function startRecords(files) {
   $("#err").classList.remove("on");
+  resetTabs();
   resetLive(files.length + " record file" + (files.length === 1 ? "" : "s"), files.reduce((a, f) => a + f.size, 0), STEPS_REC);
-  $(".c1").style.display = "none"; $(".c2").style.display = "none";
+  setCols(true);
   $("#l-fs").textContent = "Windows records";
   $("#card-dates").style.display = ""; dateTiles();
   if (!newWorker()) return;
@@ -263,14 +324,25 @@ function finish() {
   const notes = (run.firstlook && run.firstlook.notes) || [];
   if (notes.length) $("#l-summary").insertAdjacentHTML("beforeend", '<br><span style="color:var(--warn)">' + esc(notes.length + " note" + (notes.length === 1 ? "" : "s") + ": " + notes.slice(0, 3).join(" ")) + "</span>");
   $("#card-done").style.display = "";
-  $("#card-done").scrollIntoView({ behavior: "smooth", block: "center" });
-  buildReports();
-  setTimeout(() => { if ($("#v-live").classList.contains("on")) openReport(); }, fast ? 300 : 1800);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (!run.replaying) buildReports();
+  $("#a-state").textContent = "ANALYSIS COMPLETE"; $(".atab .live-dot").classList.add("off");
+  $("#replay").style.display = ""; $("#save").style.display = ""; saveMenu();
+  // the report tabs light up; nothing moves until you choose
+  for (const k of ["first", "dates"]) { const t = $('#apptabs [data-p="' + k + '"]'); t.disabled = !reports[k]; t.style.display = reports[k] || k === "first" ? "" : "none"; if (reports[k] && !run.replaying) t.classList.add("fresh"); }
+  $("#done-btns").innerHTML = Object.keys(reports).map((k, i) => '<button class="btn' + (i ? " alt" : "") + '" data-open="' + k + '">Open the ' + (k === "first" ? "first-look report" : "date checks") + " ›</button>").join("");
+  setBar();
 }
-$("#open-report").addEventListener("click", () => openReport());
+$("#done-btns").addEventListener("click", e => { const b = e.target.closest("[data-open]"); if (b) flyTo(b, b.dataset.open); });
+
 
 /* ---------------- reports ---------------- */
-let reports = {}, current = null;
+let current = null;
+/* inside the app, a report hides its own title bar (the app bar above it has the same buttons) and takes
+   theme and print requests from the app; the saved file is the plain report */
+const EMBED = '<style>body>header.top{display:none}.tabs{top:0!important}</style><script>addEventListener("message",e=>{const m=e.data||{};' +
+  'if(m.theme)document.documentElement.dataset.theme=m.theme;if(m.print)window.print();});<\/script>';
+const embed = html => { const i = html.lastIndexOf("</body>"); return i < 0 ? html + EMBED : html.slice(0, i) + EMBED + html.slice(i); };
 const inert = obj => JSON.stringify(obj).replace(/<\//g, "<\\/").replace(/<!--/g, "<\\!--");
 function buildReports() {
   Object.values(reports).forEach(r => URL.revokeObjectURL(r.url));
@@ -278,28 +350,16 @@ function buildReports() {
   const stem = run.name.replace(/\.[^.]+$/, "");
   if (run.firstlook) {
     const html = TEMPLATES.firstlook_head + TEMPLATES.firstlook.replace("/*__DATA__*/null", inert(run.firstlook.data)) + "\n</html>\n";
-    reports.first = { label: "First look", html, url: URL.createObjectURL(new Blob([html], { type: "text/html" })), folder: stem + " report",
+    reports.first = { label: "First look", html, url: URL.createObjectURL(new Blob([embed(html)], { type: "text/html" })), folder: stem + " report",
       files: { "briefing.html": html, "triage.json": JSON.stringify(run.firstlook.data, null, 1), "leads.csv": run.firstlook.leads_csv } };
   }
   if (run.dates) {
     const html = TEMPLATES.date.replace("/*__DATA__*/null", inert(run.dates.data));
-    reports.dates = { label: "Date checks", html, url: URL.createObjectURL(new Blob([html], { type: "text/html" })),
+    reports.dates = { label: "Date checks", html, url: URL.createObjectURL(new Blob([embed(html)], { type: "text/html" })), saveUrl: null,
       folder: run.firstlook ? stem + " Windows report" : "Windows report", files: Object.assign({ "briefing.html": html }, run.dates.files) };
   }
 }
-function openReport(which) {
-  which = which || (reports.first ? "first" : "dates");
-  if (!reports[which]) return;
-  current = which;
-  $("#r-name").textContent = run.name;
-  const keys = Object.keys(reports);
-  $("#r-which").innerHTML = keys.length > 1 ? keys.map(k => '<button aria-pressed="' + (k === which) + '" data-k="' + k + '">' + reports[k].label + "</button>").join("") : "";
-  $("#frame").src = reports[which].url;
-  saveMenu();
-  show("v-report");
-}
-$("#r-which").addEventListener("click", e => { const b = e.target.closest("button"); if (b) openReport(b.dataset.k); });
-$("#new").addEventListener("click", () => { if (worker) worker.terminate(); worker = null; show("v-home"); });
+$("#new").addEventListener("click", () => { if (worker) worker.terminate(); worker = null; if (run) run.done = true; $("#appbar").hidden = true; show("v-home"); });
 
 /* ---------------- saving ---------------- */
 function download(name, data, type) {
@@ -310,7 +370,7 @@ function download(name, data, type) {
 const ICO = { html: '<path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>', data: '<path d="M4 6h16M4 12h16M4 18h16"/>', zip: '<path d="M3 7h18v13H3zM3 7l2-3h14l2 3M10 12h4"/>', tab: '<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>' };
 const TYPES = { html: "text/html", json: "application/json", csv: "text/csv" };
 function saveMenu() {
-  const items = [["tab", "Open the report in its own tab", "Full window; print or keep it open", () => window.open(reports[current].url, "_blank")]];
+  const items = current && reports[current] ? [["tab", "Open this report in its own tab", "Full window, keep it open", () => window.open(URL.createObjectURL(new Blob([reports[current].html], { type: "text/html" })), "_blank")]] : [];
   for (const [k, r] of Object.entries(reports)) for (const name of Object.keys(r.files)) {
     const ext = name.split(".").pop();
     items.push([ext === "html" ? "html" : "data", r.label + ": " + name, { "briefing.html": "the report page", "triage.json": "every result, as data", "leads.csv": "opens in Excel",

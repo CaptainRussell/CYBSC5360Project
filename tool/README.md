@@ -14,8 +14,8 @@ It uses only the Python 3 standard library. The image is only read, never change
 Double-click **`Artifact Disagreement Scorer.html`** (in this folder). It opens in Chrome, Edge or Firefox and needs nothing else: no Python, no installation, no internet.
 
 1. **Drop a drive image** (`.img`, `.dd`, `.raw`) on the left box, or press *Choose an image*. For Windows record files (the CSVs from `scripts/run_parsers.ps1`), use the right box and select all of them.
-2. **Watch it work.** The page reads the boot sector and decodes it field by field, lights up a map of the drive as each file is read, counts each of the eight questions' findings as they come in with a feed of what was found, shows how much each clue weighs, ranks the leads, and fingerprints the whole image (SHA-256). NTFS drives then get the Windows date checks too. *Skip animation* jumps to the report as soon as it is ready.
-3. **Read the report.** The same report pages as below, inside the page; *First look* and *Date checks* switch between them.
+2. **Watch it work** on the *Analysis* page. It reads the boot sector and decodes it field by field, lights up a map of the drive as each file is read, counts each of the eight questions' findings as they come in with a feed of what was found, shows how much each clue weighs, ranks the leads, and fingerprints the whole image (SHA-256). NTFS drives then get the Windows date checks too. *Skip animation* finishes as soon as the results are ready.
+3. **Read the report.** When it is done, the *First look* and *Date checks* tabs light up; nothing moves until you choose one. They hold the same report pages as below. The *Analysis* page stays as it was, one tab away, and *Replay* plays it back.
 4. **Save results.** Any single file, or *Everything (.zip)*: the same files, in the same folders, that the command line writes (`briefing.html`, `triage.json`, `leads.csv`; `scores.csv`, `outcomes.csv`, `indicators.json`, `clusters.csv`, `run.json`). They work with `ads proof`, `ads rerender` and `ads compare`.
 
 The image is read on your computer and never uploaded or changed. A 1.3 GB NTFS image with 17,000 files takes about a minute.
