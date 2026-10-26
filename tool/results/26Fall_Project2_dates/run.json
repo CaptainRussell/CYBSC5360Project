@@ -1,0 +1,244 @@
+{
+  "generated": "2026-10-26T00:06:51Z",
+  "db": "C:\\Users\\Idont\\AppData\\Local\\Temp\\p2.sqlite",
+  "theta": 0.5,
+  "weight_mode": "full",
+  "calibration": "(rates measured on this image)",
+  "config": {
+    "tau_journal_s": 2.0,
+    "tau_lnk_s": 2.0,
+    "tau_session_s": 60.0,
+    "tau_mft_s": 0.0,
+    "tau_prefetch_s": 30.0,
+    "r1_two_sided": false,
+    "session_start_ids": [
+      7001
+    ],
+    "session_end_ids": [
+      7002
+    ],
+    "boot_shutdown_ids": [
+      6005,
+      6006,
+      6008,
+      41
+    ],
+    "r7_fields": [
+      "si_c",
+      "si_m"
+    ],
+    "tunneling_window_s": 15.0,
+    "r10_allowlist": [
+      "explorer.exe",
+      "searchprotocolhost.exe",
+      "searchindexer.exe",
+      "searchfilterhost.exe",
+      "msmpeng.exe",
+      "mpcmdrun.exe",
+      "svchost.exe",
+      "tiworker.exe",
+      "trustedinstaller.exe",
+      "onedrive.exe",
+      "msiexec.exe",
+      "dllhost.exe",
+      "runtimebroker.exe",
+      "backgroundtaskhost.exe",
+      "taskhostw.exe",
+      "compattelrunner.exe",
+      "wuauclt.exe"
+    ],
+    "r10_min_assoc_runs": 3,
+    "r11_neighbors": 10,
+    "r11_min_neighbors": 5,
+    "r11_delta_days": 30.0,
+    "min_entry": 24,
+    "mount_prefix": null,
+    "install_time": null,
+    "s2_journal_gap_days": 1.0,
+    "s2_unwrapped_usn_max": 33554432,
+    "s3_max_gaps_reported": 10,
+    "evtx_files": {},
+    "s3_oldest_gap_days": 1.0,
+    "s4_min_shift_s": 60.0,
+    "indicator_weights": {
+      "S1": 1.0,
+      "S2": 1.0,
+      "S3": 1.0,
+      "S4": 1.0,
+      "S5": 1.0
+    },
+    "theta": 0.5,
+    "min_evaluable": 1,
+    "weight_mode": "full",
+    "cluster_window_s": 300.0,
+    "cluster_pad_s": 60.0,
+    "tamper_scores": {
+      "sia": [
+        1,
+        1,
+        3,
+        2,
+        3,
+        3,
+        2
+      ],
+      "fna": [
+        1,
+        1,
+        1,
+        1,
+        3,
+        2,
+        2
+      ],
+      "mft_order": [
+        1,
+        1,
+        1,
+        1,
+        3,
+        2,
+        2
+      ],
+      "usn": [
+        1,
+        1,
+        1,
+        1,
+        3,
+        2,
+        2
+      ],
+      "lnk": [
+        3,
+        3,
+        1,
+        1,
+        3,
+        2,
+        2
+      ],
+      "prefetch": [
+        3,
+        3,
+        1,
+        1,
+        3,
+        2,
+        2
+      ],
+      "evtx": [
+        3,
+        3,
+        1,
+        1,
+        3,
+        2,
+        2
+      ]
+    },
+    "rule_reference_source": {
+      "R1": "usn",
+      "R2": "lnk",
+      "R3": "lnk",
+      "R4": "lnk",
+      "R5": "evtx",
+      "R6": "fna",
+      "R7": "sia",
+      "R8": "usn",
+      "R9": "lnk",
+      "R10": "prefetch",
+      "R11": "mft_order"
+    }
+  },
+  "inputs": [
+    {
+      "kind": "mft",
+      "path": "C:\\Users\\Idont\\Desktop\\Code Projects\\5360 Project\\images\\26Fall_Project2.img",
+      "sha256": "3e00b19df1980a3cb5f9b876cd2c33e2982dd7fc82eff6c6097b13649f194c56",
+      "rows": 5379,
+      "loaded_at": "2026-10-26T00:06:50Z"
+    }
+  ],
+  "weights": {
+    "R1": {
+      "weight": 1.6833574385027243,
+      "p_r": 0.5,
+      "specificity": 0.6931471805599453,
+      "resistance": 2.428571428571429,
+      "reference_source": "usn"
+    },
+    "R2": {
+      "weight": 1.2872733353256127,
+      "p_r": 0.5,
+      "specificity": 0.6931471805599453,
+      "resistance": 1.8571428571428572,
+      "reference_source": "lnk"
+    },
+    "R3": {
+      "weight": 1.2872733353256127,
+      "p_r": 0.5,
+      "specificity": 0.6931471805599453,
+      "resistance": 1.8571428571428572,
+      "reference_source": "lnk"
+    },
+    "R4": {
+      "weight": 1.2872733353256127,
+      "p_r": 0.5,
+      "specificity": 0.6931471805599453,
+      "resistance": 1.8571428571428572,
+      "reference_source": "lnk"
+    },
+    "R5": {
+      "weight": 1.2872733353256127,
+      "p_r": 0.5,
+      "specificity": 0.6931471805599453,
+      "resistance": 1.8571428571428572,
+      "reference_source": "evtx"
+    },
+    "R6": {
+      "weight": 0.006335297140362726,
+      "p_r": 0.9973947478115882,
+      "specificity": 0.002608651763678769,
+      "resistance": 2.428571428571429,
+      "reference_source": "fna"
+    },
+    "R7": {
+      "weight": 0.004456602453145008,
+      "p_r": 0.9976031679866612,
+      "specificity": 0.002399709013231927,
+      "resistance": 1.8571428571428572,
+      "reference_source": "sia"
+    },
+    "R8": {
+      "weight": 1.6833574385027243,
+      "p_r": 0.5,
+      "specificity": 0.6931471805599453,
+      "resistance": 2.428571428571429,
+      "reference_source": "usn"
+    },
+    "R9": {
+      "weight": 1.2872733353256127,
+      "p_r": 0.5,
+      "specificity": 0.6931471805599453,
+      "resistance": 1.8571428571428572,
+      "reference_source": "lnk"
+    },
+    "R10": {
+      "weight": 1.2872733353256127,
+      "p_r": 0.5,
+      "specificity": 0.6931471805599453,
+      "resistance": 1.8571428571428572,
+      "reference_source": "prefetch"
+    },
+    "R11": {
+      "weight": 22.26781822961614,
+      "p_r": 0.00010421008753647353,
+      "specificity": 9.169101623959586,
+      "resistance": 2.428571428571429,
+      "reference_source": "mft_order"
+    }
+  },
+  "system_score": 0.0,
+  "indicators_evaluable": 0
+}

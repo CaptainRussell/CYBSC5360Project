@@ -1,0 +1,4385 @@
+{
+ "generated": "2026-10-26 00:04 UTC",
+ "tool": "ADS 0.2.0",
+ "image": {
+  "path": "C:\\Users\\Idont\\Desktop\\Code Projects\\5360 Project\\images\\26Fall_Project2.img",
+  "name": "26Fall_Project2.img",
+  "bytes": 1299558400,
+  "sha256": "3e00b19df1980a3cb5f9b876cd2c33e2982dd7fc82eff6c6097b13649f194c56",
+  "fs_type": "NTFS",
+  "label": "Disk\u0000",
+  "serial": "0A7C-2770",
+  "oem": "NTFS",
+  "offset": 0,
+  "cluster_size": 4096,
+  "volume_size": 1299561472
+ },
+ "boot_hex": "eb52904e5446532020202000020800000000000000f800003f00ff003f0000000000000080008000deba2600000000000300000000000000ad6b020000000000",
+ "strata": [
+  {
+   "time": "2011-10-02 11:57:01",
+   "files": 4564,
+   "share": 0.9993431136413401,
+   "rare": false,
+   "examples": [
+    "/Disk/bin/arch",
+    "/Disk/bin/ash",
+    "/Disk/bin/ash.static"
+   ]
+  },
+  {
+   "time": "2011-10-05 01:59:05",
+   "files": 1,
+   "share": 0.0002189621195533173,
+   "rare": true,
+   "examples": [
+    "/System Volume Information/tracking.log"
+   ]
+  },
+  {
+   "time": "2011-10-05 03:45:28",
+   "files": 1,
+   "share": 0.0002189621195533173,
+   "rare": true,
+   "examples": [
+    "/$RECYCLE.BIN/S-1-5-21-3525147490-3700730291-1278425020-1000/$IZB47AA.jpg"
+   ]
+  },
+  {
+   "time": "2011-10-05 04:10:00",
+   "files": 1,
+   "share": 0.0002189621195533173,
+   "rare": true,
+   "examples": [
+    "/$RECYCLE.BIN/S-1-5-21-3525147490-3700730291-1278425020-1000/$RZB47AA.jpg"
+   ]
+  }
+ ],
+ "keys": [
+  {
+   "key": "[$2]",
+   "found_in": "/Disk/bin/bx",
+   "offset": 822167
+  },
+  {
+   "key": "cpre536at17F",
+   "found_in": "/Disk/home/httpd/html/index.html",
+   "offset": 615
+  }
+ ],
+ "locked": [
+  "/Disk/lib/modules/2.2.14-5.0/net/others/white.zip",
+  "/Disk/lib/modules/2.2.14-5.0/net/others/white.zip \u203a white.bmp",
+  "/Disk/usr/docs/ieeetran-peer_review singlecolumn/transactions_art_guide.pdf"
+ ],
+ "tiers": {
+  "strong": 0.3,
+  "moderate": 0.2
+ },
+ "counts": {
+  "entries": 5607,
+  "folders": 567,
+  "files": 4789,
+  "archive_members": 251,
+  "noise": 222,
+  "examined": 4818,
+  "with_findings": 164,
+  "deleted": 0
+ },
+ "noise": {
+  "Empty files": 221,
+  "Windows folder settings": 1
+ },
+ "types": {
+  "text": 1801,
+  "jar": 721,
+  "elf": 652,
+  "xml": 460,
+  "pe": 458,
+  "binary": 211,
+  "gif": 145,
+  "png": 113,
+  "html": 58,
+  "java-class": 57,
+  "jpeg": 56,
+  "zip": 36
+ },
+ "rules": {
+  "C1": {
+   "name": "Disguised file",
+   "question": "Does the file's name match what is really inside it?",
+   "why": "Renaming a photo to \u201creadme.txt\u201d is a simple way to hide it from someone browsing the folder.",
+   "evaluable": 2632,
+   "violated": 2,
+   "p_r": 0.0005187798298402158,
+   "weight": 7.564030984766178
+  },
+  "C2": {
+   "name": "Something hidden at the end",
+   "question": "Does the file stop where its own format says it should?",
+   "why": "Extra data glued onto the end of a picture is invisible when the picture is opened.",
+   "evaluable": 306,
+   "violated": 0,
+   "p_r": 0.00010375596596804317,
+   "weight": 9.173468897200278
+  },
+  "C3": {
+   "name": "Locked with a password",
+   "question": "Is the file locked so that it cannot be read?",
+   "why": "People lock the files they most want to keep private.",
+   "evaluable": 51,
+   "violated": 3,
+   "p_r": 0.0007262917617763021,
+   "weight": 7.227558748144965
+  },
+  "C4": {
+   "name": "Password written down",
+   "question": "Does the file contain a sentence like \u201cthe password is ...\u201d?",
+   "why": "A written-down password may open one of the locked files.",
+   "evaluable": 4817,
+   "violated": 2,
+   "p_r": 0.0005187798298402158,
+   "weight": 7.564030984766178
+  },
+  "C5": {
+   "name": "Stands out from its neighbors",
+   "question": "Is this file very different from the other files in its folder?",
+   "why": "A family photo does not belong among a program's diagrams.",
+   "evaluable": 3861,
+   "violated": 33,
+   "p_r": 0.006951649719858892,
+   "weight": 4.968776277809312
+  },
+  "C6": {
+   "name": "Never mentioned",
+   "question": "Do the drive's own guides mention this file, as they do its neighbors?",
+   "why": "Files that came with a program are usually listed in its guides; a file someone added is not.",
+   "evaluable": 761,
+   "violated": 125,
+   "p_r": 0.026042747457978833,
+   "weight": 3.6480159580684943
+  },
+  "C7": {
+   "name": "Archive with personal files",
+   "question": "Does a bundle of files (ZIP) hold emails, documents or locked files?",
+   "why": "Archives are a common place to tuck away private material.",
+   "evaluable": 10,
+   "violated": 1,
+   "p_r": 0.00031126789790412947,
+   "weight": 8.07485660853217
+  },
+  "F1": {
+   "name": "Changed at an unusual time",
+   "question": "Was the file last changed at the same time as almost everything else?",
+   "why": "When a folder is copied, every file gets the same time. A file changed later stands out.",
+   "evaluable": 4567,
+   "violated": 3,
+   "p_r": 0.0007262917617763021,
+   "weight": 7.227558748144965
+  }
+ },
+ "timeline": {
+  "bulk_time": "2011-10-02 11:57:01",
+  "bulk_share": 0.9993431136413401,
+  "timed_files": 4567
+ },
+ "not_applicable": "This is an NTFS volume, so the timestamp rules R1-R11 run in the separate Windows drive report (python -m ads ingest --image, then analyze); this first-look report asks the eight questions.",
+ "leads": [
+  {
+   "id": 1738,
+   "path": "/Disk/lib/modules/2.2.14-5.0/net/others/white.zip \u203a white.bmp",
+   "name": "white.bmp",
+   "ext": "bmp",
+   "size": 1024554,
+   "deleted": false,
+   "hidden": false,
+   "container": "/Disk/lib/modules/2.2.14-5.0/net/others/white.zip",
+   "created": null,
+   "accessed": null,
+   "zip_encrypted": true,
+   "modified": "2011-10-02 15:54:28",
+   "type": "empty",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "no content"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "violated",
+     {
+      "how": "ZIP entry encryption flag",
+      "say": "This file is locked with a password. Nobody can read it without the password.",
+      "tech": "ZIP entry encryption flag set."
+     }
+    ],
+    "C4": [
+     "not_evaluable",
+     {
+      "reason": "no content"
+     }
+    ],
+    "C5": [
+     "not_evaluable",
+     {
+      "reason": "fewer than 5 files in folder",
+      "files": 1
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "archive member"
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "not_evaluable",
+     {
+      "reason": "no volume timestamp"
+     }
+    ]
+   },
+   "score": 1.0,
+   "fired": [
+    "C3"
+   ],
+   "evaluable": 1
+  },
+  {
+   "id": 1170,
+   "path": "/Disk/home/httpd/html/attr.html",
+   "name": "attr.html",
+   "ext": "html",
+   "size": 22710,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "jpeg",
+   "family": "image",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "violated",
+     {
+      "extension": "html",
+      "content": "jpeg",
+      "first_bytes": "FF D8 FF E0 00 10 4A 46",
+      "name_says": "a web page",
+      "inside_is": "a photo (JPEG)",
+      "say": "The name ends in \u201c.html\u201d, which means a web page, but the file is really a photo (JPEG).",
+      "tech": "First bytes FF D8 FF E0 00 10 4A 46 are the signature of JPEG image."
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "end marker not found"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "folder_files": 5,
+      "others": {
+       "web page": 2,
+       "picture": 1,
+       "text file": 1
+      },
+      "this": "photo",
+      "kind": "odd_type",
+      "say": "It is the only photo among the 5 files in its folder. The others are mostly web pages, pictures and text files."
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 3,
+      "siblings": 4,
+      "say": "The guides and web pages on this drive mention 3 of the 4 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.5224269495860087,
+   "fired": [
+    "C1",
+    "C5",
+    "C6"
+   ],
+   "evaluable": 5
+  },
+  {
+   "id": 3061,
+   "path": "/$RECYCLE.BIN/S-1-5-21-3525147490-3700730291-1278425020-1000/$IZB47AA.jpg",
+   "name": "$IZB47AA.jpg",
+   "ext": "jpg",
+   "size": 544,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-05 03:45:28",
+   "modified": "2011-10-05 03:45:28",
+   "accessed": "2011-10-05",
+   "type": "binary",
+   "family": "unknown",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "content has no strong signature",
+      "type": "binary"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "not_evaluable",
+     {
+      "reason": "fewer than 5 files in folder",
+      "files": 2
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "too few siblings"
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "violated",
+     {
+      "modified": "2011-10-05 03:45:28",
+      "files_with_this_time": 1,
+      "bulk_time": "2011-10-02 11:57:01",
+      "bulk_files": 4564,
+      "say": "Almost every file on this drive (4,564 of them) was last changed at the same moment, 2 Oct 2011, 11:57:01 AM, when they were copied together. This file was changed at a different time, 5 Oct 2011, 3:45:28 AM, along with only 0 other files."
+     }
+    ]
+   },
+   "score": 0.4886262314363491,
+   "fired": [
+    "F1"
+   ],
+   "evaluable": 2
+  },
+  {
+   "id": 0,
+   "path": "/System Volume Information/tracking.log",
+   "name": "tracking.log",
+   "ext": "log",
+   "size": 20480,
+   "deleted": false,
+   "hidden": true,
+   "container": null,
+   "created": "2011-10-05 01:51:06",
+   "modified": "2011-10-05 01:59:05",
+   "accessed": "2011-10-05",
+   "type": "binary",
+   "family": "unknown",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "content has no strong signature",
+      "type": "binary"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "not_evaluable",
+     {
+      "reason": "fewer than 5 files in folder",
+      "files": 1
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "too few siblings"
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "violated",
+     {
+      "modified": "2011-10-05 01:59:05",
+      "files_with_this_time": 1,
+      "bulk_time": "2011-10-02 11:57:01",
+      "bulk_files": 4564,
+      "say": "Almost every file on this drive (4,564 of them) was last changed at the same moment, 2 Oct 2011, 11:57:01 AM, when they were copied together. This file was changed at a different time, 5 Oct 2011, 1:59:05 AM, along with only 0 other files."
+     }
+    ]
+   },
+   "score": 0.4886262314363491,
+   "fired": [
+    "F1"
+   ],
+   "evaluable": 2
+  },
+  {
+   "id": 9,
+   "path": "/Disk/bin/bx",
+   "name": "bx",
+   "ext": "",
+   "size": 1052024,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "elf",
+   "family": "executable",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "violated",
+     {
+      "hits": [
+       {
+        "offset": 822167,
+        "phrase": "Password is [$2]",
+        "candidate": "[$2]",
+        "context": ".......$G Added [*!$0] on $1. Password is [$2] and flags"
+       }
+      ],
+      "say": "This is a Linux program, which should hold only computer code, yet it contains the plain sentence \u201cPassword is [$2]\u201d. Someone may have hidden a password here.",
+      "tech": "Phrase at byte offset 822,167."
+     }
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 89
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "siblings are not usually referenced",
+      "referenced": 0
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.38278800001288016,
+   "fired": [
+    "C4"
+   ],
+   "evaluable": 3
+  },
+  {
+   "id": 1737,
+   "path": "/Disk/lib/modules/2.2.14-5.0/net/others/white.zip",
+   "name": "white.zip",
+   "ext": "zip",
+   "size": 445467,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "zip",
+   "family": "archive",
+   "noise": null,
+   "members": [
+    {
+     "name": "white.bmp",
+     "encrypted": true,
+     "size": 1024554
+    }
+   ],
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "zip"
+     }
+    ],
+    "C2": [
+     "consistent",
+     {
+      "end_offset": 445467,
+      "trailing_bytes": 0
+     }
+    ],
+    "C3": [
+     "violated",
+     {
+      "encrypted_members": [
+       "white.bmp"
+      ],
+      "tech": "Encrypted entries: white.bmp.",
+      "say": "Files inside this archive are locked with a password: white.bmp."
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "not_evaluable",
+     {
+      "reason": "fewer than 5 files in folder",
+      "files": 1
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "too few siblings"
+     }
+    ],
+    "C7": [
+     "violated",
+     {
+      "inside": [
+       "white.bmp (empty file, locked with a password)"
+      ],
+      "say": "This archive is a bundle of files. Inside it are personal items: white.bmp (empty file, locked with a password)."
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.3267547213349595,
+   "fired": [
+    "C3",
+    "C7"
+   ],
+   "evaluable": 6
+  },
+  {
+   "id": 2645,
+   "path": "/$RECYCLE.BIN/S-1-5-21-3525147490-3700730291-1278425020-1000/$RZB47AA.jpg",
+   "name": "$RZB47AA.jpg",
+   "ext": "jpg",
+   "size": 35837,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-05 03:44:59",
+   "modified": "2011-10-05 04:10:00",
+   "accessed": "2011-10-05",
+   "type": "jpeg",
+   "family": "image",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "jpeg"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "end marker not found"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "not_evaluable",
+     {
+      "reason": "fewer than 5 files in folder",
+      "files": 2
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "too few siblings"
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "violated",
+     {
+      "modified": "2011-10-05 04:10:00",
+      "files_with_this_time": 1,
+      "bulk_time": "2011-10-02 11:57:01",
+      "bulk_files": 4564,
+      "say": "Almost every file on this drive (4,564 of them) was last changed at the same moment, 2 Oct 2011, 11:57:01 AM, when they were copied together. This file was changed at a different time, 5 Oct 2011, 4:10:00 AM, along with only 0 other files."
+     }
+    ]
+   },
+   "score": 0.32329939926158696,
+   "fired": [
+    "F1"
+   ],
+   "evaluable": 3
+  },
+  {
+   "id": 1311,
+   "path": "/Disk/home/httpd/icons/small/movie.eml",
+   "name": "movie.eml",
+   "ext": "eml",
+   "size": 173728,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "email",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "email"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "folder_files": 34,
+      "others": {
+       "picture": 32,
+       "text file": 1
+      },
+      "this": "email",
+      "kind": "odd_type",
+      "say": "It is the only email among the 34 files in its folder. The others are mostly pictures and text files."
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 21,
+      "siblings": 33,
+      "say": "The guides and web pages on this drive mention 21 of the 33 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.2782086190313674,
+   "fired": [
+    "C5",
+    "C6"
+   ],
+   "evaluable": 5
+  },
+  {
+   "id": 1172,
+   "path": "/Disk/home/httpd/html/index.html",
+   "name": "index.html",
+   "ext": "html",
+   "size": 2566,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "html",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "html"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "violated",
+     {
+      "hits": [
+       {
+        "offset": 615,
+        "phrase": "password is \"cpre536at17F\"",
+        "candidate": "cpre536at17F",
+        "context": "..  .  userName is \"lorien\".  password is \"cpre536at17F\"..  <HR WI"
+       }
+      ],
+      "say": "This file contains the sentence \u201cpassword is \"cpre536at17F\"\u201d. It looks like a password someone wrote down.",
+      "tech": "Phrase at byte offset 615."
+     }
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 5
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "siblings are not usually referenced",
+      "referenced": 2
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.27682334530623254,
+   "fired": [
+    "C4"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 3062,
+   "path": "/Disk/usr/others/mypuppy2.7z",
+   "name": "mypuppy2.7z",
+   "ext": "7z",
+   "size": 36256,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "rar",
+   "family": "archive",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "violated",
+     {
+      "extension": "7z",
+      "content": "rar",
+      "first_bytes": "52 61 72 21 1A 07 00 CF",
+      "name_says": "a .7z file",
+      "inside_is": "a RAR archive (a bundle of files)",
+      "say": "The name ends in \u201c.7z\u201d, which means a .7z file, but the file is really a RAR archive (a bundle of files).",
+      "tech": "First bytes 52 61 72 21 1A 07 00 CF are the signature of RAR archive."
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "consistent",
+     {
+      "members": [
+       {
+        "name": "puppy0.jpeg",
+        "encrypted": false,
+        "size": 53448
+       }
+      ]
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "not_evaluable",
+     {
+      "reason": "fewer than 5 files in folder",
+      "files": 2
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "too few siblings"
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.25568688428182546,
+   "fired": [
+    "C1"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 38,
+   "path": "/Disk/bin/gzip",
+   "name": "gzip",
+   "ext": "",
+   "size": 53540,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "jpeg",
+   "family": "image",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "end marker not found"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "folder_files": 89,
+      "others": {
+       "Linux program": 67,
+       "text file": 20,
+       "picture": 1
+      },
+      "this": "photo",
+      "kind": "odd_type",
+      "say": "It is the only photo among the 89 files in its folder. The others are mostly Linux programs, text files and pictures."
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "siblings are not usually referenced",
+      "referenced": 0
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.2514516317720854,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 3
+  },
+  {
+   "id": 514,
+   "path": "/Disk/etc/nmh/digestcomps",
+   "name": "digestcomps",
+   "ext": "",
+   "size": 275,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "email",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "folder_files": 25,
+      "others": {
+       "text file": 24
+      },
+      "this": "email",
+      "kind": "odd_type",
+      "say": "It is the only email among the 25 files in its folder. The others are mostly text files."
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "siblings are not usually referenced",
+      "referenced": 1
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.2514516317720854,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 3
+  },
+  {
+   "id": 2898,
+   "path": "/Disk/usr/docs/ieeetran-peer_review singlecolumn/transactions_art_guide.pdf",
+   "name": "transactions_art_guide.pdf",
+   "ext": "pdf",
+   "size": 4920040,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "pdf",
+   "family": "document",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "pdf"
+     }
+    ],
+    "C2": [
+     "consistent",
+     {
+      "end_offset": 4920038,
+      "trailing_bytes": 2
+     }
+    ],
+    "C3": [
+     "violated",
+     {
+      "how": "PDF /Encrypt dictionary",
+      "say": "This file is locked with a password. Nobody can read it without the password.",
+      "tech": "PDF /Encrypt dictionary."
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 6
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 3,
+      "siblings": 5,
+      "say": "The guides and web pages on this drive mention 3 of the 5 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.22957113877994126,
+   "fired": [
+    "C3",
+    "C6"
+   ],
+   "evaluable": 7
+  },
+  {
+   "id": 1343,
+   "path": "/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/favicons.sqlite",
+   "name": "favicons.sqlite",
+   "ext": "sqlite",
+   "size": 5242880,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "sqlite",
+   "family": "database",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "sqlite"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "size": 5242880,
+      "peer_median": 212992.0,
+      "ratio": 24.6,
+      "kind": "big",
+      "peer_sizes": [
+       512,
+       98304,
+       98304,
+       196608,
+       229376,
+       524288,
+       1081344,
+       5242880
+      ],
+      "say": "At 5.0 MB it is about 25 times bigger than the other sqlite files in its folder, which are around 208 KB each."
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "siblings are not usually referenced",
+      "referenced": 0
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1818439498822258,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 1350,
+   "path": "/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite",
+   "name": "places.sqlite",
+   "ext": "sqlite",
+   "size": 5242880,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "sqlite",
+   "family": "database",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "sqlite"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "size": 5242880,
+      "peer_median": 212992.0,
+      "ratio": 24.6,
+      "kind": "big",
+      "peer_sizes": [
+       512,
+       98304,
+       98304,
+       196608,
+       229376,
+       524288,
+       1081344,
+       5242880
+      ],
+      "say": "At 5.0 MB it is about 25 times bigger than the other sqlite files in its folder, which are around 208 KB each."
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "siblings are not usually referenced",
+      "referenced": 0
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1818439498822258,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 1037,
+   "path": "/Disk/home/ftp/pub/grayscale/muhammad-ali-draft2-grayscale.jpg",
+   "name": "muhammad-ali-draft2-grayscale.jpg",
+   "ext": "jpg",
+   "size": 585187,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "jpeg",
+   "family": "image",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "jpeg"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "end marker not found"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "size": 585187,
+      "peer_median": 30010,
+      "ratio": 19.5,
+      "kind": "big",
+      "peer_sizes": [
+       9217,
+       15732,
+       22909,
+       26410,
+       30010,
+       30010,
+       30010,
+       40636,
+       41114,
+       42405,
+       46745,
+       48226,
+       49176
+      ],
+      "say": "At 571 KB it is about 19 times bigger than the other photos in its folder, which are around 29 KB each."
+     }
+    ],
+    "C6": [
+     "not_evaluable",
+     {
+      "reason": "siblings are not usually referenced",
+      "referenced": 0
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1818439498822258,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 3848,
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.common_core.feature_3.7.1.v201508262220/eclipse_update_120.jpg",
+   "name": "eclipse_update_120.jpg",
+   "ext": "jpg",
+   "size": 21695,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "jpeg",
+   "family": "image",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "jpeg"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "end marker not found"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "folder_files": 5,
+      "others": {
+       "data file": 3,
+       "text file": 1
+      },
+      "this": "photo",
+      "kind": "odd_type",
+      "say": "It is the only photo among the 5 files in its folder. The others are mostly data files and text files."
+     }
+    ],
+    "C6": [
+     "consistent",
+     {}
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1604258694748863,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 5
+  },
+  {
+   "id": 3858,
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.common_ui.feature_3.8.0.v201603091933/eclipse_update_120.jpg",
+   "name": "eclipse_update_120.jpg",
+   "ext": "jpg",
+   "size": 21695,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "jpeg",
+   "family": "image",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "jpeg"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "end marker not found"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "folder_files": 5,
+      "others": {
+       "data file": 3,
+       "text file": 1
+      },
+      "this": "photo",
+      "kind": "odd_type",
+      "say": "It is the only photo among the 5 files in its folder. The others are mostly data files and text files."
+     }
+    ],
+    "C6": [
+     "consistent",
+     {}
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1604258694748863,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 5
+  },
+  {
+   "id": 3868,
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.xml_core.feature_3.8.0.v201608061842/eclipse_update_120.jpg",
+   "name": "eclipse_update_120.jpg",
+   "ext": "jpg",
+   "size": 21695,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "jpeg",
+   "family": "image",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "jpeg"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "end marker not found"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "folder_files": 5,
+      "others": {
+       "data file": 3,
+       "text file": 1
+      },
+      "this": "photo",
+      "kind": "odd_type",
+      "say": "It is the only photo among the 5 files in its folder. The others are mostly data files and text files."
+     }
+    ],
+    "C6": [
+     "consistent",
+     {}
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1604258694748863,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 5
+  },
+  {
+   "id": 3878,
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.xml_ui.feature_3.8.0.v201608061842/eclipse_update_120.jpg",
+   "name": "eclipse_update_120.jpg",
+   "ext": "jpg",
+   "size": 21695,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "jpeg",
+   "family": "image",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "jpeg"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "end marker not found"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "folder_files": 5,
+      "others": {
+       "data file": 3,
+       "text file": 1
+      },
+      "this": "photo",
+      "kind": "odd_type",
+      "say": "It is the only photo among the 5 files in its folder. The others are mostly data files and text files."
+     }
+    ],
+    "C6": [
+     "consistent",
+     {}
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1604258694748863,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 5
+  },
+  {
+   "id": 3888,
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.xml_userdoc.feature_3.8.0.v201511030001/eclipse_update_120.jpg",
+   "name": "eclipse_update_120.jpg",
+   "ext": "jpg",
+   "size": 21695,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "jpeg",
+   "family": "image",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "jpeg"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "end marker not found"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "folder_files": 5,
+      "others": {
+       "data file": 3,
+       "text file": 1
+      },
+      "this": "photo",
+      "kind": "odd_type",
+      "say": "It is the only photo among the 5 files in its folder. The others are mostly data files and text files."
+     }
+    ],
+    "C6": [
+     "consistent",
+     {}
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1604258694748863,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 5
+  },
+  {
+   "id": 1179,
+   "path": "/Disk/home/httpd/html/images/img04.jpg",
+   "name": "img04.jpg",
+   "ext": "jpg",
+   "size": 28862,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "jpeg",
+   "family": "image",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "consistent",
+     {
+      "type": "jpeg"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "end marker not found"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "violated",
+     {
+      "size": 28862,
+      "peer_median": 1508,
+      "ratio": 19.1,
+      "kind": "big",
+      "peer_sizes": [
+       338,
+       1508,
+       8805
+      ],
+      "say": "At 28 KB it is about 19 times bigger than the other photos in its folder, which are around 1.5 KB each."
+     }
+    ],
+    "C6": [
+     "consistent",
+     {}
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1604258694748863,
+   "fired": [
+    "C5"
+   ],
+   "evaluable": 5
+  },
+  {
+   "id": 485,
+   "path": "/Disk/etc/mail/Makefile",
+   "name": "Makefile",
+   "ext": "",
+   "size": 123,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 6
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 4,
+      "siblings": 5,
+      "say": "The guides and web pages on this drive mention 4 of the 5 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 479,
+   "path": "/Disk/etc/mail/access",
+   "name": "access",
+   "ext": "",
+   "size": 331,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 6
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 4,
+      "siblings": 5,
+      "say": "The guides and web pages on this drive mention 4 of the 5 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 4536,
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.apache.ant_1.9.6.v201510161327/bin/ant",
+   "name": "ant",
+   "ext": "",
+   "size": 10175,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 13
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 11,
+      "siblings": 12,
+      "say": "The guides and web pages on this drive mention 11 of the 12 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 4540,
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.apache.ant_1.9.6.v201510161327/bin/antRun",
+   "name": "antRun",
+   "ext": "",
+   "size": 861,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 13
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 11,
+      "siblings": 12,
+      "say": "The guides and web pages on this drive mention 11 of the 12 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 4592,
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.epp.package.java_4.6.1.20161007-1200/about.mappings",
+   "name": "about.mappings",
+   "ext": "mappings",
+   "size": 233,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 13
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 10,
+      "siblings": 12,
+      "say": "The guides and web pages on this drive mention 10 of the 12 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 4611,
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.epp.package.java_4.6.2.20161208-0625/about.mappings",
+   "name": "about.mappings",
+   "ext": "mappings",
+   "size": 232,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 13
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 10,
+      "siblings": 12,
+      "say": "The guides and web pages on this drive mention 10 of the 12 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 4640,
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.jdt.debug_3.10.1.v20160811-0441/.api_description",
+   "name": ".api_description",
+   "ext": "",
+   "size": 2352,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "xml",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 7
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 4,
+      "siblings": 6,
+      "say": "The guides and web pages on this drive mention 4 of the 6 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 4641,
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.jdt.debug_3.10.1.v20160811-0441/.options",
+   "name": ".options",
+   "ext": "",
+   "size": 242,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 7
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 4,
+      "siblings": 6,
+      "say": "The guides and web pages on this drive mention 4 of the 6 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 4794,
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/.api_description",
+   "name": ".api_description",
+   "ext": "",
+   "size": 204,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "xml",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 34
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 29,
+      "siblings": 33,
+      "say": "The guides and web pages on this drive mention 29 of the 33 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 4797,
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/about.mappings",
+   "name": "about.mappings",
+   "ext": "mappings",
+   "size": 192,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 34
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 29,
+      "siblings": 33,
+      "say": "The guides and web pages on this drive mention 29 of the 33 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 4870,
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/.api_description",
+   "name": ".api_description",
+   "ext": "",
+   "size": 204,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "xml",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 34
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 29,
+      "siblings": 33,
+      "say": "The guides and web pages on this drive mention 29 of the 33 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 4873,
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/about.mappings",
+   "name": "about.mappings",
+   "ext": "mappings",
+   "size": 192,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 34
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 29,
+      "siblings": 33,
+      "say": "The guides and web pages on this drive mention 29 of the 33 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 1068,
+   "path": "/Disk/home/ftp/pub/matlab/bin/ProductRoots",
+   "name": "ProductRoots",
+   "ext": "",
+   "size": 212,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 18
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 14,
+      "siblings": 17,
+      "say": "The guides and web pages on this drive mention 14 of the 17 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 1065,
+   "path": "/Disk/home/ftp/pub/matlab/bin/mexutils.pm",
+   "name": "mexutils.pm",
+   "ext": "pm",
+   "size": 7100,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 18
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 14,
+      "siblings": 17,
+      "say": "The guides and web pages on this drive mention 14 of the 17 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 1258,
+   "path": "/Disk/home/httpd/icons/readme",
+   "name": "readme",
+   "ext": "",
+   "size": 4872,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 80
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 52,
+      "siblings": 79,
+      "say": "The guides and web pages on this drive mention 52 of the 79 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 2448,
+   "path": "/Disk/lost+found/found/win32/mexopts/intelc11msvs2008opts.stp",
+   "name": "intelc11msvs2008opts.stp",
+   "ext": "stp",
+   "size": 4175,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 36
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 26,
+      "siblings": 35,
+      "say": "The guides and web pages on this drive mention 26 of the 35 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 2451,
+   "path": "/Disk/lost+found/found/win32/mexopts/intelf10msvs2005opts.stp",
+   "name": "intelf10msvs2005opts.stp",
+   "ext": "stp",
+   "size": 3477,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 36
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 26,
+      "siblings": 35,
+      "say": "The guides and web pages on this drive mention 26 of the 35 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  },
+  {
+   "id": 2454,
+   "path": "/Disk/lost+found/found/win32/mexopts/intelf11msvs2008opts.stp",
+   "name": "intelf11msvs2008opts.stp",
+   "ext": "stp",
+   "size": 4228,
+   "deleted": false,
+   "hidden": false,
+   "container": null,
+   "created": "2011-10-02 11:57:01",
+   "modified": "2011-10-02 11:57:01",
+   "accessed": "2011-10-02",
+   "type": "text",
+   "family": "text",
+   "noise": null,
+   "outcomes": {
+    "C1": [
+     "not_evaluable",
+     {
+      "reason": "extension not judged"
+     }
+    ],
+    "C2": [
+     "not_evaluable",
+     {
+      "reason": "format has no end marker checked"
+     }
+    ],
+    "C3": [
+     "not_evaluable",
+     {
+      "reason": "not an encryptable container"
+     }
+    ],
+    "C4": [
+     "consistent",
+     {}
+    ],
+    "C5": [
+     "consistent",
+     {
+      "folder_files": 36
+     }
+    ],
+    "C6": [
+     "violated",
+     {
+      "referenced": 26,
+      "siblings": 35,
+      "say": "The guides and web pages on this drive mention 26 of the 35 other files in this folder by name, but never this one."
+     }
+    ],
+    "C7": [
+     "not_evaluable",
+     {
+      "reason": "not an opened archive"
+     }
+    ],
+    "F1": [
+     "consistent",
+     {
+      "modified": "2011-10-02 11:57:01",
+      "files_with_this_time": 4564
+     }
+    ]
+   },
+   "score": 0.1558422945649339,
+   "fired": [
+    "C6"
+   ],
+   "evaluable": 4
+  }
+ ],
+ "all_leads": [
+  {
+   "path": "/Disk/lib/modules/2.2.14-5.0/net/others/white.zip \u203a white.bmp",
+   "score": 1.0,
+   "fired": [
+    "C3"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/html/attr.html",
+   "score": 0.5224,
+   "fired": [
+    "C1",
+    "C5",
+    "C6"
+   ]
+  },
+  {
+   "path": "/$RECYCLE.BIN/S-1-5-21-3525147490-3700730291-1278425020-1000/$IZB47AA.jpg",
+   "score": 0.4886,
+   "fired": [
+    "F1"
+   ]
+  },
+  {
+   "path": "/System Volume Information/tracking.log",
+   "score": 0.4886,
+   "fired": [
+    "F1"
+   ]
+  },
+  {
+   "path": "/Disk/bin/bx",
+   "score": 0.3828,
+   "fired": [
+    "C4"
+   ]
+  },
+  {
+   "path": "/Disk/lib/modules/2.2.14-5.0/net/others/white.zip",
+   "score": 0.3268,
+   "fired": [
+    "C3",
+    "C7"
+   ]
+  },
+  {
+   "path": "/$RECYCLE.BIN/S-1-5-21-3525147490-3700730291-1278425020-1000/$RZB47AA.jpg",
+   "score": 0.3233,
+   "fired": [
+    "F1"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/movie.eml",
+   "score": 0.2782,
+   "fired": [
+    "C5",
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/html/index.html",
+   "score": 0.2768,
+   "fired": [
+    "C4"
+   ]
+  },
+  {
+   "path": "/Disk/usr/others/mypuppy2.7z",
+   "score": 0.2557,
+   "fired": [
+    "C1"
+   ]
+  },
+  {
+   "path": "/Disk/bin/gzip",
+   "score": 0.2515,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/etc/nmh/digestcomps",
+   "score": 0.2515,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/usr/docs/ieeetran-peer_review singlecolumn/transactions_art_guide.pdf",
+   "score": 0.2296,
+   "fired": [
+    "C3",
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/favicons.sqlite",
+   "score": 0.1818,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite",
+   "score": 0.1818,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/ftp/pub/grayscale/muhammad-ali-draft2-grayscale.jpg",
+   "score": 0.1818,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.common_core.feature_3.7.1.v201508262220/eclipse_update_120.jpg",
+   "score": 0.1604,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.common_ui.feature_3.8.0.v201603091933/eclipse_update_120.jpg",
+   "score": 0.1604,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.xml_core.feature_3.8.0.v201608061842/eclipse_update_120.jpg",
+   "score": 0.1604,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.xml_ui.feature_3.8.0.v201608061842/eclipse_update_120.jpg",
+   "score": 0.1604,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.xml_userdoc.feature_3.8.0.v201511030001/eclipse_update_120.jpg",
+   "score": 0.1604,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/html/images/img04.jpg",
+   "score": 0.1604,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/etc/mail/Makefile",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/etc/mail/access",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.apache.ant_1.9.6.v201510161327/bin/ant",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.apache.ant_1.9.6.v201510161327/bin/antRun",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.epp.package.java_4.6.1.20161007-1200/about.mappings",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.epp.package.java_4.6.2.20161208-0625/about.mappings",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.jdt.debug_3.10.1.v20160811-0441/.api_description",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.jdt.debug_3.10.1.v20160811-0441/.options",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/.api_description",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/about.mappings",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/.api_description",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/about.mappings",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/ftp/pub/matlab/bin/ProductRoots",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/ftp/pub/matlab/bin/mexutils.pm",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/readme",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/lost+found/found/win32/mexopts/intelc11msvs2008opts.stp",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/lost+found/found/win32/mexopts/intelf10msvs2005opts.stp",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/lost+found/found/win32/mexopts/intelf11msvs2008opts.stp",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/lost+found/found/win32/mexopts/intelf11msvs2008shellopts.stp",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/lost+found/found/win32/mexopts/lccopts.stp",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/lost+found/found/win32/mexopts/msvc100freeopts.stp",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/lost+found/found/win32/mexopts/msvc100opts.stp",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/lost+found/found/win32/mexopts/msvc90freeopts.stp",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/lost+found/found/win32/mexopts/openwatcopts.stp",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/usr/docs/ieeetran-peer_review singlecolumn/readme",
+   "score": 0.1558,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/html/poweredby.png",
+   "score": 0.1361,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/usr/docs/rivanvx-beamer-213fd269d3ef.zip \u203a rivanvx-beamer-213fd269d3ef/doc/beamerlogo.pdf",
+   "score": 0.1361,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/usr/docs/rivanvx-beamer-213fd269d3ef.zip \u203a rivanvx-beamer-213fd269d3ef/examples/a-lecture/beamerexample-lecture-logo.pdf",
+   "score": 0.1361,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/eclipse1024.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/eclipse_lg.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/images/dragHandle.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/images/win7.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/images/winXPBlue.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/eclipse1024.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/eclipse_lg.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/images/dragHandle.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/images/win7.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/images/winXPBlue.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.ui.themes_1.1.200.v20160815-0536/images/dragHandle.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.ui.themes_1.1.200.v20160815-0536/images/win7.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.ui.themes_1.1.200.v20160815-0536/images/winXPBlue.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.ui.themes_1.1.300.v20161107-1827/images/dragHandle.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.ui.themes_1.1.300.v20161107-1827/images/win7.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.ui.themes_1.1.300.v20161107-1827/images/winXPBlue.png",
+   "score": 0.1238,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/etc/security/time.conf",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.ecf.core.feature_1.3.0.v20160823-2221/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.ecf.core.ssl.feature_1.1.0.v20160823-2221/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.ecf.filetransfer.feature_3.13.2.v20160823-2221/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.ecf.filetransfer.httpclient4.feature_3.13.2.v20160823-2221/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.ecf.filetransfer.httpclient4.ssl.feature_1.1.0.v20160823-2221/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.ecf.filetransfer.ssl.feature_1.1.0.v20160823-2221/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.epp.mpc_1.5.2.v20161005-1414/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.epp.mpc_1.5.3.v20161116-1851/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.epp.package.common.feature_4.6.1.20161007-1200/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.epp.package.common.feature_4.6.2.20161208-0625/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.epp.package.java.feature_4.6.1.20161007-1200/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.epp.package.java.feature_4.6.2.20161208-0625/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.m2e.feature_1.7.0.20160603-1933/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.mylyn_feature_3.20.0.v20160608-1838/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.mylyn_feature_3.21.0.v20160914-0252/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.oomph.p2_1.6.0.v20161111-1110/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.oomph.p2_1.7.0.v20170104-1401/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.oomph.setup.core_1.6.0.v20161116-0647/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.oomph.setup.core_1.7.0.v20170201-1648/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.oomph.setup_1.6.0.v20161116-0647/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.oomph.setup_1.7.0.v20170201-1648/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.common_core.feature_3.7.1.v201508262220/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.common_ui.feature_3.8.0.v201603091933/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.xml_core.feature_3.8.0.v201608061842/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.xml_ui.feature_3.8.0.v201608061842/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/features/org.eclipse.wst.xml_userdoc.feature_3.8.0.v201511030001/feature.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.epp.package.java_4.6.1.20161007-1200/about.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.epp.package.java_4.6.1.20161007-1200/plugin.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.epp.package.java_4.6.2.20161208-0625/about.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.epp.package.java_4.6.2.20161208-0625/plugin.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.jdt.debug_3.10.1.v20160811-0441/plugin.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.m2e.maven.indexer_1.7.0.20160603-1931/org/apache/maven/index/ArtifactContext$ModelReader.class",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.m2e.maven.indexer_1.7.0.20160603-1931/org/apache/maven/index/ArtifactInfo$RepositoryVersionComparator.class",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.m2e.maven.indexer_1.7.0.20160603-1931/org/apache/maven/index/ArtifactInfo$VersionComparator.class",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.m2e.maven.indexer_1.7.0.20160603-1931/org/apache/maven/index/DefaultScanner$1.class",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.m2e.maven.indexer_1.7.0.20160603-1931/org/apache/maven/index/DefaultScanner$ScannerFileComparator.class",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.m2e.maven.indexer_1.7.0.20160603-1931/org/apache/maven/index/IteratorSearchResponse$1.class",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.m2e.maven.indexer_1.7.0.20160603-1931/org/apache/maven/index/SearchType$1.class",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/about.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/intro/css/migrate.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/intro/css/overview.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/intro/css/whatsnew.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/plugin.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.1.v20160907-1200/plugin_customization.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/about.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/intro/css/migrate.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/intro/css/overview.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/intro/css/whatsnew.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/plugin.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/pool/plugins/org.eclipse.platform_4.6.2.v20161124-1400/plugin_customization.properties",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/ftp/pub/matlab/bin/insttype.ini",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/ftp/pub/matlab/bin/mw_mpiexec.bat",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/html/home.html",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/html/more/images/screenshot.jpg",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/readme.txt",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/lost+found/found/win32/mexopts/intelf10msvs2005engmatopts.bat",
+   "score": 0.1178,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/drosen/.p2/org.eclipse.equinox.p2.repository/cache/artifacts1347357560.jar",
+   "score": 0.1136,
+   "fired": [
+    "C5"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/html/more/images/screenshot.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/alert.black.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/alert.red.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/ball.gray.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/ball.red.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/comp.blue.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/comp.gray.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/dir.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/folder.open.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/folder.sec.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/generic.red.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/generic.sec.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/hand.right.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/hand.up.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/icon.sheet.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/pdf.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/php2.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/php3.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/phpi.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/phps.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/pie1.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/pie2.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/pie3.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/pie4.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/pie5.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/pie6.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/pie7.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/comp1.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/comp2.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/dir.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/dir2.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/doc.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/generic2.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/generic3.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/image.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/key.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/sound.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/small/uu.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/home/httpd/icons/uu.gif",
+   "score": 0.0909,
+   "fired": [
+    "C6"
+   ]
+  },
+  {
+   "path": "/Disk/usr/docs/ieeetran-peer_review singlecolumn/Appendix F.pdf",
+   "score": 0.077,
+   "fired": [
+    "C6"
+   ]
+  }
+ ]
+}

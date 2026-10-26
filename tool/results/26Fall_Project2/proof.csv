@@ -1,0 +1,20 @@
+item,question,kind,answer_key_path,found_by_ads,rank,score_out_of_100,level,checks,ads_path,found_manually_by
+Envelope 1 (Sid Wirta),QA,evidence,bin/gzip,yes,11,25,Worth a look,C5 Stands out from its neighbors,/Disk/bin/gzip,FTK filter: Graphics over 20 KB; viewed each
+Envelope 2 (Jerrold Marine),QA,evidence,lib/security/hello.png,no,,,,,,FTK filter: Graphics over 20 KB; viewed each
+Envelope 3 (Edwardo Freed),QA,evidence,lost+found/found/win32/graphicssystems/ps_done.jpeg,no,,,,,,FTK filter: Graphics over 20 KB; viewed each
+Envelope 4 (Wiley Randell) in mypuppy2.7z,QA,evidence,usr/others/mypuppy2.7z,yes,10,26,Worth a look,C1 Disguised file,/Disk/usr/others/mypuppy2.7z,FTK filter: Archives over 20 KB; extension 7z but category RAR
+Envelope 5 (Sergio Ell) on page 7 of template.pdf,QA,evidence,tmp/.font-unix/fs-1/ini/template.pdf,no,,,,,,"Paged through all 12 PDFs; confirmed by index search ""Emma White"""
+Firefox browsing history,QB,evidence,home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,yes,15,18,Minor,C5 Stands out from its neighbors,/Disk/home/drosen/.mozilla/firefox/lzxeaerw.default/places.sqlite,FTK Internet tab; Text view of places.sqlite
+Firefox cookies,QC,evidence,home/drosen/.mozilla/firefox/lzxeaerw.default/cookies.sqlite,no,,,,,,FTK Internet tab; Firefox Cookies Database
+Website login (lorien / cpre536at17F),QD,evidence,home/httpd/html/index.html,yes,9,28,Worth a look,C4 Password written down,/Disk/home/httpd/html/index.html,"FTK index search username AND password; phrase ""password is"""
+Unsent email signed Wendy,QE,evidence,movie.eml,yes,8,28,Worth a look,C5 Stands out from its neighbors; C6 Never mentioned,/Disk/home/httpd/icons/small/movie.eml,FTK Email Status category
+Email with Content-ID @wendyPC,QE,evidence,test.eml,no,,,,,,FTK Email Status; Text view
+tracking.log naming wendy-pc,QE,evidence,tracking.log,yes,4,49,Look first,F1 Changed at an unusual time,/System Volume Information/tracking.log,"FTK index search ""wendy"""
+Word document last saved by wendy,QE,evidence,NIST Hard Disk Write Block Tool specification.doc,no,,,,,,"FTK index search ""wendy""; Office metadata"
+mypuppy.zip (locked; password HACHI),Extra,evidence,usr/others/mypuppy.gz|usr/others/mypuppy.zip,no,,,,,,FTK Encrypted Files category
+white.zip (locked; password d0gD0G),Extra,evidence,lib/modules/2.2.14-5.0/net/others/white.zip,yes,6,33,Look first,C3 Locked with a password; C7 Archive with personal files,/Disk/lib/modules/2.2.14-5.0/net/others/white.zip,FTK Encrypted Files category
+Password for white.zip in sunflower.html,Extra,evidence,home/httpd/html/more/sunflower.html,no,,,,,,"FTK Live Search ""pswd"" (the index search missed it)"
+Planted password in a fake shadow file,Extra,evidence,home/ftp/etc/shad,no,,,,,,FTK Live Search
+Sleeping-dog GIF with no extension,Decoy,decoy,bin/error,no,,,,,,FTK Bad Extensions and viewing
+Puppy JPEG named .html,Decoy,decoy,home/httpd/html/attr.html,yes,2,52,Look first,C1 Disguised file; C5 Stands out from its neighbors; C6 Never mentioned,/Disk/home/httpd/html/attr.html,FTK Bad Extensions with the graphics filter
+Huskies picture named .log,Decoy,decoy,change.log,no,,,,,,FTK Bad Extensions with the graphics filter

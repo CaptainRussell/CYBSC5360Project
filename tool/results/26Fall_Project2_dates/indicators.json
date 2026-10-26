@@ -1,0 +1,42 @@
+[
+  {
+    "id": "S1",
+    "name": "Log clearing",
+    "status": "not_evaluable",
+    "details": {
+      "reason": "no System or Security log"
+    }
+  },
+  {
+    "id": "S2",
+    "name": "Change journal reset",
+    "status": "not_evaluable",
+    "details": {
+      "reason": "no Application log and no $J"
+    }
+  },
+  {
+    "id": "S3",
+    "name": "Event log discontinuity",
+    "status": "not_evaluable",
+    "details": {
+      "reason": "no event logs"
+    }
+  },
+  {
+    "id": "S4",
+    "name": "Clock change",
+    "status": "not_evaluable",
+    "details": {
+      "reason": "no System or Security log"
+    }
+  },
+  {
+    "id": "S5",
+    "name": "Missing expected artifacts",
+    "status": "not_evaluable",
+    "details": {
+      "reason": "no $J data"
+    }
+  }
+]

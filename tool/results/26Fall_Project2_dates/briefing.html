@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADS Windows Report</title>
+<style>
+:root{--cardinal:#C8102E;--cardinal-ink:#9E0B23;--gold:#F1BE48;--gold-deep:#B07A0C;--ink:#1A1A1A;
+--muted:#5E5A5A;--line:#DAD6D6;--paper:#FFF;--panel:#F7F4F2;--bar:#161616;--on-bar:#F2F2F2;--ok:#2E7D4F;
+--soft:#FBECEE;--head:Cambria,Georgia,"Times New Roman",serif;--body:Calibri,"Segoe UI",Arial,sans-serif;
+--mono:Consolas,"Courier New",monospace}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--cardinal:#E2304C;--cardinal-ink:#FF8095;
+--gold:#F1BE48;--gold-deep:#F1BE48;--ink:#EDE8E6;--muted:#ADA5A3;--line:#3A3434;--paper:#151212;
+--panel:#1F1A1A;--bar:#0B0909;--ok:#6CC596;--soft:#2A1A1D;color-scheme:dark}}
+:root[data-theme=dark]{--cardinal:#E2304C;--cardinal-ink:#FF8095;--gold:#F1BE48;--gold-deep:#F1BE48;
+--ink:#EDE8E6;--muted:#ADA5A3;--line:#3A3434;--paper:#151212;--panel:#1F1A1A;--bar:#0B0909;--ok:#6CC596;
+--soft:#2A1A1D;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 var(--body)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+h1,h2,h3{font-family:var(--head);margin:0}
+h2{color:var(--cardinal);font-size:clamp(24px,4vw,34px);margin-top:8px}
+h3{font-size:20px}
+p{margin:.4em 0;max-width:72ch}
+a{color:var(--cardinal)}
+code,pre{font-family:var(--mono);font-size:.84em}
+#bar{position:sticky;top:0;z-index:9;background:var(--bar);color:var(--on-bar)}
+#bar .wrap{display:flex;gap:4px;align-items:center;height:50px;overflow-x:auto}
+#bar .brand{color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:14px;margin-right:10px;white-space:nowrap}
+#bar a{color:inherit;text-decoration:none;padding:6px 10px;border-radius:7px;white-space:nowrap;font-size:15px}
+#bar a:hover{background:rgba(255,255,255,.12)}
+.band{background:var(--cardinal);color:#fff;border-bottom:9px solid var(--gold)}
+.band .wrap{padding:34px 16px 30px}
+.band .eyebrow{color:var(--gold);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:13px}
+.band h1{font-size:clamp(28px,5vw,46px);margin:8px 0;line-height:1.08}
+.band p{max-width:52ch;font-size:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bar);color:var(--on-bar)}
+.stat{padding:16px}
+.stat+.stat{border-left:1px solid rgba(255,255,255,.14)}
+.stat .n{font:700 clamp(26px,4vw,40px)/1 var(--head)}
+.stat .l{font-size:14px;color:#BDB5B3}
+.stat.hot .n{color:var(--gold)}
+section{padding:40px 0 10px;border-bottom:1px solid var(--line)}
+.kick{font:700 13px var(--mono);letter-spacing:.08em;color:var(--muted)}
+.lead{border:1px solid var(--line);border-left-width:6px;border-radius:12px;padding:16px;margin:16px 0;background:var(--paper)}
+.lead.hot{border-left-color:var(--cardinal)}
+.lead.warm{border-left-color:var(--gold-deep)}
+.lead header{display:flex;gap:16px;align-items:flex-start}
+.score{flex:none;width:76px;text-align:center;background:var(--panel);border-radius:10px;padding:8px 4px}
+.score .num{font:700 30px/1 var(--head)}
+.score .of{display:block;font-size:12px;color:var(--muted)}
+.who h3{margin:3px 0;overflow-wrap:anywhere}
+.tier{font:700 12px var(--body);letter-spacing:.06em;text-transform:uppercase;padding:2px 9px;border-radius:999px;background:var(--soft);color:var(--cardinal-ink)}
+.tier.hot{background:var(--cardinal);color:#fff}
+.meta{font-size:14px;color:var(--muted)}
+.clue{background:var(--panel);border-radius:10px;padding:11px 13px;margin-top:10px}
+.chd{display:flex;gap:8px;align-items:center}
+.cid{font:700 12px var(--mono);background:var(--cardinal);color:#fff;border-radius:5px;padding:1px 7px}
+.clue p{margin:5px 0 4px}
+details{margin-top:4px}
+summary{cursor:pointer;color:var(--muted);font-size:14px}
+pre{background:var(--panel);padding:10px;border-radius:8px;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+.weak{color:var(--cardinal-ink);font-size:14px;font-style:italic}
+.event{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:14px 0}
+.event ul{margin:6px 0 0;padding-left:20px}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+td.h{font-family:var(--mono);font-size:12px;color:var(--muted)}
+tr.wfired td{background:var(--soft)}
+tr.wclear td b{color:var(--ok)}
+.none{color:var(--muted);font-style:italic}
+footer{padding:26px 0 50px;color:var(--muted);font-size:14px}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}.stat:nth-child(n+3){border-top:1px solid rgba(255,255,255,.14)}.stat:nth-child(3){border-left:0}.lead header{flex-wrap:wrap}}
+</style></head><body>
+<div id="bar"><div class="wrap"><span class="brand">ADS</span>
+<a href="#summary">Summary</a><a href="#first">Look first</a><a href="#events">Events</a>
+<a href="#records">About the records</a><a href="#how">How it works</a><a href="#method">Method</a></div></div>
+
+<div class="band"><div class="wrap">
+<div class="eyebrow">Artifact Disagreement Scorer · Windows drive report</div>
+<h1>What the records say — and where they disagree</h1>
+<p>This drive keeps several separate records of what happened to each file. This report lines them up,
+points out where they contradict each other, and explains each one in plain words.</p>
+</div></div>
+
+<div class="stats"><div class="wrap" style="display:contents">
+<div class="stat"><div class="n">4797</div><div class="l">files checked</div></div>
+<div class="stat hot"><div class="n">0</div><div class="l">files flagged</div></div>
+<div class="stat hot"><div class="n">0</div><div class="l">to look at first</div></div>
+<div class="stat"><div class="n">0</div><div class="l">record-damage score /100</div></div>
+</div></div>
+
+<section id="summary"><div class="wrap">
+<div class="kick">SUMMARY</div><h2>In short</h2>
+<p>Of 4797 files examined, 0 were flagged because their own records disagree with each other.
+0 of those are the ones to look at first. No sign that the records themselves were tampered with.</p>
+<p>Every flag below is explained in one plain sentence, with the exact dates and the technical detail folded
+underneath for an examiner. All times in this report are UTC (Coordinated Universal Time), the clock Windows
+keeps internally; for US Central time subtract 5 or 6 hours.</p>
+</div></section>
+
+<section id="first"><div class="wrap">
+<div class="kick">FILES TO LOOK AT FIRST</div><h2>Flagged files</h2>
+<p>Ranked by how strongly the records disagree. A higher number means more independent records contradict
+each other for that file.</p>
+<p class="none">No file crossed the flag threshold.</p>
+</div></section>
+
+<section id="events"><div class="wrap">
+<div class="kick">CANDIDATE EVENTS</div><h2>Files changed together</h2>
+<p>Tampering often touches several files at once, around the moment a single program ran. These groups are a
+good place to reconstruct what happened.</p>
+<p class="none">No files were flagged close enough together in time to form an event.</p>
+</div></section>
+
+<section id="records"><div class="wrap">
+<div class="kick">ABOUT THE RECORDS</div><h2>Were the records themselves tampered with?</h2>
+<p>Deleting a whole record can be easier than faking one. These checks look for records that were cleared,
+reset, or are missing. They do not accuse any single file; they say how much to trust the rest.</p>
+<table><tr><th>ID</th><th>Status</th><th>What it means</th><th></th></tr><tr class="wna"><td><b>S1</b></td><td>– not checked</td><td>An event log was cleared, so some activity can no longer be checked.</td><td><details><summary>Detail</summary><pre>{
+ &quot;reason&quot;: &quot;no System or Security log&quot;
+}</pre></details></td></tr><tr class="wna"><td><b>S2</b></td><td>– not checked</td><td>The change journal was reset or deleted, so some creation and change records are gone.</td><td><details><summary>Detail</summary><pre>{
+ &quot;reason&quot;: &quot;no Application log and no $J&quot;
+}</pre></details></td></tr><tr class="wna"><td><b>S3</b></td><td>– not checked</td><td>The event log has gaps in its numbering, so entries may have been removed.</td><td><details><summary>Detail</summary><pre>{
+ &quot;reason&quot;: &quot;no event logs&quot;
+}</pre></details></td></tr><tr class="wna"><td><b>S4</b></td><td>– not checked</td><td>The system clock was changed, which makes every date on the drive less trustworthy.</td><td><details><summary>Detail</summary><pre>{
+ &quot;reason&quot;: &quot;no System or Security log&quot;
+}</pre></details></td></tr><tr class="wna"><td><b>S5</b></td><td>– not checked</td><td>Records that should exist are missing (files opened with no shortcut, or programs run with no Prefetch).</td><td><details><summary>Detail</summary><pre>{
+ &quot;reason&quot;: &quot;no $J data&quot;
+}</pre></details></td></tr></table>
+</div></section>
+
+<section id="how"><div class="wrap">
+<div class="kick">HOW IT WORKS</div><h2>The idea in one line</h2>
+<p>Windows records the same event in several places, written by different parts of the system. A cover-up can
+change one or two of them, but keeping them all agreeing is hard — so disagreement is the clue. The tool runs
+eleven checks for disagreement and weighs them together, so one noisy check never raises an alarm on its own.</p>
+<table><tr><th>Check</th><th>Plain name</th><th>What it looks for</th></tr><tr><td><b>R1</b></td><td>Record-change date is before the journal&#x27;s own entry</td><td>The file&#x27;s record says it last changed before Windows&#x27; change journal recorded that change.</td></tr><tr><td><b>R2</b></td><td>A shortcut disagrees on the last-change date</td><td>A shortcut pointing at the file carries a different last-change date from the file itself.</td></tr><tr><td><b>R3</b></td><td>A shortcut is older than the file it points to</td><td>A shortcut was created before the file it points to claims to have existed.</td></tr><tr><td><b>R4</b></td><td>A shortcut was opened after the file&#x27;s last-opened date</td><td>A shortcut records the file being opened later than the file&#x27;s own last-opened date.</td></tr><tr><td><b>R5</b></td><td>The file changed while nobody was logged on</td><td>The file&#x27;s dates fall outside every logged-on session in the event log.</td></tr><tr><td><b>R6</b></td><td>The visible date is older than the protected copy</td><td>The creation date Windows shows is earlier than the file system&#x27;s own protected copy.</td></tr><tr><td><b>R7</b></td><td>The date was set to a round number</td><td>The date falls exactly on a whole second, which ordinary activity almost never produces.</td></tr><tr><td><b>R8</b></td><td>The file was created later than its visible date</td><td>The change journal first recorded the file being created after the date it now shows.</td></tr><tr><td><b>R9</b></td><td>A shortcut remembers a different creation date</td><td>A shortcut kept an older copy of the file&#x27;s creation date that no longer matches.</td></tr><tr><td><b>R10</b></td><td>The date changed as an unusual program ran</td><td>The file&#x27;s date changed at the same moment a program not associated with it ran.</td></tr><tr><td><b>R11</b></td><td>It claims to be much older than its neighbors</td><td>The file claims to pre-date the files whose records sit next to it on the disk.</td></tr></table>
+</div></section>
+
+<section id="method"><div class="wrap">
+<div class="kick">METHOD &amp; WORDS</div><h2>How to read the score, and the fine print</h2>
+<p>Each file's score is the weighted share of the checks that disagreed, out of the checks that could be run,
+as a number from 0 to 100. A file is flagged when its score is above 50. Flagged files are “Look first”
+when they score 50 or more with at least two checks disagreeing, and “Worth a look” otherwise.
+Weighting mode: full.</p>
+<p>The records were read with standard, widely used forensic tools; this report only cross-checks and explains
+them. Each input and its fingerprint (SHA-256):</p>
+<table><tr><th>Record</th><th>File</th><th>Rows</th><th>Fingerprint</th></tr><tr><td>mft</td><td>26Fall_Project2.img</td><td>5379</td><td class="h">3e00b19df1980a3c…</td></tr></table>
+<p>Generated 2026-10-26T00:06:51Z.</p>
+</div></section>
+
+<footer><div class="wrap">Artifact Disagreement Scorer · CPRE 5360 · This report points to files for an examiner to review;
+it does not by itself prove tampering.</div></footer>
+</body></html>
