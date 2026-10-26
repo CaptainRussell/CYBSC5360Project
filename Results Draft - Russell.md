@@ -107,10 +107,16 @@ ADS's first file (#1, score 100) is `white.bmp`, the locked file *inside*
 the run counts the archive's own rank (#6), so the table above uses #6.
 
 **Files ranked high that are not in the answer key.** #3 and #7 are a deleted
-JPEG in the Recycle Bin (`$RECYCLE.BIN/…/$RZB47AA.jpg`, 35,837 bytes, and its
-record `$IZB47AA.jpg`), written on 5 Oct 2011 between 03:44 and 04:10 UTC, after
-the bulk copy. My FTK examination did not look at the Recycle Bin. *To complete:
-open it in FTK and record what it is.* #5 (`bin/bx`) is a false lead: a program
+picture in the Recycle Bin (`$RECYCLE.BIN/…/$RZB47AA.jpg`, 35,837 bytes, and its
+deletion record `$IZB47AA.jpg`), flagged by F1 because it was written on 5 Oct
+2011 between 03:44 and 04:10 UTC, after the bulk copy. My FTK examination had
+not looked at the Recycle Bin. Opened in FTK, it is a photo of a running
+Dalmatian puppy (439 by 290 pixels), originally `I:\Disk\tmp\rushhour.jpg`,
+deleted on 4 Oct 2011 at about 10:44 PM US Central. It is not an envelope; it
+matches the case's other dog pictures used as distractions (`bin/error`,
+`attr.html`, `change.log`). ADS pointed to a deleted file the hand examination had
+missed; on inspection it is a distraction an examiner would still need to rule
+out, not case evidence. #5 (`bin/bx`) is a false lead: a program
 containing the template text "Password is [$2]". #12 (`etc/nmh/digestcomps`) is a
 mailing-list template, which I had also set aside by hand as not a real email.
 #13 is an IEEE guide PDF that ADS reports as encrypted (*to complete: check in FTK whether it needs a password to open, or only restricts printing or editing*).
