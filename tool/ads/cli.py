@@ -129,7 +129,7 @@ def cmd_triage(a):
         sys.exit("Could not find the image file: %s" % image)
     out = os.path.abspath(a.out or os.path.splitext(os.path.basename(image))[0] + " report")
     say("")
-    say("ADS first-look report")
+    say("Artifact Disagreement Scorer: first-look report")
     say("  Image:   %s" % image)
     say("  Output:  %s" % out)
     say("  The image is only read, never changed.")
@@ -138,7 +138,7 @@ def cmd_triage(a):
     try:
         t = Triage(image, progress=progress)
     except UnsupportedImage as e:
-        sys.exit("\n%s\nADS reads raw (.img, .dd, .raw) images of FAT and NTFS drives. Convert an E01 to raw first." % e)
+        sys.exit("\n%s\nThe Artifact Disagreement Scorer reads raw (.img, .dd, .raw) images of FAT and NTFS drives. Convert an E01 to raw first." % e)
     vol = t.vol.summary()
     say("               %s drive named \u201c%s\u201d" % (vol["fs_type"], (vol["label"] or "").strip()))
     t.collect().run()
@@ -224,7 +224,7 @@ def main(argv=None):
                    help="with no calibration file, measure each rule's firing rate p_r on this image itself")
     s.set_defaults(fn=cmd_analyze)
 
-    s = sub.add_parser("evaluate", help="compare ADS and single rules against ground truth")
+    s = sub.add_parser("evaluate", help="compare all checks together with single rules against ground truth")
     s.add_argument("--results", required=True)
     s.add_argument("--truth", required=True)
     s.add_argument("--out")

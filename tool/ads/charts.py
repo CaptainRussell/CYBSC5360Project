@@ -39,7 +39,7 @@ def roc_svg(ads_pts, rule_pts, rule_label):
                  % (PAD - 8, _y(g) + 4, MUTED, g))
     return (
         '<svg viewBox="0 0 %d %d" width="100%%" style="max-width:480px" role="img" '
-        'aria-label="ROC curve: ADS against the best single check">'
+        'aria-label="ROC curve: all checks together against the best single check">'
         '<rect x="%d" y="%d" width="%d" height="%d" fill="none" style="stroke:%s"/>'
         '%s'
         '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" style="stroke:%s" stroke-dasharray="4 4" stroke-width="1"/>'
@@ -74,14 +74,14 @@ def render(result, out_dir, target_fpr=0.01):
     verdict = "—"
     if best:
         if ads[fpr_key] > best[fpr_key]:
-            verdict = ("At a %g%% false-alarm rate, ADS caught %s of the tampering, more than the best single "
+            verdict = ("At a %g%% false-alarm rate, all checks together caught %s of the tampering, more than the best single "
                        "check (%s, %s). Combining the records helped."
                        % (target_fpr * 100, _pct(ads[fpr_key]), rule_name(best_rid), _pct(best[fpr_key])))
         elif ads[fpr_key] == best[fpr_key]:
-            verdict = ("At a %g%% false-alarm rate, ADS matched the best single check (%s) at %s. Combining did "
+            verdict = ("At a %g%% false-alarm rate, all checks together matched the best single check (%s) at %s. Combining did "
                        "not help here." % (target_fpr * 100, rule_name(best_rid), _pct(ads[fpr_key])))
         else:
-            verdict = ("At a %g%% false-alarm rate, the best single check (%s, %s) beat ADS (%s). On this data, "
+            verdict = ("At a %g%% false-alarm rate, the best single check (%s, %s) beat all checks together (%s). On this data, "
                        "combining did not help — see the per-check table."
                        % (target_fpr * 100, rule_name(best_rid), _pct(best[fpr_key]), _pct(ads[fpr_key])))
 
@@ -92,7 +92,7 @@ def render(result, out_dir, target_fpr=0.01):
 
     trows = ""
     for r in sorted(rows, key=lambda r: (r["detector"] != "ADS", -(r["auc"] or 0))):
-        name = "ADS (all checks together)" if r["detector"] == "ADS" else \
+        name = "All checks together (the Scorer)" if r["detector"] == "ADS" else \
                "%s — %s" % (r["detector"].split()[0], rule_name(r["detector"].split()[0]))
         color = ADS_C if r["detector"] == "ADS" else ONE_C
         trows += ('<tr%s><td>%s</td><td class="num">%s</td><td>%s%s</td><td class="num">%s</td></tr>'
@@ -100,8 +100,9 @@ def render(result, out_dir, target_fpr=0.01):
                      html.escape(name), "–" if r["auc"] is None else "%.2f" % r["auc"],
                      _pct(r[fpr_key]), bar(r[fpr_key], color), _pct(r.get("precision"))))
 
-    from .theme import THEME_CSS, THEME_JS, icon
-    page = TEMPLATE.replace("@css@", THEME_CSS).replace("@js@", THEME_JS).replace("@sun@", icon("sun")) \
+    from .theme import THEME_CSS, THEME_JS, brand, credit, icon
+    page = TEMPLATE.replace("@css@", THEME_CSS).replace("@js@", THEME_JS).replace("@brand@", brand("Evaluation")) \
+        .replace("@credit@", credit("Numbers come from the ground-truth list for this test set.")).replace("@sun@", icon("sun")) \
         .replace("@print@", icon("print")).replace("@ico1@", icon("overview")).replace("@ico2@", icon("all")).replace("@svg@", svg).replace("@verdict@", html.escape(verdict)) \
         .replace("@tampered@", str(result["tampered"])).replace("@benign@", str(result["benign"])) \
         .replace("@fpr@", "%g" % (target_fpr * 100)).replace("@rows@", trows) \
@@ -117,14 +118,14 @@ def render(result, out_dir, target_fpr=0.01):
 
 
 TEMPLATE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>ADS Evaluation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Artifact Disagreement Scorer · Evaluation</title>
 <style>@css@
 tr.ads td{background:var(--accent-soft);font-weight:650}
 .key span{display:inline-flex;align-items:center;gap:7px;margin-right:16px;font-size:13px;color:var(--muted)}
 .key i{width:22px;height:3px;border-radius:2px;display:inline-block}
 .vbig{font-size:18px;line-height:1.5}
 </style></head><body>
-<header class="top"><div class="wrap"><div class="brand"><span class="dot"></span>ADS // EVALUATION</div>
+<header class="top"><div class="wrap">@brand@
 <div class="case"><span class="pill acc">@tampered@ tampered · @benign@ clean</span></div><div class="spacer"></div>
 <button class="iconbtn" data-act="theme" title="Light or dark">@sun@</button><button class="iconbtn" data-act="print" title="Print every tab">@print@</button></div></header>
 <nav class="tabs"><div class="wrap"><a class="tab" href="#summary" data-tab="summary">@ico1@Summary <kbd>1</kbd></a>
@@ -133,13 +134,13 @@ tr.ads td{background:var(--accent-soft);font-weight:650}
 <section class="panel" id="p-summary"><div class="ph"><div><h2>Did combining the checks help?</h2><div class="sub">Against the ground-truth list of tampered files.</div></div></div>
 <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start">
 <div class="card"><p class="vbig">@verdict@</p><div class="grid g2" style="margin-top:14px">
-<div class="card kpi acc"><div class="v">@adsauc@</div><div class="l">ADS overall (area under curve, of 1.00)</div></div>
+<div class="card kpi acc"><div class="v">@adsauc@</div><div class="l">All checks together, overall (area under curve, of 1.00)</div></div>
 <div class="card kpi"><div class="v">@fpr@%</div><div class="l">false-alarm rate compared at</div></div></div></div>
-<div class="card">@svg@<div class="key" style="margin-top:8px"><span><i style="background:var(--accent)"></i>ADS (all checks)</span><span><i style="background:var(--accent2)"></i>best single check at @fpr@%</span><span><i style="background:var(--line2)"></i>guessing</span></div>
+<div class="card">@svg@<div class="key" style="margin-top:8px"><span><i style="background:var(--accent)"></i>all checks together</span><span><i style="background:var(--accent2)"></i>best single check at @fpr@%</span><span><i style="background:var(--line2)"></i>guessing</span></div>
 <div class="note" style="margin-top:8px">Up means catching more tampering; right means more false alarms. Closer to the top-left is better.</div></div></div>
 </section>
 <section class="panel" id="p-checks"><div class="ph"><div><h2>Every check, side by side</h2><div class="sub">“Caught” is the share of tampering found when tuned to @fpr@% false alarms.</div></div></div>
 <div class="card scroll-x"><table class="t"><thead><tr><th>Check</th><th class="num">Overall</th><th>Caught at @fpr@%</th><th class="num">Precision</th></tr></thead><tbody>@rows@</tbody></table></div></section>
 </main>
-<footer class="foot"><div class="wrap">Artifact Disagreement Scorer · numbers come from the ground-truth list for this test set.</div></footer>
+<footer class="foot"><div class="wrap">@credit@</div></footer>
 <script>@js@</script></body></html>"""

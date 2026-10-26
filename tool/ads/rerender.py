@@ -51,7 +51,7 @@ def rerender_dates(folder):
                          "prefetch_runs": _split(r["prefetch_runs"], "; "), "indicators": _split(r["indicators"], " ")}
                         for r in csv.DictReader(fh)]
     meta = {"theta": run["theta"], "weight_mode": run["weight_mode"], "inputs": run.get("inputs", []),
-            "generated": run.get("generated", ""), "calibration": run.get("calibration")}
+            "generated": run.get("generated", ""), "calibration": run.get("calibration"), "config": run.get("config")}
     data = ntfs_briefing.build_data(None, outcome_rows, scored, indicators, clusters,
                                     (run.get("system_score", 0.0), run.get("indicators_evaluable", 0)), meta)
     out = os.path.join(folder, "briefing.html")

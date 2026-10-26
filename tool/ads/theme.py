@@ -1,4 +1,4 @@
-"""One look for every page ADS writes: a dark, console-style forensic theme.
+"""One look for every page the Artifact Disagreement Scorer writes: a dark, console-style forensic theme.
 
 All report pages (first-look report, Windows date report, proof page, evaluation
 page, control panel) embed THEME_CSS and, where they have tabs or expanding rows,
@@ -52,6 +52,8 @@ p{margin:0}
   border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;gap:14px;height:54px}
 .brand{display:flex;align-items:center;gap:9px;font:700 14px var(--mono);letter-spacing:.06em;color:var(--accent);white-space:nowrap}
+.brand .nm{display:grid;line-height:1.15}
+.brand .nm small{font:600 10px var(--mono);letter-spacing:.14em;color:var(--accent2)}
 .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2.4s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.35}}
 .case{display:flex;gap:8px;align-items:center;min-width:0;color:var(--muted);font-size:13px}
@@ -73,13 +75,43 @@ p{margin:0}
 .tab[aria-selected="true"] .n{background:var(--accent-soft);color:var(--accent-ink)}
 .tab kbd{font-size:10px;color:var(--dim);border:1px solid var(--line2);border-radius:4px;padding:0 4px}
 @media (max-width:760px){.tab kbd{display:none}.case .hide-s{display:none}}
-@media (max-width:620px){.top .wrap{gap:8px}.case b{display:none}.brand{font-size:12px}.case{overflow:hidden}}
+@media (max-width:620px){.top .wrap{gap:8px}.case b{display:none}.brand{font-size:11px;letter-spacing:.02em;white-space:normal}.case{overflow:hidden}}
+@media (max-width:420px){.case{display:none}}
 
 /* ---- panels ---- */
 main{padding:22px 0 60px}
 .panel{display:none;animation:enter .35s ease both}
 .panel.on{display:block}
+.panel.on.from-r{animation-name:enterR}.panel.on.from-l{animation-name:enterL}
 @keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes enterR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes enterL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+/* ---- navigation aids ---- */
+[data-nav]{cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}
+.card[data-nav]:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-soft),var(--shadow);transform:translateY(-2px)}
+.card[data-nav] .go{position:absolute;top:12px;right:12px;font:700 11px var(--mono);color:var(--dim);opacity:0;transition:opacity .15s,transform .15s}
+.card[data-nav]:hover .go{opacity:1;transform:translateX(2px);color:var(--accent-ink)}
+.ghost{position:fixed;z-index:60;pointer-events:none;border:2px solid var(--accent);border-radius:12px;background:var(--accent-soft);
+  box-shadow:0 0 24px var(--accent);transition:all .45s cubic-bezier(.6,0,.2,1)}
+.tab.ping{animation:ping .7s ease}
+@keyframes ping{30%{background:var(--accent-soft);box-shadow:0 0 18px var(--accent-soft)}}
+.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,60%{box-shadow:0 0 0 2px var(--accent),0 0 26px var(--accent-soft)}100%{box-shadow:none}}
+#backbtn{position:fixed;left:18px;bottom:18px;z-index:30;display:none;align-items:center;gap:8px;border:1px solid var(--accent);
+  background:var(--panel);color:var(--accent-ink);border-radius:999px;padding:8px 14px;font:600 13px var(--ui);cursor:pointer;box-shadow:var(--shadow)}
+#backbtn.on{display:inline-flex;animation:enter .3s ease}
+#progress{position:fixed;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:40;width:0}
+#keyhelp{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);display:none;place-items:center}
+#keyhelp.on{display:grid}
+#keyhelp .card{width:min(420px,92vw)}
+#keyhelp kbd{display:inline-block;min-width:22px;text-align:center;border:1px solid var(--line2);border-radius:5px;padding:1px 6px;margin-right:8px;color:var(--accent-ink)}
+#keyhelp div.k{padding:5px 0;color:var(--muted);font-size:14px}
+.filterbar{display:none;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;margin-bottom:12px;border:1px dashed var(--accent);border-radius:10px;
+  background:var(--accent-soft);font-size:13px;color:var(--accent-ink)}
+.filterbar.on{display:flex;animation:enter .3s ease}
+.filterbar button{border:0;background:none;color:var(--accent-ink);font:700 13px var(--ui);cursor:pointer;text-decoration:underline}
+.credit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;color:var(--muted)}
+.credit b{color:var(--accent-ink);font-family:var(--mono);letter-spacing:.04em}
 .ph{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
 .ph h2{font-size:22px}
 .ph .sub{color:var(--muted);font-size:14px;margin-top:3px}
@@ -158,7 +190,7 @@ footer.foot{border-top:1px solid var(--line);color:var(--dim);font-size:12px;pad
 @media print{
   :root{--bg:#fff;--bg2:#fff;--panel:#fff;--panel2:#f4f6f9;--line:#d6dde8;--text:#000;--muted:#333;--dim:#555;color-scheme:light}
   body{background:#fff}.top,.tabs,.toolbar,.iconbtn{display:none!important}
-  .panel{display:block!important;break-before:page}.acc-body{grid-template-rows:1fr!important}
+  .panel{display:block!important;break-before:page}#backbtn,#progress,.ghost{display:none!important}.acc-body{grid-template-rows:1fr!important}
 }
 """
 
@@ -175,9 +207,14 @@ THEME_JS = r"""
   $$('[data-act="print"]').forEach(b=>b.addEventListener('click',()=>window.print()));
   // tabs: hash routing, number keys, arrow keys
   const tabs=$$('.tab[data-tab]'), names=tabs.map(t=>t.dataset.tab);
+  let current=null;
   function show(name,push){
     if(!names.length) return;            // a page without tabs (the control panel)
     if(!names.includes(name)) name=names[0];
+    const dir=current==null?"":names.indexOf(name)>names.indexOf(current)?"from-r":names.indexOf(name)<names.indexOf(current)?"from-l":"";
+    $$('.panel').forEach(p=>p.classList.remove('from-r','from-l')); const pn=$('#p-'+name); if(pn&&dir) pn.classList.add(dir);
+    if(current!==name&&!flying) back.classList.remove('on');
+    current=name;
     tabs.forEach(t=>t.setAttribute('aria-selected', t.dataset.tab===name?'true':'false'));
     $$('.panel').forEach(p=>p.classList.toggle('on', p.id==='p-'+name));
     if(push!==false && location.hash!=='#'+name) history.pushState(null,'','#'+name);
@@ -185,10 +222,51 @@ THEME_JS = r"""
     document.dispatchEvent(new CustomEvent('ads:tab',{detail:name}));
   }
   window.ADS_SHOW=show;
+  // "fly" navigation: a glowing box travels from what was clicked to the tab it opens,
+  // and a back button offers the way home.
+  let flying=false;
+  const back=document.createElement('button'); back.id='backbtn'; document.body.appendChild(back);
+  let backTo=null;
+  back.addEventListener('click',()=>{const b=backTo;back.classList.remove('on');if(b){show(b.tab);if(b.y!=null)setTimeout(()=>window.scrollTo({top:b.y,behavior:'smooth'}),50);}});
+  function fly(from,name,after){
+    const tab=tabs.find(t=>t.dataset.tab===name);
+    const ct=tabs.find(t=>t.dataset.tab===current), tn=ct&&[...ct.childNodes].find(n=>n.nodeType===3&&n.textContent.trim());
+    const origin={tab:current,y:window.scrollY}, label=tn?tn.textContent.trim():'';
+    const done=()=>{flying=true;show(name);flying=false;if(tab){tab.classList.remove('ping');void tab.offsetWidth;tab.classList.add('ping');}
+      if(origin.tab&&origin.tab!==name){backTo=origin;back.innerHTML='&#8592; Back to '+label;back.classList.add('on');}
+      if(after)setTimeout(after,60);};
+    const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(!from||!tab||reduce||name===current){done();return;}
+    const a=from.getBoundingClientRect(), b=tab.getBoundingClientRect(), g=document.createElement('div'); g.className='ghost';
+    Object.assign(g.style,{left:a.left+'px',top:a.top+'px',width:a.width+'px',height:a.height+'px'}); document.body.appendChild(g);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>Object.assign(g.style,{left:b.left+'px',top:b.top+'px',width:b.width+'px',height:b.height+'px',opacity:'.4'})));
+    setTimeout(()=>{g.remove();done();},430);
+  }
+  window.ADS_FLY=fly;
+  // bring an element into view and make it glow briefly
+  window.ADS_FLASH=el=>{if(!el)return;el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');};
+  // generic links: data-nav="tab" with optional data-target="#css-selector" to open and flash
+  document.addEventListener('click',e=>{const n=e.target.closest('[data-nav]');if(!n)return;e.preventDefault();
+    fly(n,n.dataset.nav,()=>{const t=n.dataset.target&&$(n.dataset.target);if(t){if(t.classList.contains('acc-item')&&!t.classList.contains('open')){t.classList.add('open');animate(t);}window.ADS_FLASH(t);}});});
+  // keyboard help
+  const kh=document.createElement('div'); kh.id='keyhelp';
+  kh.innerHTML='<div class="card"><h3>Keyboard</h3><div class="k"><kbd>1</kbd>-<kbd>'+Math.max(1,names.length)+'</kbd> open a tab</div><div class="k"><kbd>&#8592;</kbd><kbd>&#8594;</kbd> previous / next tab</div>'+
+    '<div class="k"><kbd>/</kbd> search this tab</div><div class="k"><kbd>j</kbd><kbd>k</kbd> next / previous row</div><div class="k"><kbd>Esc</kbd> close this</div><div class="k"><kbd>?</kbd> show this help</div></div>';
+  document.body.appendChild(kh); kh.addEventListener('click',e=>{if(e.target===kh)kh.classList.remove('on');});
+  // reading progress along the top edge
+  const prog=document.createElement('div'); prog.id='progress'; document.body.appendChild(prog);
+  addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-innerHeight;prog.style.width=(h>0?100*scrollY/h:0)+'%';},{passive:true});
   tabs.forEach(t=>t.addEventListener('click',e=>{e.preventDefault();show(t.dataset.tab);}));
   window.addEventListener('popstate',()=>show(location.hash.slice(1),false));
   document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){kh.classList.remove('on');const i=document.activeElement;if(i&&i.blur)i.blur();return;}
     if(e.target.closest('input,textarea')||e.ctrlKey||e.metaKey||e.altKey) return;
+    if(e.key==='?'){kh.classList.toggle('on');return;}
+    if(e.key==='/'){const q=$('.panel.on input');if(q){e.preventDefault();q.focus();}return;}
+    if(e.key==='j'||e.key==='k'){const rows=$$('.panel.on .acc-item').filter(x=>x.offsetParent);if(!rows.length)return;
+      let i=rows.findIndex(x=>x.classList.contains('open'));const n=e.key==='j'?Math.min(rows.length-1,i+1):Math.max(0,i-1);
+      rows.forEach(x=>{x.classList.remove('open');const h=x.querySelector('.acc-head');if(h)h.setAttribute('aria-expanded','false');});
+      rows[n].classList.add('open');animate(rows[n]);rows[n].scrollIntoView({behavior:'smooth',block:'center'});return;}
     const i=parseInt(e.key,10); if(i>=1&&i<=names.length){show(names[i-1]);return;}
     const cur=names.indexOf((tabs.find(t=>t.getAttribute('aria-selected')==='true')||tabs[0]||{}).dataset?.tab);
     if(e.key==='ArrowRight'&&cur<names.length-1) show(names[cur+1]);
@@ -240,6 +318,21 @@ ICONS = {
     "lock": '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     "check": '<path d="m5 12 5 5L20 7"/>',
 }
+
+
+TOOL = "Artifact Disagreement Scorer"
+AUTHOR = "Created by Captain Scott Russell for CPRE 5360"
+
+
+def brand(sub):
+    """The header name block: the tool's full name with the page's purpose under it."""
+    return ('<div class="brand" title="%s"><span class="dot"></span><span class="nm">%s<small>%s</small></span></div>'
+            % (AUTHOR, TOOL.upper(), sub.upper()))
+
+
+def credit(extra=""):
+    """First footer line on every page: who made the tool."""
+    return '<div class="credit"><b>%s</b><span>&middot; %s</span></div>%s' % (TOOL, AUTHOR, extra)
 
 
 def icon(name, cls="ico"):

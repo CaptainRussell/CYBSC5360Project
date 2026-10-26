@@ -66,7 +66,7 @@ def _write_markdown(path, ctx, outcome_rows, scored, indicators, clusters, weigh
         outcomes.setdefault(key, {})[rid] = (outcome, details)
     flagged = [r for r in scored if r["flagged"]]
     L = []
-    L.append("# ADS report\n")
+    L.append("# Artifact Disagreement Scorer report\n")
     L.append("Generated %s. Threshold θ = %s, weight mode `%s`%s.\n" % (
         now_utc_iso(), meta["theta"], meta["weight_mode"],
         "" if meta.get("calibration") else " (no baseline calibration: specificity terms are 1)"))

@@ -55,6 +55,7 @@ class TestPipelineAndBriefing(unittest.TestCase):
             self.assertNotIn("@leads@", html)
             self.assertNotIn("@palette@", html)
             self.assertNotRegex(html, r"@[a-z]+@")
+            self.assertIn("Created by Captain Scott Russell for CPRE 5360", html)
             # Rebuilding the page from the saved files gives the same page.
             from ads.rerender import rerender
             os.rename(os.path.join(out, "briefing.html"), os.path.join(d, "first.html"))
@@ -160,6 +161,7 @@ class TestChartsBestCheck(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             page = _read(charts.render({"tampered": 2, "benign": 9, "detectors": rows}, d))
             self.assertIn(explain.rule_name("R8"), page.split("</p>")[0])
+            self.assertIn("Created by Captain Scott Russell for CPRE 5360", page)
 
 
 class TestPortableTimes(unittest.TestCase):

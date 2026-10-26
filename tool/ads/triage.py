@@ -238,7 +238,7 @@ def open_volume(image_path):
     try:
         return NTFSVolume(image_path)
     except NotNTFS:
-        raise UnsupportedImage("%s holds neither a FAT nor an NTFS drive that ADS can read." % image_path)
+        raise UnsupportedImage("%s holds neither a FAT nor an NTFS drive that the Artifact Disagreement Scorer can read." % image_path)
 
 
 class Triage:
@@ -577,7 +577,7 @@ class Triage:
         locked = [i["path"] for i in live if i.get("outcomes", {}).get("C3", ("",))[0] == VIOLATED]
         return {
             "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-            "tool": "ADS %s" % __version__,
+            "tool": "Artifact Disagreement Scorer %s" % __version__,
             "image": {"path": os.path.abspath(self.image_path), "name": os.path.basename(self.image_path),
                       "bytes": os.path.getsize(self.image_path), "sha256": self.image_sha256(),
                       **self.vol.summary()},

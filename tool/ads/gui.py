@@ -18,7 +18,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .config import load_config
-from .theme import THEME_CSS, THEME_JS
+from .theme import THEME_CSS, THEME_JS, brand, credit
 
 JOBS = {}
 _LOCK = threading.Lock()
@@ -85,7 +85,7 @@ def _run_image(jid, image, key=""):
                 JOBS[jid]["proof"] = True
         _finish(jid, out, html)
     except UnsupportedImage as e:
-        _fail(jid, "%s ADS reads raw images (.img, .dd, .raw) of FAT and NTFS drives." % e)
+        _fail(jid, "%s The tool reads raw images (.img, .dd, .raw) of FAT and NTFS drives." % e)
     except Exception as e:
         _fail(jid, str(e))
 
@@ -125,7 +125,8 @@ class Handler(BaseHTTPRequestHandler):
         u = urllib.parse.urlparse(self.path)
         q = urllib.parse.parse_qs(u.query)
         if u.path == "/":
-            return self._send(200, PAGE.replace("@TOKEN@", TOKEN).replace("@css@", THEME_CSS).replace("@js@", THEME_JS))
+            return self._send(200, PAGE.replace("@TOKEN@", TOKEN).replace("@css@", THEME_CSS).replace("@js@", THEME_JS)
+                              .replace("@brand@", brand("Control panel")).replace("@credit@", credit()))
         if not self._token_ok(q.get("t", [""])[0]):
             return self._send(403, "forbidden")
         if u.path == "/status":
@@ -187,7 +188,7 @@ def main(argv=None):
             pass
     srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     url = "http://127.0.0.1:%d" % port
-    print("ADS control panel is open at %s" % url)
+    print("Artifact Disagreement Scorer control panel is open at %s" % url)
     print("Leave this window open while you use it. Press Ctrl+C here to close.")
     try:
         webbrowser.open(url)
@@ -200,7 +201,7 @@ def main(argv=None):
 
 
 PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>ADS Control Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Artifact Disagreement Scorer · Control Panel</title>
 <style>@css@
 label{display:block;font-weight:600;margin:12px 0 5px;font-size:13px;color:var(--muted)}
 input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;font:14px var(--mono);background:var(--panel2);color:var(--text)}
@@ -218,7 +219,7 @@ a.open{display:inline-block;margin:10px 16px 0 0;font:700 14px var(--ui);color:v
 .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:s .8s linear infinite;vertical-align:-1px;margin-right:6px}
 @keyframes s{to{transform:rotate(360deg)}}
 </style></head><body>
-<header class="top"><div class="wrap"><div class="brand"><span class="dot"></span>ADS // CONTROL PANEL</div>
+<header class="top"><div class="wrap">@brand@
 <div class="case"><span class="pill">read-only · this computer only</span></div><div class="spacer"></div>
 <button class="iconbtn" data-act="theme" title="Light or dark"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button></div></header>
 <main class="wrap">
@@ -242,6 +243,7 @@ a.open{display:inline-block;margin:10px 16px 0 0;font:700 14px var(--ui);color:v
 </div></div>
 <div id="log"></div>
 </main>
+<footer class="foot"><div class="wrap">@credit@</div></footer>
 <script>
 const TOKEN='@TOKEN@';
 let timer=null;

@@ -147,13 +147,13 @@ def _e(s):
 
 
 def render(scored, summ, facts, key_name):
-    from .theme import THEME_CSS, THEME_JS, icon
+    from .theme import THEME_CSS, THEME_JS, brand, credit, icon
     ev = summ["evidence"]
-    verdict = ("ADS listed %d of the %d evidence files found by hand, %d in its top 10. Reaching all of them means "
+    verdict = ("The tool listed %d of the %d evidence files found by hand, %d in its top 10. Reaching all of them means "
                "reviewing its top %d of %s files." % (summ["found"], ev, summ["top10"], summ["deepest"],
                                                     format(summ["examined"], ",")))
     if summ["found"] == 0:
-        verdict = "ADS listed none of the %d evidence files found by hand. Each row says why." % ev
+        verdict = "The tool listed none of the %d evidence files found by hand. Each row says why." % ev
     chev = icon("chev", "ico chev")
     rows = ""
     for s_ in sorted(scored, key=lambda s: (s["kind"] != "evidence", s["rank"] is None, s["rank"] or 0)):
@@ -165,7 +165,7 @@ def render(scored, summ, facts, key_name):
         chips = "".join('<span class="chip"><b>%s</b></span>' % _e(c) for c, _n in s_["checks"])
         saw = ("<dt>Score</dt><dd>%s / 100 · %s</dd>" % (s_["score"], _e(s_["level"])) +
                "".join("<dt>%s</dt><dd>%s</dd>" % (_e(c), _e(n)) for c, n in s_["checks"])) if found else \
-            ("<dt>ADS</dt><dd>No check fired. ADS points to files whose records or contents disagree; evidence that "
+            ("<dt>The tool</dt><dd>No check fired. The tool points to files whose records or contents disagree; evidence that "
              "looks ordinary on its own is outside what it looks for.</dd>")
         rows += ('<div class="acc-item" data-kind="{kind}" data-found="{f}"><button class="acc-head" aria-expanded="false">{rank}'
                  '<div style="flex:1;min-width:0"><b>{item}</b><div class="note mono" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{path}</div></div>'
@@ -186,7 +186,7 @@ def render(scored, summ, facts, key_name):
                     '<td>{tag}</td></tr>').format(
             id=_e(c["check"]), name=_e(c["name"]), flags=format(c["flags"], ","), a=100 * c["found"] / max(1, ev), found=c["found"],
             b=100 * c["ads_same_budget"] / max(1, ev), ads=c["ads_same_budget"], cls="ok" if better else ("hot" if worse else ""),
-            tag='<span class="badge ok">ADS better</span>' if better else ('<span class="badge hot">check better</span>' if worse else '<span class="badge minor">tie</span>'))
+            tag='<span class="badge ok">together better</span>' if better else ('<span class="badge hot">check better</span>' if worse else '<span class="badge minor">tie</span>'))
     pct = 100 * summ["found"] / max(1, ev)
     r = 54
     circ = 2 * 3.14159 * r
@@ -196,7 +196,8 @@ def render(scored, summ, facts, key_name):
              'stroke-dasharray="{c:.1f}" stroke-dashoffset="{c:.1f}" data-off="{o:.1f}"/><text x="70" y="68" text-anchor="middle" '
              'style="font:700 26px var(--mono);fill:var(--text)">{f}/{e}</text><text x="70" y="90" text-anchor="middle" '
              'style="font:12px var(--ui);fill:var(--muted)">evidence listed</text></svg>').format(r=r, c=circ, o=circ * (1 - pct / 100), f=summ["found"], e=ev)
-    return (PAGE.replace("@css@", THEME_CSS).replace("@js@", THEME_JS)
+    return (PAGE.replace("@css@", THEME_CSS).replace("@js@", THEME_JS).replace("@brand@", brand("Proof of function"))
+            .replace("@credit@", credit("The tool points to files for an examiner to review; it does not answer the case questions itself."))
             .replace("@verdict@", _e(verdict)).replace("@rows@", rows).replace("@singles@", singles).replace("@donut@", donut)
             .replace("@found@", str(summ["found"])).replace("@evidence@", str(ev)).replace("@top10@", str(summ["top10"]))
             .replace("@depth@", str(summ["deepest"])).replace("@others@", str(summ["others_above"]))
@@ -208,7 +209,7 @@ def render(scored, summ, facts, key_name):
 
 
 PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>ADS Proof of Function</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Artifact Disagreement Scorer · Proof of Function</title>
 <style>@css@
 .rk{font:700 16px var(--mono);min-width:44px}.rk.ok{color:var(--ok)}.rk.no{color:var(--dim)}
 .cicons{display:flex;gap:4px}
@@ -216,7 +217,7 @@ PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 .vbig{font-size:18px;line-height:1.5}
 @media (max-width:620px){.hide-s{display:none!important}}
 </style></head><body>
-<header class="top"><div class="wrap"><div class="brand"><span class="dot"></span>ADS // PROOF</div>
+<header class="top"><div class="wrap">@brand@
 <div class="case"><b>@image@</b><span class="pill acc">@fs@</span><span class="pill hide-s">@key@</span></div><div class="spacer"></div>
 <button class="iconbtn" data-act="theme" title="Light or dark">@sun@</button><button class="iconbtn" data-act="print" title="Print every tab">@print@</button></div></header>
 <nav class="tabs" aria-label="Sections"><div class="wrap">
@@ -224,7 +225,7 @@ PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <a class="tab" href="#items" data-tab="items">@ico_leads@Item by item <span class="n">@evidence@</span> <kbd>2</kbd></a>
 <a class="tab" href="#checks" data-tab="checks">@ico_how@Each check alone <kbd>3</kbd></a></div></nav>
 <main class="wrap">
-<section class="panel" id="p-summary"><div class="ph"><div><h2>Did ADS point to what was found by hand?</h2><div class="sub">Compared with the examiner's own findings, from the @kind@.</div></div></div>
+<section class="panel" id="p-summary"><div class="ph"><div><h2>Did the tool point to what was found by hand?</h2><div class="sub">Compared with the examiner's own findings, from the @kind@.</div></div></div>
 <div class="grid" style="grid-template-columns:auto minmax(0,1fr);align-items:center">
 <div class="card" style="display:grid;place-items:center">@donut@</div>
 <div class="card"><p class="vbig">@verdict@</p></div></div>
@@ -233,15 +234,15 @@ PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <div class="card kpi acc"><div class="v" data-count="@depth@">0</div><div class="l">files to review to reach them</div></div>
 <div class="card kpi warn"><div class="v" data-count="@others@">0</div><div class="l">of those not in the key</div></div>
 <div class="card kpi"><div class="v" style="font-size:26px">@decoys@</div><div class="l">decoys also listed</div></div></div>
-<p class="note" style="margin-top:12px">ADS listed @leads@ of @examined@ files. Files it lists that are not in the key are not necessarily false: the key is one examiner's findings.</p>
+<p class="note" style="margin-top:12px">The tool listed @leads@ of @examined@ files. Files it lists that are not in the key are not necessarily false: the key is one examiner's findings.</p>
 </section>
 <section class="panel" id="p-items"><div class="ph"><div><h2>Item by item</h2><div class="sub">Each thing found by hand. Open one for detail.</div></div></div>
 <div class="toolbar"><div class="seg" id="kf"><button aria-pressed="true" data-k="">All</button><button aria-pressed="false" data-k="1">Listed</button><button aria-pressed="false" data-k="0">Missed</button><button aria-pressed="false" data-k="decoy">Decoys</button></div></div>
 <div id="il">@rows@</div></section>
-<section class="panel" id="p-checks"><div class="ph"><div><h2>Each check alone, against all of them together</h2><div class="sub">A check alone flags files in no order. ADS gets the same number of files: its top ones.</div></div></div>
-<div class="card scroll-x"><table class="t"><thead><tr><th>Check alone</th><th class="num">Files it flags</th><th>Evidence it catches</th><th>ADS, same budget</th><th></th></tr></thead><tbody>@singles@</tbody></table></div></section>
+<section class="panel" id="p-checks"><div class="ph"><div><h2>Each check alone, against all of them together</h2><div class="sub">A check alone flags files in no order. All checks together get the same number of files: the top-ranked ones.</div></div></div>
+<div class="card scroll-x"><table class="t"><thead><tr><th>Check alone</th><th class="num">Files it flags</th><th>Evidence it catches</th><th>All together, same number</th><th></th></tr></thead><tbody>@singles@</tbody></table></div></section>
 </main>
-<footer class="foot"><div class="wrap">ADS points to files for an examiner to review; it does not answer the case questions itself.</div></footer>
+<footer class="foot"><div class="wrap">@credit@</div></footer>
 <script>@js@</script>
 <script>
 document.querySelectorAll('#kf button').forEach(b=>b.addEventListener('click',()=>{

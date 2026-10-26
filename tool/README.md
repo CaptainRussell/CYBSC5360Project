@@ -1,5 +1,7 @@
 # Artifact Disagreement Scorer (ADS)
 
+*Created by Captain Scott Russell for CPRE 5360.*
+
 Working implementation of the tool in the term paper. It looks for places where a drive's independent records disagree, weighs those disagreements together, and explains every flag in plain words. It has two parts:
 
 * **First look at a drive image:** eight questions asked of every file (disguised, something hidden at the end, locked, password written down, odd one out, never mentioned, archive of personal files, changed at an unusual time). Works on raw images of **FAT and NTFS** drives.
@@ -45,6 +47,10 @@ The report goes in a folder called "IMAGE report" (choose another with `--out FO
   * **How it works:** each check explained.
 
   Technical detail is folded away under each file. A sun/moon button switches between dark and light, and the page prints cleanly.
+
+  Everything links to where its files are: click a number on the Overview (for example "look first") and a highlight travels to the tab it opens, already filtered; a "Back" button returns you. Inside an open lead, Previous/Next step through the list and each check's chip opens its explanation. Keys: `1`-`7` tabs, `j`/`k` next/previous row, `/` search, `?` all shortcuts.
+  * **Drive** also draws where the parts of the drive sit (partition table, boot area, file tables, folders, data) with the arithmetic that locates each, and how sectors add up to a cluster.
+  * **How it works** explains, for each question, exactly what the tool reads and compares, with a worked example and this drive's numbers.
 * `leads.csv`: every file with a clue, its score out of 100, its level and what was found, in plain words. Opens in Excel.
 * `triage.json`: the same results as data.
 

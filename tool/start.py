@@ -10,7 +10,7 @@ from ads.cli import main  # noqa: E402
 
 
 def ask():
-    print("ADS first-look report")
+    print("Artifact Disagreement Scorer: first-look report")
     print("Drag the drive image file into this window (or type its path), then press Enter.")
     while True:
         path = input("> ").strip().strip('"').strip("'").replace("\\ ", " ")

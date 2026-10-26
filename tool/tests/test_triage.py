@@ -87,6 +87,8 @@ class FatTriage(unittest.TestCase):
             html = fh.read()
         self.assertIn("/bin/tool", html)
         self.assertNotIn("__DATA__", html)
+        self.assertIn("Created by Captain Scott Russell for CPRE 5360", html)
+        self.assertNotIn("Every finding is a reason to look", html)
         with open(os.path.join(out, "leads.csv"), encoding="utf-8") as fh:
             self.assertIn("Password written down", fh.read())
 
