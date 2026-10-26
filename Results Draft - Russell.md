@@ -141,9 +141,15 @@ matching rule counts as evidence. C2 fired on no file.
    3 files), as on Project 1.
 3. *Every top-twenty flag is explained by the report alone:* **met.** Every check
    that fired on the top twenty files has its plain-language sentence.
-4. *Every missed evidence file is explained:* see the table below.
+4. *Every missed evidence file is explained:* **met** (table below).
 
-**Misses.**
+**Misses.** Every miss is explained below from what each check answered for that
+file (`why.csv`, made with `python -m ads why`). Six of the nine sit in folders
+with fewer than five files, too few for the two "compare with its neighbors"
+checks (C5, C6), which are the ones that found envelope 1 (`bin/gzip`, the only
+photo among 89 files). The others hold their evidence inside the file's content
+or metadata, which no check reads, or write a password in a form C4 does not
+look for.
 
 | Evidence not listed | Why, from what ADS examines |
 |---|---|
@@ -151,11 +157,11 @@ matching rule counts as evidence. C2 fired on no file.
 | `home/ftp/etc/shad` (passwd: k1tt3n@p) | Same: "passwd:" has no "is" |
 | `usr/others/mypuppy.gz` holding the locked `mypuppy.zip` | Only ZIP archives are opened; the locked ZIP is inside a gzip file |
 | `NIST Hard Disk Write Block Tool specification.doc` | The evidence is the author name in its metadata; no check reads document metadata |
-| `lib/security/hello.png`, envelope 2 | *To complete from `why.csv`* |
-| `…/graphicssystems/ps_done.jpeg`, envelope 3 | *To complete from `why.csv`* |
-| `tmp/.font-unix/fs-1/ini/template.pdf`, envelope 5 | *To complete from `why.csv`* |
-| `cookies.sqlite` | *To complete from `why.csv`* |
-| `test.eml` | *To complete from `why.csv`* |
+| `lib/security/hello.png`, envelope 2 | A real PNG with the right name and nothing appended (C1, C2 clean). C5 compared it with its 37-file folder and did not find it out of place: the folder holds at least one other PNG, so it was not "the only picture" |
+| `lost+found/found/win32/graphicssystems/ps_done.jpeg`, envelope 3 | A real JPEG with the right name (C1 clean); its end marker was not found, so C2 could not check; its folder has only 2 files, too few for C5 and C6 |
+| `tmp/.font-unix/fs-1/ini/template.pdf`, envelope 5 | A valid PDF that ends where it should (C1, C2 clean, not locked); the envelope is a page inside it, and no check reads page content; it is alone in its folder, so C5 and C6 could not check. The hidden dot-folder is not one of the eight questions |
+| `cookies.sqlite` | A normal browser database of normal size in its 31-file profile folder (C1, C5 clean); the evidence is the cookies inside it, which ADS does not read |
+| `lost+found/found/win32/related/test.eml` | A real email with the right name (C1 clean); the evidence (the computer name wendyPC) is inside the message; it is alone in its folder, so C5 and C6 could not check |
 
 Sources: `tool/results/26Fall_Project2/` (`proof.html`, `proof.csv`,
 `briefing.html`, `triage.json`).
