@@ -66,7 +66,7 @@ mark{background:var(--hot-soft);color:var(--hot);border-radius:3px;padding:0 2px
 .cbar:hover{background:var(--panel2)}
 .cbar .nm{font-size:13px}
 /* drive */
-.hex{font:13px/1.9 var(--mono);overflow-x:auto;position:relative}
+.hex{font:13px/1.9 var(--mono);overflow-x:auto;overflow-y:hidden;position:relative}
 .hrow{display:flex;gap:14px;white-space:nowrap}
 .hrow .o{color:var(--dim)}
 .hrow .b{display:flex;gap:5px}
@@ -83,7 +83,7 @@ mark{background:var(--hot-soft);color:var(--hot);border-radius:3px;padding:0 2px
 .fld .off{font:11px var(--mono);color:var(--dim)}
 .fld.hl{background:var(--panel2);box-shadow:inset 3px 0 0 var(--fc)}
 .scan{position:absolute;left:0;right:0;height:22px;top:0;pointer-events:none;background:linear-gradient(180deg,transparent,var(--accent-soft) 60%,transparent);animation:scan 4s ease-in-out infinite}
-@keyframes scan{0%{transform:translateY(0);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateY(150px);opacity:0}}
+@keyframes scan{0%{top:0;opacity:0}15%{opacity:1}85%{opacity:1}100%{top:calc(100% - 22px);opacity:0}}
 /* keys */
 .keyc{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--panel2)}
 .keyc .k{font:700 16px var(--mono);color:var(--warn);overflow-wrap:anywhere}

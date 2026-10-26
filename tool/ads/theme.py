@@ -149,7 +149,7 @@ table.t{border-collapse:collapse;width:100%;font-size:14px}
 .t th{color:var(--dim);font:700 11px var(--ui);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
 .t tbody tr:hover td{background:var(--panel2)}
 .t td.num,.t th.num{text-align:right;font-family:var(--mono)}
-.scroll-x{overflow-x:auto}
+.scroll-x{overflow-x:auto;overflow-y:hidden}
 
 /* ---- expanding rows (accordion) ---- */
 .acc-item{border:1px solid var(--line);border-radius:10px;background:var(--panel);margin-bottom:8px;overflow:hidden;transition:border-color .2s}
