@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-26T00:06:51Z",
+  "generated": "2026-10-27T12:45:52Z",
   "db": "C:\\Users\\Idont\\AppData\\Local\\Temp\\p2.sqlite",
   "theta": 0.5,
   "weight_mode": "full",
@@ -154,10 +154,10 @@
   "inputs": [
     {
       "kind": "mft",
-      "path": "C:\\Users\\Idont\\Desktop\\Code Projects\\5360 Project\\images\\26Fall_Project2.img",
+      "path": "..\\images\\26Fall_Project2.img",
       "sha256": "3e00b19df1980a3cb5f9b876cd2c33e2982dd7fc82eff6c6097b13649f194c56",
       "rows": 5379,
-      "loaded_at": "2026-10-26T00:06:50Z"
+      "loaded_at": "2026-10-27T12:45:51Z"
     }
   ],
   "weights": {

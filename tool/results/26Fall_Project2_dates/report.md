@@ -1,6 +1,6 @@
-# ADS report
+# Artifact Disagreement Scorer report
 
-Generated 2026-10-26T00:06:51Z. Threshold θ = 0.5, weight mode `full`.
+Generated 2026-10-27T12:45:53Z. Threshold θ = 0.5, weight mode `full`.
 
 ## Inputs
 

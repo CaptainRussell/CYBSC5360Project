@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Artifact Disagreement Scorer · Date Checks</title>
+<style>
+:root{
+  --bg:#0A0F1C; --bg2:#0D1424; --panel:#111A2E; --panel2:#16223A; --line:#23314E; --line2:#2E3F62;
+  --text:#E5ECF6; --muted:#8B9BB7; --dim:#5B6B88;
+  --accent:#22D3EE; --accent-ink:#67E8F9; --accent-soft:rgba(34,211,238,.12);
+  --accent2:#A78BFA; --accent2-soft:rgba(167,139,250,.14);
+  --hot:#FB7185; --hot-soft:rgba(251,113,133,.14); --warn:#FBBF24; --warn-soft:rgba(251,191,36,.14);
+  --ok:#34D399; --ok-soft:rgba(52,211,153,.13); --minor:#64748B; --minor-soft:rgba(100,116,139,.18);
+  --f1:#22D3EE; --f2:#A78BFA; --f3:#FBBF24; --f4:#34D399; --f5:#F472B6; --f6:#60A5FA; --f7:#FB923C; --f8:#4ADE80;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --ui:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Roboto,Arial,sans-serif;
+  --mono:"Cascadia Code","JetBrains Mono","SF Mono",Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F3F6FB; --bg2:#EAF0F8; --panel:#FFFFFF; --panel2:#F5F8FC; --line:#D9E1EC; --line2:#C5D1E2;
+  --text:#0F172A; --muted:#475569; --dim:#64748B;
+  --accent:#0891B2; --accent-ink:#0E7490; --accent-soft:rgba(8,145,178,.10);
+  --accent2:#7C3AED; --accent2-soft:rgba(124,58,237,.10);
+  --hot:#E11D48; --hot-soft:rgba(225,29,72,.10); --warn:#B45309; --warn-soft:rgba(180,83,9,.10);
+  --ok:#047857; --ok-soft:rgba(4,120,87,.10); --minor:#64748B; --minor-soft:rgba(100,116,139,.12);
+  --f1:#0891B2; --f2:#7C3AED; --f3:#B45309; --f4:#047857; --f5:#DB2777; --f6:#2563EB; --f7:#C2410C; --f8:#15803D;
+  --shadow:0 8px 24px rgba(15,23,42,.10);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--ui);min-height:100vh;
+  background-image:linear-gradient(var(--bg2) 1px,transparent 1px),linear-gradient(90deg,var(--bg2) 1px,transparent 1px);
+  background-size:32px 32px;background-attachment:fixed}
+a{color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.mono,code,kbd{font-family:var(--mono)}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.01em}
+p{margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+.ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ---- header and tabs ---- */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:14px;height:54px}
+.brand{display:flex;align-items:center;gap:9px;font:700 14px var(--mono);letter-spacing:.06em;color:var(--accent);white-space:nowrap}
+.brand .nm{display:grid;line-height:1.15}
+.brand .nm small{font:600 10px var(--mono);letter-spacing:.14em;color:var(--accent2)}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.case{display:flex;gap:8px;align-items:center;min-width:0;color:var(--muted);font-size:13px}
+.case b{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;border:1px solid var(--line2);
+  font:600 12px var(--mono);color:var(--muted);white-space:nowrap;background:var(--panel)}
+.pill.acc{color:var(--accent-ink);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.spacer{flex:1}
+.iconbtn{border:1px solid var(--line2);background:var(--panel);color:var(--muted);border-radius:8px;height:32px;min-width:32px;
+  display:inline-grid;place-items:center;cursor:pointer;padding:0 8px;font:600 12px var(--ui)}
+.iconbtn:hover{color:var(--text);border-color:var(--accent)}
+.tabs{border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 92%,transparent);position:sticky;top:54px;z-index:19;backdrop-filter:blur(8px)}
+.tabs .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tab{display:flex;align-items:center;gap:8px;padding:12px 14px 11px;color:var(--muted);text-decoration:none;font-weight:600;font-size:14px;
+  border-bottom:2px solid transparent;white-space:nowrap;cursor:pointer;background:none;border-top:0;border-left:0;border-right:0}
+.tab:hover{color:var(--text)}
+.tab[aria-selected="true"]{color:var(--accent-ink);border-bottom-color:var(--accent)}
+.tab .n{font:600 11px var(--mono);padding:0 6px;border-radius:999px;background:var(--panel2);color:var(--muted)}
+.tab[aria-selected="true"] .n{background:var(--accent-soft);color:var(--accent-ink)}
+.tab kbd{font-size:10px;color:var(--dim);border:1px solid var(--line2);border-radius:4px;padding:0 4px}
+@media (max-width:760px){.tab kbd{display:none}.case .hide-s{display:none}}
+@media (max-width:620px){.top .wrap{gap:8px}.case b{display:none}.brand{font-size:11px;letter-spacing:.02em;white-space:normal}.case{overflow:hidden}}
+@media (max-width:420px){.case{display:none}}
+
+/* ---- panels ---- */
+main{padding:22px 0 60px}
+.panel{display:none;animation:enter .35s ease both}
+.panel.on{display:block}
+.panel.on.from-r{animation-name:enterR}.panel.on.from-l{animation-name:enterL}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes enterR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes enterL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+/* ---- navigation aids ---- */
+[data-nav]{cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}
+.card[data-nav]:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-soft),var(--shadow);transform:translateY(-2px)}
+.card[data-nav] .go{position:absolute;top:12px;right:12px;font:700 11px var(--mono);color:var(--dim);opacity:0;transition:opacity .15s,transform .15s}
+.card[data-nav]:hover .go{opacity:1;transform:translateX(2px);color:var(--accent-ink)}
+.ghost{position:fixed;z-index:60;pointer-events:none;border:2px solid var(--accent);border-radius:12px;background:var(--accent-soft);
+  box-shadow:0 0 24px var(--accent);transition:all .45s cubic-bezier(.6,0,.2,1)}
+.tab.ping{animation:ping .7s ease}
+@keyframes ping{30%{background:var(--accent-soft);box-shadow:0 0 18px var(--accent-soft)}}
+.flash{animation:flash 1.6s ease}
+@keyframes flash{0%,60%{box-shadow:0 0 0 2px var(--accent),0 0 26px var(--accent-soft)}100%{box-shadow:none}}
+#backbtn{position:fixed;left:18px;bottom:18px;z-index:30;display:none;align-items:center;gap:8px;border:1px solid var(--accent);
+  background:var(--panel);color:var(--accent-ink);border-radius:999px;padding:8px 14px;font:600 13px var(--ui);cursor:pointer;box-shadow:var(--shadow)}
+#backbtn.on{display:inline-flex;animation:enter .3s ease}
+#progress{position:fixed;left:0;top:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:40;width:0}
+#keyhelp{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);display:none;place-items:center}
+#keyhelp.on{display:grid}
+#keyhelp .card{width:min(420px,92vw)}
+#keyhelp kbd{display:inline-block;min-width:22px;text-align:center;border:1px solid var(--line2);border-radius:5px;padding:1px 6px;margin-right:8px;color:var(--accent-ink)}
+#keyhelp div.k{padding:5px 0;color:var(--muted);font-size:14px}
+.filterbar{display:none;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;margin-bottom:12px;border:1px dashed var(--accent);border-radius:10px;
+  background:var(--accent-soft);font-size:13px;color:var(--accent-ink)}
+.filterbar.on{display:flex;animation:enter .3s ease}
+.filterbar button{border:0;background:none;color:var(--accent-ink);font:700 13px var(--ui);cursor:pointer;text-decoration:underline}
+.credit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;color:var(--muted)}
+.credit b{color:var(--accent-ink);font-family:var(--mono);letter-spacing:.04em}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.ph h2{font-size:22px}
+.ph .sub{color:var(--muted);font-size:14px;margin-top:3px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.g2,.g3{grid-template-columns:minmax(0,1fr)}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi .v{font-size:26px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0;position:relative}
+.card h3{font-size:14px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.kpi .v{font:700 34px/1 var(--mono);letter-spacing:-.02em}
+.kpi .l{color:var(--muted);font-size:13px;margin-top:6px}
+.kpi.hot .v{color:var(--hot)}.kpi.acc .v{color:var(--accent)}.kpi.ok .v{color:var(--ok)}.kpi.warn .v{color:var(--warn)}
+.kpi::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:2px;border-radius:2px;background:var(--line)}
+.kpi.hot::after{background:var(--hot)}.kpi.acc::after{background:var(--accent)}.kpi.ok::after{background:var(--ok)}.kpi.warn::after{background:var(--warn)}
+.muted{color:var(--muted)}.dim{color:var(--dim)}
+.note{font-size:13px;color:var(--muted)}
+
+/* ---- badges, chips, bars ---- */
+.badge{display:inline-flex;align-items:center;gap:5px;font:700 11px var(--ui);letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.badge.hot{background:var(--hot-soft);color:var(--hot)}.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.minor{background:var(--minor-soft);color:var(--muted)}.badge.ok{background:var(--ok-soft);color:var(--ok)}
+.badge.acc{background:var(--accent-soft);color:var(--accent-ink)}
+.chip{display:inline-flex;align-items:center;gap:5px;font:600 12px var(--ui);padding:3px 8px;border-radius:999px;border:1px solid var(--line2);
+  color:var(--muted);background:var(--panel2);white-space:nowrap}
+.chip b{font:700 11px var(--mono);color:var(--accent-ink)}
+button.chip{cursor:pointer}
+button.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--text);background:var(--accent-soft)}
+.bar{height:8px;border-radius:99px;background:var(--panel2);overflow:hidden}
+.bar>i{display:block;height:100%;width:0;border-radius:99px;background:var(--accent);transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.bar.hot>i{background:var(--hot)}.bar.warn>i{background:var(--warn)}.bar.minor>i{background:var(--minor)}.bar.ok>i{background:var(--ok)}
+
+/* ---- tables ---- */
+table.t{border-collapse:collapse;width:100%;font-size:14px}
+.t th,.t td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.t th{color:var(--dim);font:700 11px var(--ui);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+.t tbody tr:hover td{background:var(--panel2)}
+.t td.num,.t th.num{text-align:right;font-family:var(--mono)}
+.scroll-x{overflow-x:auto;overflow-y:hidden}
+
+/* ---- expanding rows (accordion) ---- */
+.acc-item{border:1px solid var(--line);border-radius:10px;background:var(--panel);margin-bottom:8px;overflow:hidden;transition:border-color .2s}
+.acc-item:hover{border-color:var(--line2)}
+.acc-item.open{border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+.acc-head{display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left}
+.acc-head .chev{transition:transform .25s;color:var(--dim)}
+.acc-item.open .acc-head .chev{transform:rotate(90deg);color:var(--accent)}
+.acc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+.acc-item.open>.acc-body{grid-template-rows:1fr}
+.acc-body>div{overflow:hidden}
+.acc-inner{padding:2px 16px 16px;border-top:1px dashed var(--line)}
+details.more{margin-top:10px}
+details.more>summary{cursor:pointer;color:var(--accent-ink);font-size:13px;font-weight:600;list-style:none;display:inline-flex;align-items:center;gap:6px}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"▸";transition:transform .2s;display:inline-block}
+details.more[open]>summary::before{transform:rotate(90deg)}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:13px;margin-top:8px}
+.kv dt{color:var(--dim)}.kv dd{margin:0;font-family:var(--mono);overflow-wrap:anywhere}
+
+/* ---- tooltip ---- */
+#tip{position:fixed;z-index:50;pointer-events:none;max-width:320px;background:var(--panel);border:1px solid var(--accent);border-radius:8px;
+  padding:8px 10px;font-size:13px;box-shadow:var(--shadow);opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+#tip.on{opacity:1;transform:none}
+#tip b{color:var(--accent-ink)}
+
+/* ---- inputs ---- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.search{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:0 10px;height:36px;min-width:220px;flex:1;max-width:380px}
+.search input{border:0;background:none;color:var(--text);font:14px var(--ui);outline:none;width:100%}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--panel);color:var(--muted);font:600 13px var(--ui);padding:0 12px;height:34px;cursor:pointer;border-right:1px solid var(--line2)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink)}
+
+footer.foot{border-top:1px solid var(--line);color:var(--dim);font-size:12px;padding:16px 0 30px;overflow-wrap:anywhere}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media print{
+  :root{--bg:#fff;--bg2:#fff;--panel:#fff;--panel2:#f4f6f9;--line:#d6dde8;--text:#000;--muted:#333;--dim:#555;color-scheme:light}
+  body{background:#fff}.top,.tabs,.toolbar,.iconbtn{display:none!important}
+  .panel{display:block!important;break-before:page}#backbtn,#progress,.ghost{display:none!important}.acc-body{grid-template-rows:1fr!important}
+}
+
+.lead-row{display:grid;grid-template-columns:44px 92px minmax(0,1fr) auto auto 18px;align-items:center;gap:12px;width:100%}
+.rank{font:700 13px var(--mono);color:var(--dim)}
+.score{display:grid;gap:4px}.score .v{font:700 16px/1 var(--mono)}.score .v small{font-size:11px;color:var(--dim)}
+.fname{min-width:0}.fname b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fname span{display:block;font:12px var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cicons{display:flex;gap:4px}
+.cic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-ink);flex:none}
+.cic .ico{width:15px;height:15px}
+.why ul{margin:12px 0 0;padding:0;display:grid;gap:8px}.why li{list-style:none;display:grid;grid-template-columns:26px 1fr;gap:10px}
+.why .t{font-weight:650}.why .s{color:var(--muted);font-size:14px}
+.checks11{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:5px;margin-top:8px}
+.c8{border:1px solid var(--line);border-radius:8px;padding:6px 2px;text-align:center;font:700 11px var(--mono);background:var(--panel)}
+.c8 i{display:block;width:8px;height:8px;border-radius:50%;margin:0 auto 4px;background:var(--dim)}
+.c8.fired{border-color:var(--hot);color:var(--hot)}.c8.fired i{background:var(--hot)}.c8.clean i{background:var(--ok)}.c8.na{color:var(--dim)}
+.cbar{display:grid;grid-template-columns:30px minmax(0,1fr) 168px;gap:10px;align-items:center;padding:5px 6px;border-radius:8px}
+.cbar .nm{font-size:13px}
+.mini{display:grid;grid-template-columns:34px 46px minmax(0,1fr) 0;gap:10px;align-items:center;padding:8px 6px;border-radius:8px;cursor:pointer}
+.mini:hover{background:var(--panel2)}
+.ctx{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px;font-size:12px;overflow-wrap:anywhere}
+.empty{color:var(--dim);font-style:italic}
+.card.kpi .go{position:absolute;top:12px;right:12px;font:700 11px var(--mono);color:var(--dim);opacity:0;transition:opacity .15s}
+.card.kpi[data-nav]:hover .go{opacity:1;color:var(--accent-ink)}
+.cbar[data-nav]:hover{background:var(--panel2)}
+.srcs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.src{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2);display:grid;gap:4px}
+.src b{font:700 13px var(--mono);color:var(--accent-ink)}.src span{font-size:13px;color:var(--muted)}.src div{display:flex;gap:4px;flex-wrap:wrap}
+@media (max-width:760px){.srcs{grid-template-columns:minmax(0,1fr)}}
+.capx{font:700 11px var(--ui);letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin-top:12px}
+.tech-steps{counter-reset:st;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.tech-steps li{list-style:none;display:grid;grid-template-columns:24px 1fr;gap:10px;font-size:14px}
+.tech-steps li::before{counter-increment:st;content:counter(st);width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--accent2-soft);color:var(--accent2);font:700 11px var(--mono)}
+.math{font:12px var(--mono);color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:10px}
+.math b{color:var(--text)}
+@media (max-width:760px){.lead-row{grid-template-columns:34px 70px minmax(0,1fr) 18px}.lead-row .cicons,.lead-row .badge{display:none}
+  .checks11{grid-template-columns:repeat(6,minmax(0,1fr))}.cbar{grid-template-columns:30px minmax(0,1fr)}.cbar .note{grid-column:2}}
+</style></head><body>
+<header class="top"><div class="wrap"><div class="brand" title="Created by Captain Scott Russell for CPRE 5360"><span class="dot"></span><span class="nm">ARTIFACT DISAGREEMENT SCORER<small>DATE CHECKS</small></span></div>
+<div class="case"><span class="pill acc">NTFS</span><span class="pill hide-s" id="gen"></span></div><div class="spacer"></div>
+<button class="iconbtn" data-act="theme" title="Light or dark" id="b-sun"></button><button class="iconbtn" data-act="print" title="Print every tab" id="b-print"></button></div></header>
+<nav class="tabs" aria-label="Report sections"><div class="wrap" id="tabbar"></div></nav>
+<main class="wrap" id="body"></main>
+<footer class="foot"><div class="wrap"><div class="credit"><b>Artifact Disagreement Scorer</b><span>&middot; Created by Captain Scott Russell for CPRE 5360</span></div>Read-only. This report points to files for an examiner to review; it does not by itself prove tampering.</div></footer>
+<script>const C = {"icons": {"overview": "<path d=\"M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z\"/>", "leads": "<path d=\"M3 6h18M3 12h12M3 18h7\"/><circle cx=\"18\" cy=\"17\" r=\"3\"/><path d=\"m20.5 19.5 2 2\"/>", "drive": "<rect x=\"2\" y=\"5\" width=\"20\" height=\"14\" rx=\"2\"/><path d=\"M6 15h.01M10 15h8M6 9h12\"/>", "keys": "<circle cx=\"8\" cy=\"15\" r=\"4\"/><path d=\"m10.8 12.2 8.7-8.7M17 6l2 2M14.5 8.5l2 2\"/>", "time": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>", "all": "<path d=\"M4 5h16M4 10h16M4 15h16M4 20h10\"/>", "how": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.5v.7M12 17h.01\"/>", "events": "<path d=\"M3 12h4l3-8 4 16 3-8h4\"/>", "shield": "<path d=\"M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z\"/><path d=\"m9 12 2 2 4-4\"/>", "chev": "<path d=\"m9 6 6 6-6 6\"/>", "sun": "<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4\"/>", "print": "<path d=\"M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2\"/><rect x=\"6\" y=\"14\" width=\"12\" height=\"7\"/>", "search": "<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-3.5-3.5\"/>", "lock": "<rect x=\"4\" y=\"11\" width=\"16\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/>", "check": "<path d=\"m5 12 5 5L20 7\"/>"}, "RULE_TECH": {"R1": ["Windows logs every change to a file's details in the change journal ($UsnJrnl:$J) as a <b>BasicInfoChange<\/b> entry, stamped with the journal's own clock.", "The file's record-changed date ($STANDARD_INFORMATION, “E”) is the moment its details last changed, so it should be at or after the latest such journal entry.", "If it is earlier by more than {tau_journal_s:g} seconds, the date was set back after the change was logged."], "R2": ["Find the shortcuts (.lnk files) that point to this file: first by the MFT record number stored inside the shortcut, otherwise by its path.", "Take the most recently changed shortcut and compare its own record-changed date with the file's.", "A gap of more than {tau_lnk_s:g} seconds means one of the two was changed separately."], "R3": ["A shortcut can only be made after the file it points to exists.", "So every shortcut's created date must be at or after the file's visible created date (allowing {tau_lnk_s:g} seconds).", "A shortcut older than its file means the file's created date was moved later, or the shortcut's earlier."], "R4": ["Opening a file through its shortcut opens the file too.", "So the most recent shortcut's last-opened date should be at or before the file's own last-opened date (allowing {tau_lnk_s:g} seconds).", "A shortcut opened after the file's last-opened date means the file's date was set back."], "R5": ["Rebuild user sessions from the System event log: logon (event 7001) to logoff (7002), cut short by start-up and shutdown events (6005, 6006, 6008, 41).", "The file's visible created and modified dates should fall inside a session (allowing {tau_session_s:g} seconds).", "Dates outside the period the log covers are not judged."], "R6": ["Each file's MFT record keeps its created date twice: in <b>$STANDARD_INFORMATION<\/b>, which Explorer shows and any program can change, and in <b>$FILE_NAME<\/b>, which Windows itself writes when the file is created, moved or renamed.", "Date-changing tools usually change only the first.", "So the visible created date should never be earlier than the protected $FILE_NAME copy."], "R7": ["NTFS dates count in steps of 100 nanoseconds, seven digits after the second, so a real date almost never ends in exactly .0000000.", "Many date-changing tools write whole seconds.", "If the visible created or modified date has all seven sub-second digits zero, the check finds something."], "R8": ["The change journal records the moment the file was created (a <b>FileCreate<\/b> entry).", "The visible created date should match it within {tau_journal_s:g} seconds.", "Exception: NTFS “tunneling”. When a file is deleted or renamed and a new file takes the same name in the same folder within {tunneling_window_s:g} seconds, Windows deliberately copies the old created date, so that case is not counted."], "R9": ["Every shortcut stores a copy of its target's created date, taken when the shortcut was made.", "That copy should match the file's current visible created date (within {tau_lnk_s:g} seconds).", "If it does not, the file's created date changed after the shortcut was made."], "R10": ["For every BasicInfoChange in the journal, look for programs that ran (from Prefetch) within {tau_prefetch_s:g} seconds of it.", "Ignore Windows' own background programs (Explorer, search indexing, Defender and similar) and programs that routinely open this file (it is in their list of files loaded and they ran {r10_min_assoc_runs} or more times).", "Any program left over, such as a date-changing tool, makes the check find something."], "R11": ["Windows hands out MFT record numbers roughly in order, so records next to each other were usually created around the same time.", "Compare the file's visible created date with the middle (median) created date of its {r11_neighbors} neighbors on each side.", "If it is more than {r11_delta_days:g} days older, it claims an age its position does not support."]}, "SOURCES": [["$MFT · $STANDARD_INFORMATION", "the four dates Explorer shows; any program can change them", "R1 R2 R3 R4 R5 R6 R7 R8 R9 R11"], ["$MFT · $FILE_NAME", "a protected copy written by Windows itself", "R6"], ["Change journal ($J)", "a log of every change, with its own clock", "R1 R8 R10"], ["Shortcuts (.lnk)", "made when a file is opened; keep copies of its dates", "R2 R3 R4 R9"], ["Prefetch", "which programs ran, and when", "R10"], ["Event logs", "when someone was logged on", "R5"]], "STRONG": 0.5, "DRIVE_WIDE": 0.9, "DRIVE_WIDE_MIN": 50, "default_config": {"tau_journal_s": 2.0, "tau_lnk_s": 2.0, "tau_session_s": 60.0, "tau_mft_s": 0.0, "tau_prefetch_s": 30.0, "r1_two_sided": false, "tunneling_window_s": 15.0, "r10_min_assoc_runs": 3, "r11_neighbors": 10, "r11_min_neighbors": 5, "r11_delta_days": 30.0, "min_entry": 24, "s2_journal_gap_days": 1.0, "s2_unwrapped_usn_max": 33554432, "s3_max_gaps_reported": 10, "s3_oldest_gap_days": 1.0, "s4_min_shift_s": 60.0, "theta": 0.5, "min_evaluable": 1, "weight_mode": "full", "cluster_window_s": 300.0, "cluster_pad_s": 60.0}}, D = {"generated":"2026-10-27T12:47:14Z","theta":0.5,"weight_mode":"full","calibration":"(rates measured on this image)","inputs":[{"kind":"mft","path":"26Fall_Project2.img","sha256":"3e00b19df1980a3cb5f9b876cd2c33e2982dd7fc82eff6c6097b13649f194c56","rows":5379,"loaded_at":"2026-10-27T12:47:14Z"}],"counts":{"scored":4797,"flagged":0,"look_first":0},"system":{"score":0,"evaluable":0,"level":"clear"},"leads":[],"activity":{"R1":{"evaluable":0,"violated":0},"R2":{"evaluable":0,"violated":0},"R3":{"evaluable":0,"violated":0},"R4":{"evaluable":0,"violated":0},"R5":{"evaluable":0,"violated":0},"R6":{"evaluable":4797,"violated":4785},"R7":{"evaluable":4797,"violated":4786},"R8":{"evaluable":0,"violated":0},"R9":{"evaluable":0,"violated":0},"R10":{"evaluable":0,"violated":0},"R11":{"evaluable":4797,"violated":0}},"clusters":[],"warnings":[{"id":"S1","name":"Log clearing","status":"not_evaluable","plain":"An event log was cleared, so some activity can no longer be checked.","details":{"reason":"no System or Security log"}},{"id":"S2","name":"Change journal reset","status":"not_evaluable","plain":"The change journal was reset or deleted, so some creation and change records are gone.","details":{"reason":"no Application log and no $J"}},{"id":"S3","name":"Event log discontinuity","status":"not_evaluable","plain":"The event log has gaps in its numbering, so entries may have been removed.","details":{"reason":"no event logs"}},{"id":"S4","name":"Clock change","status":"not_evaluable","plain":"The system clock was changed, which makes every date on the drive less trustworthy.","details":{"reason":"no System or Security log"}},{"id":"S5","name":"Missing expected artifacts","status":"not_evaluable","plain":"Records that should exist are missing (files opened with no shortcut, or programs run with no Prefetch).","details":{"reason":"no $J data"}}],"rules":{"R1":{"name":"Record-change date is before the journal's own entry","what":"The file's record says it last changed before Windows' change journal recorded that change."},"R2":{"name":"A shortcut disagrees on the last-change date","what":"A shortcut pointing at the file carries a different last-change date from the file itself."},"R3":{"name":"A shortcut is older than the file it points to","what":"A shortcut was created before the file it points to claims to have existed."},"R4":{"name":"A shortcut was opened after the file's last-opened date","what":"A shortcut records the file being opened later than the file's own last-opened date."},"R5":{"name":"The file changed while nobody was logged on","what":"The file's dates fall outside every logged-on session in the event log."},"R6":{"name":"The visible date is older than the protected copy","what":"The creation date Windows shows is earlier than the file system's own protected copy."},"R7":{"name":"The date was set to a round number","what":"The date falls exactly on a whole second, which ordinary activity almost never produces."},"R8":{"name":"The file was created later than its visible date","what":"The change journal first recorded the file being created after the date it now shows."},"R9":{"name":"A shortcut remembers a different creation date","what":"A shortcut kept an older copy of the file's creation date that no longer matches."},"R10":{"name":"The date changed as an unusual program ran","what":"The file's date changed at the same moment a program not associated with it ran."},"R11":{"name":"It claims to be much older than its neighbors","what":"The file claims to pre-date the files whose records sit next to it on the disk."}},"config":{"tau_journal_s":2,"tau_lnk_s":2,"tau_session_s":60,"tau_mft_s":0,"tau_prefetch_s":30,"r1_two_sided":false,"tunneling_window_s":15,"r10_min_assoc_runs":3,"r11_neighbors":10,"r11_min_neighbors":5,"r11_delta_days":30,"min_entry":24,"s2_journal_gap_days":1,"s2_unwrapped_usn_max":33554432,"s3_max_gaps_reported":10,"s3_oldest_gap_days":1,"s4_min_shift_s":60,"theta":0.5,"min_evaluable":1,"weight_mode":"full","cluster_window_s":300,"cluster_pad_s":60}};</script>
+<script>
+/* The Windows date report, drawn from its data. The same page is written by the command line and by the browser
+   version: both fill in only D, the results. C holds the fixed parts (icons, how each check works, the record sources). */
+(function(){
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#x27;"}[c]));
+const num = n => Number(n).toLocaleString("en-US");
+const icon = (name, cls) => '<svg class="' + (cls || "ico") + '" viewBox="0 0 24 24" aria-hidden="true">' + (C.icons[name] || "") + '</svg>';
+const chev = () => icon("chev", "ico chev");
+/* "%.nf": correctly rounded, ties to even, as Python formats */
+function fixed(x, n) {
+  const dv = new DataView(new ArrayBuffer(8)); dv.setFloat64(0, Math.abs(x));
+  const hi = dv.getUint32(0), lo = dv.getUint32(4), ex = (hi >>> 20) & 0x7ff;
+  let m = (BigInt(hi & 0xfffff) << 32n) | BigInt(lo), e = ex ? ex - 1075 : -1074; if (ex) m |= 1n << 52n;
+  let q;
+  if (e >= 0) q = (m << BigInt(e)) * 10n ** BigInt(n);
+  else { const k = -e, N = m * 5n ** BigInt(k); if (k <= n) q = N * 10n ** BigInt(n - k); else { const dvs = 10n ** BigInt(k - n); q = N / dvs; const r2 = 2n * (N % dvs); if (r2 > dvs || (r2 === dvs && (q & 1n))) q += 1n; } }
+  let s = q.toString().padStart(n + 1, "0"); if (n) s = s.slice(0, -n) + "." + s.slice(-n);
+  return (x < 0 ? "-" : "") + s;
+}
+const round = x => Number(fixed(x, 0));
+/* "{name:g}".format(cfg): Python's general number format, enough for the settings shown */
+const fmtG = v => { if (typeof v !== "number") return String(v); let s = v.toPrecision(6); if (s.includes("e")) return s.replace(/\.?0+e/, "e").replace(/e([+-])(\d)$/, "e$10$2"); return s.includes(".") ? s.replace(/\.?0+$/, "") : s; };
+const fmt = (t, cfg) => t.replace(/\{(\w+)(?::g)?\}/g, (m, k) => (k in cfg ? (m.endsWith(":g}") ? fmtG(cfg[k]) : String(cfg[k])) : m));
+const MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
+const nice = ts => { const t = String(ts || ""); const m = /^(\d+)-(\d+)-(\d+) ([^ .]+)/.exec(t); if (!m || +m[2] < 1 || +m[2] > 12) return t || "?"; return parseInt(m[3], 10) + " " + MONTHS[+m[2] - 1] + " " + m[1] + ", " + m[4] + " UTC"; };
+const niceText = s => String(s).replace(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?/g, x => nice(x));
+const nameDir = path => { const p = String(path).split("/").join("\\"); const s = p.replace(/^\\+|\\+$/g, ""); if (s.includes("\\")) { const i = p.lastIndexOf("\\"); return [p.slice(i + 1), p.slice(0, i) || "\\"]; } return [s || p, "\\"]; };
+/* json.dumps(obj, sort_keys=?, indent=?) */
+function pyJson(v, sortKeys, ind, lvl) {
+  lvl = lvl || 0;
+  if (v === null || v === undefined) return "null";
+  if (typeof v === "boolean") return v ? "true" : "false";
+  if (typeof v === "number") return String(v);
+  if (typeof v === "string") return '"' + v.replace(/[\\"\u0000-\u001f\u0080-\uffff]/g, c => ({'"': '\\"', "\\": "\\\\", "\n": "\\n", "\r": "\\r", "\t": "\\t"}[c] || "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"))) + '"';
+  const nl = ind == null ? "" : "\n" + " ".repeat(ind * (lvl + 1)), close = ind == null ? "" : "\n" + " ".repeat(ind * lvl), sep = ind == null ? ", " : ",";
+  if (Array.isArray(v)) return v.length ? "[" + nl + v.map(x => pyJson(x, sortKeys, ind, lvl + 1)).join(sep + nl) + close + "]" : "[]";
+  let k = Object.keys(v); if (!k.length) return "{}"; if (sortKeys) k.sort();
+  return "{" + nl + k.map(x => pyJson(x) + ": " + pyJson(v[x], sortKeys, ind, lvl + 1)).join(sep + nl) + close + "}";
+}
+const d = D, c = d.counts, sysd = d.system, cfg = d.config || C.default_config;
+const strong = Math.max(Number(d.theta), C.STRONG);
+const theta100 = round(Number(d.theta) * 100);
+const RIDS = Object.keys(d.rules);
+
+function strip(status) {
+  return '<div class="checks11">' + RIDS.map(rid => {
+    const [o, reason] = status[rid] || ["not_evaluable", ""];
+    const k = {violated: "fired", consistent: "clean"}[o] || "na";
+    const tip = {fired: "Disagreement found", clean: "Checked: records agree"}[k] || ("Could not check" + (reason ? ": " + reason : ""));
+    return '<div class="c8 ' + k + '" data-tip="<b>' + rid + " " + esc(d.rules[rid].name) + "</b><br>" + esc(tip) + '"><i></i>' + rid + "</div>";
+  }).join("") + "</div>";
+}
+function leadHtml(i, l) {
+  const [name, folder] = nameDir(l.path);
+  const chips = l.fired.map(f => '<span class="chip" data-tip="' + esc(f.name) + '"><b>' + f.id + "</b></span>").join("");
+  const why = l.fired.map(f => '<li><span class="cic">' + icon("time") + '</span><div><div class="t">' + f.id + " · " + esc(f.name) + '</div><div class="s">' + esc(f.say) + "</div></div></li>").join("");
+  const tech = l.fired.map(f => "<dt>" + f.id + "</dt><dd>" + esc(pyJson(f.tech, true)) + "</dd>").join("");
+  const weak = l.weak.length ? '<div class="note" style="color:var(--warn);margin-top:8px">Some of this rests on records a warning reports as damaged (' + esc(l.weak.join(", ")) + "); treat it with care.</div>" : "";
+  return '<div class="acc-item" data-text="' + esc(l.path.toLowerCase()) + '"><button class="acc-head" aria-expanded="false"><div class="lead-row">' +
+    '<span class="rank">#' + i + '</span><div class="score"><div class="v">' + l.score + '<small>/100</small></div>' +
+    '<div class="bar ' + l.cls + '"><i data-w="' + l.score + '"></i></div></div><div class="fname"><b>' + esc(name) + "</b><span>" + esc(folder) + "</span></div>" +
+    '<div class="cicons">' + chips + '</div><span class="badge ' + l.cls + '">' + esc(l.tier) + "</span>" + chev() + "</div></button>" +
+    '<div class="acc-body"><div><div class="acc-inner"><div class="why"><ul>' + why + "</ul></div>" + weak +
+    '<details class="more"><summary>Technical detail</summary><dl class="kv"><dt>Full path</dt><dd>' + esc(l.path) + "</dd>" +
+    "<dt>MFT record</dt><dd>" + l.entry + "-" + l.seq + "</dd><dt>Checks run</dt><dd>" + l.evaluable + " of 11 (" + l.confidence + "% on undamaged records)</dd>" +
+    (l.cluster ? "<dt>Event</dt><dd>" + l.cluster + "</dd>" : "") + tech + "</dl>" +
+    '<div class="note" style="margin-top:10px">All eleven date checks for this file:</div>' + strip(l.status) + "</details></div></div></div></div>";
+}
+
+// ---- check activity (drive-wide patterns) ----
+let act = "", wide = [];
+for (const rid of RIDS) {
+  const a = (d.activity || {})[rid] || {evaluable: 0, violated: 0}, ev = a.evaluable, vi = a.violated, share = ev ? vi / ev : 0;
+  const isWide = ev >= C.DRIVE_WIDE_MIN && share >= C.DRIVE_WIDE;
+  if (isWide) wide.push([rid, vi, ev]);
+  const cls = isWide ? "hot" : vi ? "warn" : "ok";
+  const label = !ev ? "not checkable" : num(vi) + " / " + num(ev) + " · " + fixed(100 * share, 1).replace(/0+$/, "").replace(/\.$/, "") + "%";
+  act += '<div class="cbar" data-nav="how" data-target="#q-' + rid + '" data-tip="<b>' + rid + " " + esc(d.rules[rid].name) + "</b><br>" + esc(d.rules[rid].what) + '"><span class="cic">' + icon("time") +
+    '</span><div><div class="nm">' + rid + " · " + esc(d.rules[rid].name) + '</div><div class="bar ' + (ev ? cls : "minor") + '"><i data-w="' + fixed(ev ? 100 * share : 0, 1) + '"></i></div></div>' +
+    '<span class="mono note" style="text-align:right">' + label + "</span></div>";
+}
+const wideHtml = wide.length ? '<div class="card" style="border-color:var(--hot);margin-top:14px"><h3 style="color:var(--hot)">' + icon("events") + "Drive-wide pattern</h3>" +
+  "<p>These checks disagree on nearly every file, so they cannot single any file out, but they say something about the whole drive, for example that every visible date was set at once.</p>" +
+  '<ul class="note" style="margin:8px 0 0">' + wide.map(w => "<li><b>" + w[0] + "</b> " + esc(d.rules[w[0]].name) + " fired on " + num(w[1]) + " of " + num(w[2]) + " files</li>").join("") + "</ul></div>" : "";
+const leads = d.leads.map((l, i) => leadHtml(i + 1, l)).join("") ||
+  '<div class="card"><div class="empty">No file crossed the flag line. See Check activity on the Overview for drive-wide patterns.</div></div>';
+const events = d.clusters.map((cl, i) => {
+  const start = nice(cl.start), end = nice(cl.end), when = start === end ? start : start + " → " + end;
+  const pf = cl.prefetch.map(p => '<span class="chip">' + esc(niceText(p).split(" @ ").join(" at ")) + "</span> ").join("");
+  const inds = cl.indicators.map(x => '<span class="badge warn">' + esc(x) + "</span> ").join("");
+  return '<div class="acc-item"><button class="acc-head"><span class="cic">' + icon("events") + '</span><div style="flex:1;min-width:0"><b>Event ' + (i + 1) + "</b>" +
+    '<div class="note mono">' + esc(when) + '</div></div><span class="chip"><b>' + cl.files + "</b>&nbsp;file" + (cl.files === 1 ? "" : "s") + "</span>" + chev() + "</button>" +
+    '<div class="acc-body"><div><div class="acc-inner"><div style="margin-top:10px">' + cl.paths.map(p => '<div class="mono note">' + esc(p) + "</div>").join("") + "</div>" +
+    (pf ? '<div class="note" style="margin-top:8px">Programs that ran then: ' + pf + "</div>" : "") + (inds ? '<div class="note" style="margin-top:8px">Warnings then: ' + inds + "</div>" : "") + "</div></div></div></div>";
+}).join("") || '<div class="card"><div class="empty">No flagged files were changed close enough together to form an event.</div></div>';
+const recs = d.warnings.map(w => {
+  const st = {fired: ["hot", "Found"], clear: ["ok", "Clear"], not_evaluable: ["minor", "Not checked"]}[w.status] || ["minor", w.status];
+  const det = w.details && Object.keys(w.details).length ? '<details class="more"><summary>Detail</summary><div class="ctx mono" style="margin-top:6px;white-space:pre-wrap">' + esc(pyJson(w.details, false, 1)) + "</div></details>" : "";
+  return '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>' + w.id + " · " + esc(w.name) + "</b>" +
+    '<span class="badge ' + st[0] + '">' + st[1] + '</span></div><p class="note" style="margin-top:6px">' + esc(w.plain) + "</p>" + det + "</div>";
+}).join("");
+const rules = RIDS.map(rid => {
+  const r = d.rules[rid], a = (d.activity || {})[rid] || {evaluable: 0, violated: 0};
+  return '<div class="acc-item" style="margin:0" id="q-' + rid + '"><button class="acc-head"><span class="cic">' + icon("time") + '</span><div style="flex:1;min-width:0">' +
+    "<b>" + rid + " · " + esc(r.name) + '</b><div class="note">' + esc(r.what) + '</div></div><span class="chip"><b>' + num(a.violated) + "</b>&nbsp;files</span>" + chev() + "</button>" +
+    '<div class="acc-body"><div><div class="acc-inner"><div class="capx">How the tool checks it</div><ol class="tech-steps">' +
+    (C.RULE_TECH[rid] || []).map(t => "<li><div>" + fmt(t, cfg) + "</div></li>").join("") + "</ol>" +
+    '<div class="math"><b>On this drive:</b> could check ' + num(a.evaluable) + " files, found a disagreement in " + num(a.violated) + ".</div></div></div></div></div>";
+}).join("");
+const sources = C.SOURCES.map(s => '<div class="src"><b>' + esc(s[0]) + "</b><span>" + esc(s[1]) + "</span><div>" +
+  s[2].split(" ").map(x => '<span class="chip" data-nav="how" data-target="#q-' + x + '"><b>' + x + "</b></span>").join("") + "</div></div>").join("");
+const inputs = d.inputs.map(i => "<tr><td>" + esc(i.kind) + '</td><td class="mono">' + esc(String(i.path).split("\\").join("/").split("/").pop()) + '</td><td class="num">' + num(i.rows) +
+  '</td><td class="mono note">' + esc(String(i.sha256).slice(0, 16)) + "…</td></tr>").join("");
+const tops = d.leads.slice(0, 5).map((l, i) => '<div class="mini" data-go="flagged"><span class="rank">#' + (i + 1) + '</span><span class="badge ' + l.cls + '">' + l.score +
+  '</span><div class="fname"><b>' + esc(nameDir(l.path)[0]) + "</b><span>" + esc(nameDir(l.path)[1]) + "</span></div><span></span></div>").join("");
+const tabs = [["overview", "Overview", "overview", ""], ["flagged", "Flagged files", "leads", c.flagged], ["events", "Events", "events", d.clusters.length],
+  ["records", "Records", "shield", ""], ["how", "How it works", "how", ""]];
+document.getElementById("tabbar").innerHTML = tabs.map((t, i) => '<a class="tab" href="#' + t[0] + '" data-tab="' + t[0] + '" role="tab">' + icon(t[2]) + t[1] +
+  (t[3] !== "" ? ' <span class="n">' + t[3] + "</span>" : "") + " <kbd>" + (i + 1) + "</kbd></a>").join("");
+const recNote = sysd.level === "clear" ? "No sign that the records themselves were damaged." : "Some records look cleared, reset or incomplete.";
+document.getElementById("gen").textContent = d.generated || "";
+document.getElementById("b-sun").innerHTML = icon("sun");
+document.getElementById("b-print").innerHTML = icon("print");
+document.getElementById("body").innerHTML =
+  '<section class="panel" id="p-overview"><div class="ph"><div><h2>Overview</h2><div class="sub">All times are UTC.</div></div>' +
+  '<div class="note">Click any number to go to its files.</div></div><div class="grid g4">' +
+  '<div class="card kpi acc" data-nav="how" data-target="#rules"><span class="go">open ›</span><div class="v" data-count="' + c.scored + '">0</div><div class="l">files checked</div></div>' +
+  '<div class="card kpi warn" data-nav="flagged"><span class="go">open ›</span><div class="v" data-count="' + c.flagged + '">0</div><div class="l">flagged</div></div>' +
+  '<div class="card kpi hot" data-nav="flagged"><span class="go">open ›</span><div class="v" data-count="' + c.look_first + '">0</div><div class="l">look first</div></div>' +
+  '<div class="card kpi ' + (sysd.level !== "clear" ? "hot" : "ok") + '" data-nav="records"><span class="go">open ›</span><div class="v" data-count="' + sysd.score + '">0</div><div class="l">record damage /100</div></div></div>' +
+  wideHtml + '<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Check activity</h3>' + act +
+  '<div class="note" style="margin-top:6px">How often each date check found a disagreement. Click a check to see how it works.</div></div>' +
+  '<div class="card"><h3>Top flagged files</h3>' + (tops || '<div class="empty">None.</div>') + '<p class="note" style="margin-top:8px">' + esc(recNote) + "</p></div></div></section>" +
+  '<section class="panel" id="p-flagged"><div class="ph"><div><h2>Flagged files</h2><div class="sub">Files whose own records disagree. Open one to see why.</div></div></div>' +
+  '<div class="toolbar"><label class="search">' + icon("search") + '<input id="fq" placeholder="Search path" aria-label="Search flagged files"></label></div><div id="fl">' + leads + "</div></section>" +
+  '<section class="panel" id="p-events"><div class="ph"><div><h2>Events</h2><div class="sub">Flagged files changed within minutes of each other.</div></div></div>' + events + "</section>" +
+  '<section class="panel" id="p-records"><div class="ph"><div><h2>Records</h2><div class="sub">Were the records themselves cleared, reset or removed?</div></div></div><div class="grid g2">' + recs + "</div></section>" +
+  '<section class="panel" id="p-how"><div class="ph"><div><h2>How it works</h2><div class="sub">Eleven checks compare the dates Windows keeps in different places. Open a check to see exactly what the tool does.</div></div></div>' +
+  '<div class="card"><h3>Where the dates come from</h3><div class="srcs">' + sources + "</div>" +
+  '<div class="note" style="margin-top:8px">One file, several witnesses. Changing a date in one place is easy; changing it consistently in all of them is not. Each check compares two witnesses.</div></div>' +
+  '<h3 style="margin:22px 0 10px;font-size:15px" id="rules">The eleven checks</h3><div class="grid g2" style="align-items:start">' + rules + "</div>" +
+  '<div class="grid g2" style="margin-top:14px"><div class="card"><h3>The score</h3><p>The weighted share of checks that found a disagreement, out of 100. Flagged above ' + theta100 +
+  "; “Look first” at " + round(strong * 100) + "+ with two or more checks.</p>" +
+  '<dl class="kv"><dt>Weighting</dt><dd>' + esc(d.weight_mode) + "</dd><dt>Rates from</dt><dd>" + esc(d.calibration || "defaults") + "</dd></dl></div>" +
+  '<div class="card"><h3>Inputs</h3><div class="scroll-x"><table class="t"><thead><tr><th>Record</th><th>File</th><th class="num">Rows</th><th>SHA-256</th></tr></thead><tbody>' + inputs + "</tbody></table></div></div></div></section>";
+})();
+</script>
+<script>
+(function(){
+  const $=(s,r)=> (r||document).querySelector(s), $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+  // theme toggle (remembered per viewer; works without storage too)
+  const root=document.documentElement;
+  try{const t=localStorage.getItem('ads-theme'); if(t) root.dataset.theme=t;}catch(e){}
+  $$('[data-act="theme"]').forEach(b=>b.addEventListener('click',()=>{
+    root.dataset.theme = root.dataset.theme==='light' ? 'dark' : 'light';
+    try{localStorage.setItem('ads-theme',root.dataset.theme);}catch(e){}
+  }));
+  $$('[data-act="print"]').forEach(b=>b.addEventListener('click',()=>window.print()));
+  // tabs: hash routing, number keys, arrow keys
+  const tabs=$$('.tab[data-tab]'), names=tabs.map(t=>t.dataset.tab);
+  let current=null;
+  function show(name,push){
+    if(!names.length) return;            // a page without tabs (the control panel)
+    if(!names.includes(name)) name=names[0];
+    const dir=current==null?"":names.indexOf(name)>names.indexOf(current)?"from-r":names.indexOf(name)<names.indexOf(current)?"from-l":"";
+    $$('.panel').forEach(p=>p.classList.remove('from-r','from-l')); const pn=$('#p-'+name); if(pn&&dir) pn.classList.add(dir);
+    if(current!==name&&!flying) back.classList.remove('on');
+    current=name;
+    tabs.forEach(t=>t.setAttribute('aria-selected', t.dataset.tab===name?'true':'false'));
+    $$('.panel').forEach(p=>p.classList.toggle('on', p.id==='p-'+name));
+    if(push!==false && location.hash!=='#'+name) history.pushState(null,'','#'+name);
+    window.scrollTo({top:0});
+    document.dispatchEvent(new CustomEvent('ads:tab',{detail:name}));
+  }
+  window.ADS_SHOW=show;
+  // "fly" navigation: a glowing box travels from what was clicked to the tab it opens,
+  // and a back button offers the way home.
+  let flying=false;
+  const back=document.createElement('button'); back.id='backbtn'; document.body.appendChild(back);
+  let backTo=null;
+  back.addEventListener('click',()=>{const b=backTo;back.classList.remove('on');if(b){show(b.tab);if(b.y!=null)setTimeout(()=>window.scrollTo({top:b.y,behavior:'smooth'}),50);}});
+  function fly(from,name,after){
+    const tab=tabs.find(t=>t.dataset.tab===name);
+    const ct=tabs.find(t=>t.dataset.tab===current), tn=ct&&[...ct.childNodes].find(n=>n.nodeType===3&&n.textContent.trim());
+    const origin={tab:current,y:window.scrollY}, label=tn?tn.textContent.trim():'';
+    const done=()=>{flying=true;show(name);flying=false;if(tab){tab.classList.remove('ping');void tab.offsetWidth;tab.classList.add('ping');}
+      if(origin.tab&&origin.tab!==name){backTo=origin;back.innerHTML='&#8592; Back to '+label;back.classList.add('on');}
+      if(after)setTimeout(after,60);};
+    const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(!from||!tab||reduce||name===current){done();return;}
+    const a=from.getBoundingClientRect(), b=tab.getBoundingClientRect(), g=document.createElement('div'); g.className='ghost';
+    Object.assign(g.style,{left:a.left+'px',top:a.top+'px',width:a.width+'px',height:a.height+'px'}); document.body.appendChild(g);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>Object.assign(g.style,{left:b.left+'px',top:b.top+'px',width:b.width+'px',height:b.height+'px',opacity:'.4'})));
+    setTimeout(()=>{g.remove();done();},430);
+  }
+  window.ADS_FLY=fly;
+  // bring an element into view and make it glow briefly
+  window.ADS_FLASH=el=>{if(!el)return;el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');};
+  // generic links: data-nav="tab" with optional data-target="#css-selector" to open and flash
+  document.addEventListener('click',e=>{const n=e.target.closest('[data-nav]');if(!n)return;e.preventDefault();
+    fly(n,n.dataset.nav,()=>{const t=n.dataset.target&&$(n.dataset.target);if(t){if(t.classList.contains('acc-item')&&!t.classList.contains('open')){t.classList.add('open');animate(t);}window.ADS_FLASH(t);}});});
+  // keyboard help
+  const kh=document.createElement('div'); kh.id='keyhelp';
+  kh.innerHTML='<div class="card"><h3>Keyboard</h3><div class="k"><kbd>1</kbd>-<kbd>'+Math.max(1,names.length)+'</kbd> open a tab</div><div class="k"><kbd>&#8592;</kbd><kbd>&#8594;</kbd> previous / next tab</div>'+
+    '<div class="k"><kbd>/</kbd> search this tab</div><div class="k"><kbd>j</kbd><kbd>k</kbd> next / previous row</div><div class="k"><kbd>Esc</kbd> close this</div><div class="k"><kbd>?</kbd> show this help</div></div>';
+  document.body.appendChild(kh); kh.addEventListener('click',e=>{if(e.target===kh)kh.classList.remove('on');});
+  // reading progress along the top edge
+  const prog=document.createElement('div'); prog.id='progress'; document.body.appendChild(prog);
+  addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-innerHeight;prog.style.width=(h>0?100*scrollY/h:0)+'%';},{passive:true});
+  tabs.forEach(t=>t.addEventListener('click',e=>{e.preventDefault();show(t.dataset.tab);}));
+  window.addEventListener('popstate',()=>show(location.hash.slice(1),false));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){kh.classList.remove('on');const i=document.activeElement;if(i&&i.blur)i.blur();return;}
+    if(e.target.closest('input,textarea')||e.ctrlKey||e.metaKey||e.altKey) return;
+    if(e.key==='?'){kh.classList.toggle('on');return;}
+    if(e.key==='/'){const q=$('.panel.on input');if(q){e.preventDefault();q.focus();}return;}
+    if(e.key==='j'||e.key==='k'){const rows=$$('.panel.on .acc-item').filter(x=>x.offsetParent);if(!rows.length)return;
+      let i=rows.findIndex(x=>x.classList.contains('open'));const n=e.key==='j'?Math.min(rows.length-1,i+1):Math.max(0,i-1);
+      rows.forEach(x=>{x.classList.remove('open');const h=x.querySelector('.acc-head');if(h)h.setAttribute('aria-expanded','false');});
+      rows[n].classList.add('open');animate(rows[n]);rows[n].scrollIntoView({behavior:'smooth',block:'center'});return;}
+    const i=parseInt(e.key,10); if(i>=1&&i<=names.length){show(names[i-1]);return;}
+    const cur=names.indexOf((tabs.find(t=>t.getAttribute('aria-selected')==='true')||tabs[0]||{}).dataset?.tab);
+    if(e.key==='ArrowRight'&&cur<names.length-1) show(names[cur+1]);
+    if(e.key==='ArrowLeft'&&cur>0) show(names[cur-1]);
+  });
+  // accordions
+  document.addEventListener('click',e=>{
+    const h=e.target.closest('.acc-head'); if(!h) return;
+    const it=h.closest('.acc-item'); it.classList.toggle('open'); h.setAttribute('aria-expanded', it.classList.contains('open'));
+  });
+  // tooltip for anything with data-tip
+  const tip=document.createElement('div'); tip.id='tip'; document.body.appendChild(tip);
+  document.addEventListener('mouseover',e=>{const el=e.target.closest('[data-tip]'); if(!el){tip.classList.remove('on');return;}
+    tip.innerHTML=el.dataset.tip; tip.classList.add('on');});
+  document.addEventListener('mousemove',e=>{if(!tip.classList.contains('on'))return;
+    const w=tip.offsetWidth,h=tip.offsetHeight; let x=e.clientX+14,y=e.clientY+16;
+    if(x+w>innerWidth-8)x=e.clientX-w-14; if(y+h>innerHeight-8)y=e.clientY-h-16; tip.style.left=x+'px'; tip.style.top=y+'px';});
+  // count-up numbers and growing bars when a panel is shown
+  function animate(scope){
+    $$('[data-count]',scope).forEach(el=>{const to=+el.dataset.count, t0=performance.now(), d=900;
+      (function f(t){const k=Math.min(1,(t-t0)/d), v=Math.round(to*(1-Math.pow(1-k,3))); el.textContent=v.toLocaleString(); if(k<1)requestAnimationFrame(f);})(t0);});
+    $$('.bar>i[data-w]',scope).forEach(i=>{i.style.width='0';requestAnimationFrame(()=>requestAnimationFrame(()=>i.style.width=i.dataset.w+'%'));});
+  }
+  window.ADS_ANIMATE=animate;
+  document.addEventListener('ads:tab',e=>animate($('#p-'+e.detail)));
+  // copy buttons
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-copy]'); if(!b)return;
+    const txt=b.dataset.copy; const done=()=>{const o=b.textContent;b.textContent='copied';setTimeout(()=>b.textContent=o,1200);};
+    if(navigator.clipboard) navigator.clipboard.writeText(txt).then(done,done); else done();});
+  window.addEventListener('DOMContentLoaded',()=>show(location.hash.slice(1)||names[0],false));
+  if(document.readyState!=='loading') show(location.hash.slice(1)||names[0],false);
+})();
+</script>
+<script>
+document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){e.preventDefault();ADS_SHOW(g.dataset.go);}});
+document.addEventListener('click',e=>{const h=e.target.closest('.acc-head');if(h)setTimeout(()=>ADS_ANIMATE(h.closest('.acc-item')),10);});
+const fq=document.getElementById('fq');if(fq)fq.addEventListener('input',()=>{const q=fq.value.trim().toLowerCase();
+  document.querySelectorAll('#fl .acc-item').forEach(it=>it.style.display=(!q||it.dataset.text.includes(q))?'':'none');});
+</script>
+</body></html>
