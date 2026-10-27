@@ -9,7 +9,9 @@ author: "Captain Scott Russell"
 This section reports the proof of function described in Section IV. Both projects
 were run with tool version `5997b4e` on 2026-10-26, on Windows; the freeze test
 passed, so the first-look checks are the ones committed on 2026-10-20, before
-Project 2 was examined. Items still to complete are marked *To complete*.
+Project 2 was examined. Both projects were run again on 2026-10-27 with version
+`df39dbe` and gave the same findings, ranks and scores. Items still to complete are
+marked *To complete*.
 
 ## A. Project 1: Development Case
 
@@ -242,7 +244,10 @@ On both projects every check that fired on the top twenty files carries a
 plain-language sentence, with the exact values under it. On a Windows PC (Intel Core i7-7800X, 3.5 GHz), the
 first-look report read and checked all 4,818 files of Project 2's 1.3 GB image in
 34 seconds, and the date checks read its 5,379 MFT records and scored 4,797 files
-in 4.9 seconds. *To complete: my own read of whether each top-twenty sentence
+in 4.9 seconds. The browser edition (one offline HTML page) was run in Chrome on
+both images on 2026-10-27; its saved results match the command line's exactly on
+Project 1's first look and on Project 2's first look and date checks (`ads compare`).
+Project 2 took 35 seconds in the browser. *To complete: my own read of whether each top-twenty sentence
 makes sense without the raw records.*
 
 ## E. Observations Made After Seeing the Answers (Not Part of the Held-Out Result)
