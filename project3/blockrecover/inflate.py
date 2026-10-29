@@ -8,8 +8,10 @@ and never spells out letter by letter a run it could have copied from just
 before. Random bits break both habits within a few dozen symbols. This decoder
 counts those breaks ("slips"); the right next block has almost none.
 
-(RFC 1951. Pure Python, so it is used only where zlib's answer is not enough.)
+(RFC 1950/1951. Pure Python, so it is used only where zlib's answer is not enough.)
 """
+
+import zlib
 
 LEN_BASE = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59,
             67, 83, 99, 115, 131, 163, 195, 227, 258]
@@ -76,7 +78,7 @@ class Inflater:
     """Feed it compressed bytes a piece at a time; copy() it to try different next pieces."""
 
     __slots__ = ("inp", "ip", "bits", "nbits", "out", "base", "state", "lit", "dist", "final",
-                 "eof", "slips", "tokens", "after_match", "lits", "stored_left")
+                 "eof", "slips", "tokens", "after_match", "lits", "stored_left", "adler", "summed")
 
     def __init__(self, zlib_header=True):
         self.inp, self.ip, self.bits, self.nbits = b"", 0, 0, 0
@@ -89,6 +91,7 @@ class Inflater:
         self.after_match = None         # (source position) when the last token was a copy
         self.lits = []                  # output positions of the latest literals (pending checks)
         self.stored_left = 0
+        self.adler, self.summed = 1, 0   # zlib's checksum of the output, and how far it reaches
 
     def copy(self):
         c = Inflater.__new__(Inflater)
@@ -181,9 +184,15 @@ class Inflater:
         o = self.out
         o.append(c)
         if len(o) > 2 * WINDOW:
+            self._sum()
             n = self.base + len(o)
             del o[:len(o) - WINDOW]
             self.base = n - len(o)
+
+    def _sum(self):
+        if self.summed < self.total:
+            self.adler = zlib.adler32(bytes(self.out[self.summed - self.base:]), self.adler)
+            self.summed = self.total
 
     def _check_lits(self, flush=False):
         """Two literals in a row, where the first starts 4 bytes already seen close by:
@@ -282,8 +291,12 @@ class Inflater:
                 self._emit_copy(length, dist)
         elif st == "adler":
             self._get(self.nbits & 7)
+            want = 0
             for _ in range(4):
-                self._get(8)
+                want = (want << 8) | self._get(8)
+            self._sum()
+            if want != self.adler:
+                raise InflateError("checksum does not match")
             self.eof = True
 
     def _dynamic(self):

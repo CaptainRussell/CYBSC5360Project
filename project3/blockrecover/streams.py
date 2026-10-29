@@ -191,8 +191,11 @@ class JPEGStream(Kind):
             # the picture is complete before its blocks are used up: the order is wrong
             return None
         m, c = dec.junction(info["edges"], self._overlay(st))
+        steps, ssum = st.get("steps", 0), st.get("ssum", 0.0)
+        if c:
+            steps, ssum = steps + 1, ssum + m
         return {"raw": b"", "dec": dec, "j": js, "tot": st["tot"] + (m or 0) * c, "cnt": st["cnt"] + c,
-                "new": info["edges"], "parent": st}
+                "new": info["edges"], "parent": st, "steps": steps, "ssum": ssum}
 
     def _thumbnail(self, st, raw):
         """Photoshop keeps a small JPEG thumbnail inside its header segment. While the header
@@ -239,7 +242,9 @@ class JPEGStream(Kind):
         return self._advance(st, piece)
 
     def cost(self, st):
-        return st["tot"] / st["cnt"] if st["cnt"] else 0.0
+        # each block's own seams count equally: a single wrong join is not diluted by the
+        # many squares decoded before it
+        return st.get("ssum", 0.0) / st["steps"] if st.get("steps") else 0.0
 
     def finish(self, st, tail):
         if st["j"] is None:
@@ -437,7 +442,7 @@ def order(pdfobj, s, beams=(6, 40, 300), log=None):
 def _search(kind, head, tail, todo, pool, piece, beam, num):
     st0 = kind.begin(head)
     if st0 is None:
-        raise StreamError("stream %d: its known start does not read correctly" % num)
+        raise StreamError("stream %s: its known start does not read correctly" % num)
     paths = [(st0, ())]
     for p in todo:
         pieces = {b.name: piece(p, b.data) for b in pool}
@@ -451,7 +456,7 @@ def _search(kind, head, tail, todo, pool, piece, beam, num):
                 if st2 is not None:
                     nxt.append((kind.cost(st2), st2, chosen + (b,)))
         if not nxt:
-            raise StreamError("stream %d: no block continues it at position %d" % (num, p))
+            raise StreamError("stream %s: no block continues it at position %d" % (num, p))
         nxt.sort(key=lambda x: x[0])
         best = nxt[0][0]
         paths, seen = [], set()
@@ -467,4 +472,4 @@ def _search(kind, head, tail, todo, pool, piece, beam, num):
     for st, chosen in paths:
         if kind.finish(st, tail):
             return chosen
-    raise StreamError("stream %d: no ordering closes the stream correctly" % num)
+    raise StreamError("stream %s: no ordering closes the stream correctly" % num)

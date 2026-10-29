@@ -34,7 +34,7 @@ class Result:
         return out
 
 
-def run(path_or_blocks, progress=None):
+def run(path_or_blocks, progress=None, stages=("PDF", "Word", "JPEG")):
     blocks = blockmod.load(path_or_blocks) if isinstance(path_or_blocks, str) else path_or_blocks
     R = Result(blocks)
 
@@ -48,7 +48,7 @@ def run(path_or_blocks, progress=None):
     free = list(blocks)
 
     # PDF
-    if any(b.data.startswith(b"%PDF-") for b in free):
+    if "PDF" in stages and any(b.data.startswith(b"%PDF-") for b in free):
         P = pdf.PDF(free, log=say)
         try:
             P.anchor()
@@ -62,11 +62,12 @@ def run(path_or_blocks, progress=None):
         except PlaceError as e:
             ok, note = False, str(e)
             say("PDF", "stopped:", e)
-        R.files.append(_file("PDF", "recovered.pdf", P.L, P.size, ok, note))
-        free = list(P.free.values())
+        if getattr(P, "L", None) is not None:
+            R.files.append(_file("PDF", "recovered.pdf", P.L, P.size, ok, note))
+            free = list(P.free.values())
 
     # Word
-    if any(b.data.startswith(word.MAGIC) for b in free):
+    if "Word" in stages and any(b.data.startswith(word.MAGIC) for b in free):
         W = word.Word(free, log=say)
         try:
             W.anchor()
@@ -80,11 +81,12 @@ def run(path_or_blocks, progress=None):
         except PlaceError as e:
             ok, note = False, str(e)
             say("Word", "stopped:", e)
-        R.files.append(_file("Word", "recovered.doc", W.L, W.L.n * 512, ok, note))
-        free = list(W.free.values())
+        if getattr(W, "L", None) is not None:
+            R.files.append(_file("Word", "recovered.doc", W.L, W.L.n * 512, ok, note))
+            free = list(W.free.values())
 
     # JPEG
-    if any(b.data[:3] == b"\xff\xd8\xff" for b in free):
+    if "JPEG" in stages and any(b.data[:3] == b"\xff\xd8\xff" for b in free):
         try:
             L = jpegfile.rebuild(free, log=say)
             used = {b.name for b in L.at if b}

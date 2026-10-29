@@ -25,6 +25,20 @@ EOF_TAIL = re.compile(rb"startxref\s+(\d+)\s+%%EOF\s*$")
 STREAM_KW = re.compile(rb"stream(\r\n|\n)")
 
 
+def _xref_head_ok(t, need):
+    """t starts a table; its lines must stay valid past byte `need` (into the joined block)."""
+    m = re.match(rb"xref\s*(\d+) (\d+)\s*?(\r\n|\n|\r)", t)
+    if not m:
+        return False
+    i, left = m.end(), int(m.group(2))
+    while i < need and left:
+        mm = XREF_LINE.match(t, i)
+        if not mm:
+            return False
+        i, left = mm.end(), left - 1
+    return i >= need or not left
+
+
 def xor(a, b):
     n = min(len(a), len(b))
     return (int.from_bytes(a[:n], "little") ^ int.from_bytes(b[:n], "little")).to_bytes(n, "little")
@@ -100,13 +114,25 @@ class PDF:
             for b in self.blocks:
                 m = EOF_TAIL.search(b.data.rstrip(b"\0"))
                 if m:
-                    ends.append((b, m))
+                    ends.append((b, None, m))
+            if not ends:
+                # the end may be cut by a block boundary: a nearly empty last block finishes
+                # the "startxref ... %%EOF" that another block starts
+                for x in self.blocks:
+                    t = x.data.rstrip(b"\0")
+                    if not 0 < len(t) < 16:
+                        continue
+                    for y in self.blocks:
+                        if y is not x and b"startxref" in y.data[-48:]:
+                            m = EOF_TAIL.search(y.data + t)
+                            if m:
+                                ends.append((x, y, m))
             if len(ends) != 1:
                 raise PDFError("expected one block ending the PDF (startxref ... %%%%EOF), found %d" % len(ends))
             self.eof = ends[0]
             self.size = None
             self.L = Layout(len(self.blocks) + 1)
-            self.log("header", heads[0].name, "not linearized; the table is at byte %s" % ends[0][1].group(1).decode())
+            self.log("header", heads[0].name, "not linearized; the table is at byte %s" % ends[0][2].group(1).decode())
         else:
             self.size = size
             self.L = Layout((size + BS - 1) // BS)
@@ -116,14 +142,21 @@ class PDF:
     def place_end(self, table_end):
         """Non-linearized: the trailer follows the last table, and the block holding
         "%%EOF" ends the file. That fixes the file's length."""
-        b, m = self.eof
+        last, prev, m = self.eof
+        b = prev or last                                 # the block holding "startxref"
         p = table_end // BS
         if not (b.data.find(b"trailer") == table_end % BS or self.L.at[p] is not None):
             p += 1
         if self.L.at[p] is not None and self.L.at[p] is not b:
             p += 1
         self.place(p, b, "ends the file (%%EOF)")
-        self.size = p * BS + m.end() + len(re.match(rb"[\r\n]*", b.data[m.end():]).group(0))
+        if prev is not None:
+            self.place(p + 1, last, "the last bytes of %%EOF")
+            p += 1
+            rel = m.end() - BS
+        else:
+            rel = m.end()
+        self.size = p * BS + rel + len(re.match(rb"[\r\n]*", last.data[rel:]).group(0))
         n = -(-self.size // BS)
         if any(x is not None for x in self.L.at[n:]):
             raise PDFError("blocks were placed past the end of the file")
@@ -134,6 +167,15 @@ class PDF:
         """Read a cross-reference table at `offset`, placing its blocks as they are needed. -> trailer text."""
         self.anchor_text(offset, b"xref", "cross-reference table")
         head = self.L.data(offset, offset + 64)
+        if head is None:
+            # the table's first lines run into the next block: the block that continues
+            # them into a header and a valid first entry is the one
+            p = offset // BS + 1
+            cur = self.L.at[p - 1].data[offset % BS:]
+            c = [b for b in self.free.values() if _xref_head_ok(cur + b.data[:64], len(cur) + 1)]
+            if len(c) == 1:
+                self.place(p, c[0], "cross-reference table continues")
+            head = self.L.data(offset, offset + 64)
         m = re.match(rb"xref\s*(\d+) (\d+)\s*?(\r\n|\n|\r)", head or b"")
         if not m:
             raise PDFError("no cross-reference table at offset %d" % offset)
@@ -306,7 +348,7 @@ class PDF:
     def anchor(self):
         self.find_header()
         if self.eof:
-            offsets = [int(self.eof[1].group(1))]
+            offsets = [int(self.eof[2].group(1))]
         else:
             m = re.search(rb"xref", self.L.at[0].data)
             offsets = [m.start()] if m else []

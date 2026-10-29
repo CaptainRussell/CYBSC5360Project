@@ -14,3 +14,4 @@ __pycache__/
 # Project 3 test sets are rebuilt by eval/make_sets.py
 project3/eval/sets/
 project3/recovered*/
+project3/tests/data/

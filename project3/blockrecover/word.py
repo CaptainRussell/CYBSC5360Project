@@ -228,7 +228,10 @@ class Word:
         for k in range(1, (end - 1) // BS + 1):
             self.unique(self.wd[k], lambda d, k=k: self._fib_part_ok(d, k), "Word header, part %d" % (k + 1),
                         rank=lambda d, k=k: self._fib_pairs_used(d, k))
-        fib = b"".join(self.at_sector(self.wd[k]).data for k in range((end - 1) // BS + 1))
+        # (the tables this toolkit reads are listed in the FIB's first block; a later FIB block
+        # that cannot be told apart yet is filled in at the end)
+        fib = b"".join((self.at_sector(self.wd[k]).data if self.at_sector(self.wd[k]) else bytes(BS))
+                       for k in range((end - 1) // BS + 1))
         vals = u32s(fib[self.fclcb_at:end])
         self.fclcb = [(vals[2 * k], vals[2 * k + 1]) for k in range(self.cb_fclcb)]
         self.log("Word header", "%d characters of text; %d tables listed" % (self.ccp_text, sum(1 for f, l in self.fclcb if l)))
