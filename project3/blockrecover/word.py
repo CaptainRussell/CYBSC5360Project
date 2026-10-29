@@ -15,7 +15,7 @@ fall. A text block without a line break is placed by how its words join with its
 neighbours'.
 """
 
-import re
+import itertools
 import struct
 
 from .layout import BS, Layout, PlaceError
@@ -336,7 +336,7 @@ class Word:
                     c = []
                     for x in self.free.values():
                         v = u32s(x.data[phase:])
-                        if v[0] > prev and all(p < q for p, q in zip(v, v[1:])):
+                        if prev < v[0] <= self.wd_size() and all(p < q for p, q in zip(v[:8], v[1:8])):
                             c.append((v[0], x))
                     if not c:
                         break
@@ -346,9 +346,137 @@ class Word:
                     b = c[0][1]
                 v = u32s(b.data[phase:])
                 if not all(p < q for p, q in zip(v, v[1:])):
+                    placed += self._plc_data(fc, lcb, k, b, phase)
                     break
                 prev = v[-1]
         self.log("tables", "%d blocks of ascending tables placed" % placed)
+
+    def _plc_data(self, fc, lcb, k, b, phase):
+        """After its positions, a PLC holds one fixed-size record per entry. Where the records
+        repeat, each later block's bytes follow from where it falls."""
+        v = u32s(b.data[phase:])
+        # positions are character numbers, so they cannot pass the document's length
+        lim = self.wd_size()
+        stop = next(i for i in range(1, len(v)) if v[i] <= v[i - 1] or v[i] > lim)
+        ds = k * BS + phase + 4 * stop                       # where the records start (table offset)
+        ncp = (ds - fc) // 4
+        n = ncp - 1
+        if n <= 0 or (lcb - 4 * ncp) % n:
+            return 0
+        rec = (lcb - 4 * ncp) // n
+        if not 0 < rec <= 64 or ds % BS + rec > BS:
+            return 0
+        tmpl = b.data[ds % BS:ds % BS + rec]
+        end = fc + lcb
+        placed = 0
+        for j in range(k + 1, (end - 1) // BS + 1):
+            lo, hi = j * BS, min(end, (j + 1) * BS)
+            want = bytes(tmpl[(x - ds) % rec] for x in range(lo, hi))
+
+            def test(d, want=want, n=hi - lo):
+                return d[:n] == want
+            if self.unique(self.ts[j], test, "table records (repeating)"):
+                placed += 1
+        return placed
+
+    def zero_regions(self):
+        """Parts of streams that hold nothing: after the FIB until the text, after a property
+        set's last section, after a stream's end. Blocks there must be all zeros (or zero
+        where the stream has ended)."""
+        self.expect_zero = {}                         # sector -> (lo, hi) range within it that must be 0
+        wd = self.wd
+        fib = b"".join(self.at_sector(wd[k]).data for k in range(3) if self.at_sector(wd[k]))
+        end = self.fclcb_at + 8 * self.cb_fclcb
+        if len(fib) >= end + 2:
+            csw_new = struct.unpack("<H", fib[end:end + 2])[0]
+            if csw_new <= 8:                          # (a larger count is not a real FIB field)
+                end += 2 + 2 * csw_new
+        text_start = min(fc for a, b, fc, c in self.pieces) if self.pieces else end
+        self._zero_range(wd, end, text_start)
+        for e in self.entries:
+            if e["type"] != 2 or e["size"] < 4096:
+                continue
+            secs = self.chain(e["start"])
+            self._zero_range(secs, e["size"], len(secs) * BS)
+            if e["name"].startswith("\x05"):
+                first = self.at_sector(secs[0])
+                if first is None:
+                    self.unique(secs[0], lambda d: d[:4] == b"\xfe\xff\x00\x00" and
+                                d[28:44] == _FMTID.get(e["name"], d[28:44]), "property set " + e["name"][1:])
+                    first = self.at_sector(secs[0])
+                if first is not None:
+                    self._zero_range(secs, _propset_end(first.data), e["size"])
+        placed = 0
+        for sec, (lo, hi) in sorted(self.expect_zero.items()):
+            if lo == 0 and hi == BS and self.unique(sec, lambda d: not any(d), "nothing here (zeros)"):
+                placed += 1
+        self.log("empty", "%d all-zero blocks placed" % placed)
+
+    def _zero_range(self, secs, lo, hi):
+        for k in range(lo // BS, min(len(secs), -(-hi // BS))):
+            a, b = max(lo, k * BS) - k * BS, min(hi, (k + 1) * BS) - k * BS
+            if a < b:
+                old = self.expect_zero.get(secs[k])
+                self.expect_zero[secs[k]] = (min(a, old[0]), max(b, old[1])) if old else (a, b)
+
+    def leftovers(self, candidates):
+        """The last few positions: pick the assignment whose joins with the neighbours look most
+        like the bytes around them, among blocks that are zero where they must be."""
+        todo = [p for p in range(1, self.L.n) if self.L.at[p] is None]
+        if not todo:
+            return
+        cands = [b for b in candidates if b.name in self.free]
+        starts = {}
+        for fc, lcb in self.fclcb:
+            if lcb:
+                starts.setdefault(self.ts[fc // BS] + 1, []).append(fc % BS)
+
+        text_secs = {self.wd[s] for s, _lo, _hi in getattr(self, "text_sectors", ())}
+
+        def score(b, p):
+            z = self.expect_zero.get(p - 1)
+            if z and any(b.data[z[0]:z[1]]):
+                return None
+            sc = 0.0
+            left = self.L.at[p - 1]
+            right = self.L.at[p + 1] if p + 1 < self.L.n else None
+            if left is not None:
+                sc += _join(left.data, b.data)
+            if right is not None:
+                sc += _join(b.data, right.data)
+            if p - 1 in self.wd and p - 1 not in text_secs and _fkp_shape(b.data, self.wd_size()):
+                sc += 2                                # the formatting pages' area of the document
+            for o in starts.get(p, ()):
+                if b.data[o:o + 2] == b"\xff\xff":     # a string table starts here
+                    sc += 4
+            return sc
+
+        table = {(b.name, p): score(b, p) for b in cands for p in todo}
+        if len(todo) <= 8 and len(cands) <= 12:
+            best, best_sc = None, None
+            for perm in itertools.permutations(cands, len(todo)):
+                tot = 0
+                for b, p in zip(perm, todo):
+                    v = table[(b.name, p)]
+                    if v is None:
+                        break
+                    tot += v
+                else:
+                    if best_sc is None or tot > best_sc:
+                        best, best_sc = perm, tot
+            if best is None:
+                raise WordError("no way to fill the last %d positions" % len(todo))
+            for b, p in zip(best, todo):
+                self.L.put(p, b, "fits its neighbours best")
+                self.free.pop(b.name, None)
+        else:
+            for p in todo:
+                ok = [(table[(b.name, p)], b) for b in cands if b.name in self.free and table[(b.name, p)] is not None]
+                if ok:
+                    ok.sort(key=lambda t: -t[0])
+                    self.L.put(p, ok[0][1], "fits its neighbours best")
+                    self.free.pop(ok[0][1].name, None)
+        self.log("last blocks", "%d placed by how they join their neighbours" % len(todo))
 
     # --- the whole job ---------------------------------------------------------
 
@@ -362,7 +490,38 @@ class Word:
         self.fkps()
         self.text()
         self.ascending_tables()
+        self.zero_regions()
         return self.L
+
+
+_FMTID = {
+    "\x05SummaryInformation": bytes.fromhex("E0859FF2F94F6810AB9108002B27B3D9"),
+    "\x05DocumentSummaryInformation": bytes.fromhex("02D5CDD59C2E1B10939708002B2CF9AE"),
+}
+
+
+def _propset_end(d):
+    """Where the last section of a property set ends."""
+    n = struct.unpack("<I", d[24:28])[0]
+    end = 28 + 20 * n
+    for k in range(min(n, 4)):
+        off = struct.unpack("<I", d[28 + 20 * k + 16:28 + 20 * k + 20])[0]
+        if off + 4 <= len(d):
+            end = max(end, off + struct.unpack("<I", d[off:off + 4])[0])
+    return end
+
+
+def _join(a, b, w=6, g=3):
+    """How familiar the bytes across the join of a then b are: the share of short byte
+    sequences spanning the join that also occur inside a or b."""
+    win = a[-w:] + b[:w]
+    hits = tot = 0
+    for i in range(w - g + 1, w):
+        gram = win[i:i + g]
+        tot += 1
+        if gram in a[:-w] or gram in b[w:]:
+            hits += 1
+    return hits / tot
 
 
 def _dir_like(d):
@@ -400,6 +559,14 @@ def _fkp_ok(d, fc0, fc1):
         return False
     v = u32s(d[:4 * (crun + 1)])
     return v[0] == fc0 and all(a < b for a, b in zip(v, v[1:])) and v[-1] <= fc1 + 1 and v[-1] >= fc1 - 1
+
+
+def _fkp_shape(d, limit):
+    crun = d[511]
+    if not 1 <= crun <= 101:
+        return False
+    v = u32s(d[:4 * (crun + 1)])
+    return all(a < b for a, b in zip(v, v[1:])) and v[-1] <= limit
 
 
 def _clx(raw):
