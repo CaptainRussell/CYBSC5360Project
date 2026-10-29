@@ -270,14 +270,20 @@ JPEG_MARKERS = set(range(0xE0, 0xF0)) | {0xDB, 0xC4, 0xC0, 0xC1, 0xC2, 0xDD, 0xD
 
 
 def header_check(d):
-    """Walk JPEG header segments in d. -> (still possible, index after the SOS segment or None)."""
+    """Walk JPEG header segments in d. -> (still possible, index after the SOS segment or None).
+    Encoders write application segments (APPn) before the frame header (SOF), never after it.
+    Without that rule, a wrong block that happens to start FF E0..EF reads as one long APPn
+    segment, and the header never seems to end."""
     if len(d) >= 2 and d[:2] != b"\xff\xd8":
         return False, None
-    i = 2
+    i, frame = 2, False
     while i + 4 <= len(d):
         if d[i] != 0xFF or d[i + 1] not in JPEG_MARKERS:
             return False, None
         m = d[i + 1]
+        if 0xE0 <= m <= 0xEF and frame:
+            return False, None
+        frame = frame or m in (0xC0, 0xC1, 0xC2)
         ln = struct.unpack(">H", d[i + 2:i + 4])[0]
         if ln < 2:
             return False, None

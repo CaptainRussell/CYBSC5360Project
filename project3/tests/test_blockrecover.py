@@ -135,6 +135,15 @@ class TestJPEG(unittest.TestCase):
         im.save(b, "JPEG", quality=85, **kw)
         return b.getvalue()
 
+    def test_no_app_segment_after_frame(self):
+        data = self.picture()
+        ok, end = streams.header_check(data)
+        self.assertTrue(ok and end)
+        sof = data.find(b"\xff\xc0")
+        # a wrong block that starts FF E5 right after the frame header reads as a long APP5 segment
+        fake = data[:sof] + data[sof:sof + 2 + struct.unpack(">H", data[sof + 2:sof + 4])[0]] + b"\xff\xe5\x60\x00"
+        self.assertEqual(streams.header_check(fake), (False, None))
+
     def decode_all(self, data):
         h = jpeg.Header(data)
         dec = jpeg.Decoder(h)

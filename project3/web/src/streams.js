@@ -155,10 +155,12 @@
 
   function headerCheck(d) {   // -> [still possible, index after SOS or null]
     if (d.length >= 2 && !(d[0] === 0xFF && d[1] === 0xD8)) return [false, null];
-    var i = 2;
+    var i = 2, frame = false;   // (no APPn segment after the frame header: see header_check)
     while (i + 4 <= d.length) {
       if (d[i] !== 0xFF || !JPEG_MARKERS[d[i + 1]]) return [false, null];
       var m = d[i + 1], ln = B.u16be(d, i + 2);
+      if (m >= 0xE0 && m <= 0xEF && frame) return [false, null];
+      frame = frame || m === 0xC0 || m === 0xC1 || m === 0xC2;
       if (ln < 2) return [false, null];
       var seg = d.subarray(i + 4, i + 2 + ln);
       if (!segmentOk(m, seg, ln - 2)) return [false, null];
