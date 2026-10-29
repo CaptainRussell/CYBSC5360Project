@@ -29,7 +29,7 @@ def data(R, summary, out=None):
         f, p = placed.get(b.name, (None, None))
         g, why = R.guesses[b.name]
         blocks.append([b.name, f["kind"] if f else "", p, g, why])
-    return {"credit": CREDIT, "files": files, "blocks": blocks, "unplaced": summary["unplaced"],
+    return {"credit": CREDIT, "files": files, "blocks": blocks, "unplaced": summary["unplaced"], "input": summary.get("input"),
             "log": summary["log"], "total": len(R.blocks)}
 
 
@@ -112,6 +112,10 @@ function kpi(v,l,c){return '<div class="card kpi '+(c||'')+'"><div class="v">'+v
 $("#p-overview").innerHTML=
  '<div class="grid g4">'+kpi(D.total,"blocks in the set","acc")+kpi(placed,"placed in a file",placed==D.total?"ok":"warn")+
  kpi(D.files.filter(f=>f.ok).length+" / "+D.files.length,"files rebuilt and checked","ok")+kpi(D.unplaced.length,"blocks left over",D.unplaced.length?"warn":"ok")+'</div>'+
+ (D.input?'<div class="card" style="margin-top:14px"><h3>The evidence analysed</h3><p style="margin-top:6px"><span class="mono">'+esc(D.input.name)+'</span>'+
+   (D.input.course_set?' <span class="pill ok">matches the published MD5 of the course block set</span>':'')+'</p>'+
+   '<p class="mono muted" style="margin-top:8px;font-size:11px;word-break:break-all">MD5 '+D.input.md5+'<br>SHA-256 '+D.input.sha256+'</p>'+
+   '<p class="muted" style="margin-top:6px">The blocks were only read, never changed. Each block&rsquo;s own MD5 is in the block map.</p></div>':'')+
  '<div class="grid g3" style="margin-top:14px">'+D.files.map(f=>'<div class="card fcard f-'+f.kind+'"><h3><span class="sw"></span>'+KIND[f.kind]+'</h3>'+
    '<p class="muted" style="margin-top:6px">'+f.blocks+' blocks, '+f.bytes.toLocaleString()+' bytes &middot; <span class="mono">'+esc(f.name)+'</span></p>'+
    '<p style="margin-top:8px">'+(f.ok?'<span class="pill ok">checked</span> ':'<span class="pill hot">incomplete</span> ')+esc(f.note)+'</p>'+

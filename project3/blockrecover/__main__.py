@@ -11,6 +11,8 @@ def main(argv=None):
                                  description="Sort shuffled 512-byte blocks into files and rebuild each file.")
     ap.add_argument("blocks", help="a folder of block files, or a .zip holding one")
     ap.add_argument("--out", default="recovered", help="folder for the rebuilt files and the report")
+    ap.add_argument("--thorough", action="store_true",
+                    help="search the picture more widely (much slower, often a cleaner bottom)")
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args(argv)
 
@@ -18,7 +20,7 @@ def main(argv=None):
         if not a.quiet:
             print("%-10s %s" % (stage, msg), flush=True)
 
-    R = recover.run(a.blocks, progress=progress)
+    R = recover.run(a.blocks, progress=progress, thorough=a.thorough)
     s = recover.write(R, a.out)
     try:
         from . import report

@@ -35,6 +35,7 @@
     return ffs >= 2 ? "yes" : "unsure";
   }
   function randomLike(d) { return entropy(d) >= 7.35; }
+  function compressedLike(d) { return entropy(d) >= 6.5; }
 
   var PDF_WORDS = /\d{10} \d{5} [nf]|\d+ \d+ obj|endobj|endstream|\/Type[ \t\n\r\f\v]*\/|\/Filter|\/Length \d|xref|trailer|%%EOF/;
   var CFB = B.unhex("d0cf11e0a1b11ae1");
@@ -57,6 +58,6 @@
     return ["Word", "structured binary (tables, numbers, small values)"];
   }
 
-  BR.features = { entropy: entropy, textShare: textShare, jpegScanLike: jpegScanLike, randomLike: randomLike };
+  BR.features = { entropy: entropy, textShare: textShare, jpegScanLike: jpegScanLike, randomLike: randomLike, compressedLike: compressedLike };
   BR.classify = { guess: guess };
 })();

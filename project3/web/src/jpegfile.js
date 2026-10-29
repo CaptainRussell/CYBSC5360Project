@@ -143,9 +143,12 @@
     return best;
   }
 
+  // jpegfile.BEAMS and THOROUGH: how many partial orders the picture search keeps
+  var BEAMS = [8, 24], THOROUGH = [64];
+
   function rebuild(pool, log, beams, progress) {
     log = log || function () {};
-    beams = beams || [8, 24];
+    beams = beams || BEAMS;
     var heads = pool.filter(function (b) { return b.data[0] === 0xFF && b.data[1] === 0xD8 && b.data[2] === 0xFF; });
     if (heads.length !== 1) throw new JPEGFileError("expected one block starting a JPEG, found " + heads.length);
     var head = heads[0], rest = pool.filter(function (b) { return b !== head; });
@@ -187,5 +190,5 @@
     return L;
   }
 
-  BR.jpegfile = { rebuild: rebuild, JPEGFileError: JPEGFileError };
+  BR.jpegfile = { rebuild: rebuild, JPEGFileError: JPEGFileError, BEAMS: BEAMS, THOROUGH: THOROUGH };
 })();

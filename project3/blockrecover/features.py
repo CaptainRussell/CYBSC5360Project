@@ -39,3 +39,10 @@ def jpeg_scan_like(data):
 def random_like(data):
     """Encrypted or well-compressed bytes look like noise: near 8 bits per byte."""
     return entropy(data) >= 7.35
+
+
+def compressed_like(data):
+    """Compressed bytes are usually near 8 bits per byte too, but a stretch of a font or a
+    picture can compress less well (7.1 has been seen), so this floor is lower. The
+    decompressor rejects any wrong block anyway; this only keeps the search small."""
+    return entropy(data) >= 6.5

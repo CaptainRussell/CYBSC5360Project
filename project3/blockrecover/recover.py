@@ -15,9 +15,20 @@ from . import blocks as blockmod, classify, jpegfile, pdf, streams, word
 from .layout import PlaceError
 
 
+# The MD5 the course published for its block set
+COURSE_MD5 = "017c90727e8dfcb757ae189cacc74c18"
+
+
+def fingerprint(name, data):
+    """The input's hashes, recorded so anyone can confirm which evidence was analysed."""
+    md5 = hashlib.md5(data).hexdigest()
+    return {"name": name, "md5": md5, "sha256": hashlib.sha256(data).hexdigest(), "course_set": md5 == COURSE_MD5}
+
+
 class Result:
     def __init__(self, blocks):
         self.blocks = blocks
+        self.input = None          # fingerprint() of the ZIP, when the input was one
         self.files = []            # dicts: kind, name, layout, size, note, ok
         self.log = []              # (seconds, stage, message)
         self.t0 = time.time()
@@ -34,9 +45,12 @@ class Result:
         return out
 
 
-def run(path_or_blocks, progress=None, stages=("PDF", "Word", "JPEG")):
+def run(path_or_blocks, progress=None, stages=("PDF", "Word", "JPEG"), thorough=False):
     blocks = blockmod.load(path_or_blocks) if isinstance(path_or_blocks, str) else path_or_blocks
     R = Result(blocks)
+    if isinstance(path_or_blocks, str) and os.path.isfile(path_or_blocks):
+        with open(path_or_blocks, "rb") as fh:
+            R.input = fingerprint(os.path.basename(path_or_blocks), fh.read())
 
     def say(stage, *msg):
         R.say(stage, *msg)
@@ -88,7 +102,7 @@ def run(path_or_blocks, progress=None, stages=("PDF", "Word", "JPEG")):
     # JPEG
     if "JPEG" in stages and any(b.data[:3] == b"\xff\xd8\xff" for b in free):
         try:
-            L = jpegfile.rebuild(free, log=say)
+            L = jpegfile.rebuild(free, log=say, beams=jpegfile.THOROUGH if thorough else jpegfile.BEAMS)
             used = {b.name for b in L.at if b}
             free = [b for b in free if b.name not in used]
             exact = getattr(L, "exact", True)
@@ -152,6 +166,7 @@ def write(R, out):
                   | {"blocks": sum(1 for x in f["layout"].at if x), "positions": f["layout"].n}
                   for f in R.files],
         "unplaced": [b.name for b in R.unplaced],
+        "input": R.input,
         "log": R.log,
     }
     with open(os.path.join(out, "summary.json"), "w", encoding="utf-8") as fh:

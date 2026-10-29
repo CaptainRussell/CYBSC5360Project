@@ -15,7 +15,8 @@ sys.path.insert(0, os.path.join(HERE, ".."))
 
 from blockrecover import jpeg  # noqa: E402
 
-ORDER = ["base", "tables", "features", "pdfcrypt", "pdflex", "inflate", "binfmt", "jpeg"]
+ORDER = ["base", "tables", "features", "pdfcrypt", "pdflex", "inflate", "binfmt", "jpeg", "pdf", "streams", "word",
+         "jpegfile", "recover"]
 
 
 def tables_js():
@@ -42,6 +43,26 @@ def engine_js():
     return "\n".join(parts)
 
 
+def js_string(text):
+    # a JavaScript string literal that is also safe inside a <script> element
+    return json.dumps(text).replace("</", "<\\/").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
+
+
+def build(out=None):
+    from blockrecover import report
+    from blockrecover.theme import THEME_CSS, THEME_JS
+    with open(os.path.join(HERE, "app.html"), encoding="utf-8") as fh:
+        page = fh.read()
+    with open(os.path.join(HERE, "app.js"), encoding="utf-8") as fh:
+        app = fh.read()
+    tpl = report.TEMPLATE.replace("/*CSS*/", THEME_CSS + report.PAGE_CSS).replace("/*JS*/", THEME_JS)
+    page = (page.replace("/*CSS*/", THEME_CSS).replace("/*JS*/", THEME_JS).replace("/*APP*/", app)
+            .replace("/*ENGINE*/", js_string(engine_js())).replace("/*REPORT*/", js_string(tpl)))
+    out = out or os.path.join(HERE, "..", "BlockRecovery.html")
+    with open(out, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(page)
+    return out
+
+
 if __name__ == "__main__":
-    write_tables()
-    print("tables.js written")
+    print("written:", build(sys.argv[1] if len(sys.argv) > 1 else None))

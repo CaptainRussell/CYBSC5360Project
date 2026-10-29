@@ -71,7 +71,7 @@
   }
 
   // ---- the whole job -------------------------------------------------------------------
-  function run(blocks, progress, stages) {
+  function run(blocks, progress, stages, thorough) {
     stages = stages || ["PDF", "Word", "JPEG"];
     var R = { blocks: blocks, files: [], log: [], t0: Date.now() };
     function say(stage) {
@@ -130,7 +130,7 @@
 
     if (stages.indexOf("JPEG") >= 0 && free.some(function (b) { return b.data[0] === 0xFF && b.data[1] === 0xD8 && b.data[2] === 0xFF; })) {
       try {
-        var L = BR.jpegfile.rebuild(free, say, null, progress && function (k, n, path) {
+        var L = BR.jpegfile.rebuild(free, say, thorough ? BR.jpegfile.THOROUGH : BR.jpegfile.BEAMS, progress && function (k, n, path) {
           progress({ ev: "picture", done: k, of: n, path: path ? path.map(function (b) { return b.name; }) : null });
         });
         var used = new Set(L.at.filter(Boolean).map(function (b) { return b.name; }));
@@ -176,7 +176,7 @@
       blocks: R.blocks.length,
       files: R.files.map(function (f) { return { kind: f.kind, name: f.name, ok: f.ok, note: f.note, bytes: f.bytes, md5: f.md5, sha256: f.sha256,
         blocks: f.layout.at.filter(Boolean).length, positions: f.layout.n }; }),
-      unplaced: R.unplaced.map(function (b) { return b.name; }), log: R.log
+      unplaced: R.unplaced.map(function (b) { return b.name; }), input: R.input || null, log: R.log
     };
     return { summary: summary, blocks: rows };
   }
@@ -195,7 +195,7 @@
     });
     return { credit: "Created by Captain Scott Russell for CPRE 5360", files: files,
       blocks: R.blocks.map(function (b) { var fp = placed.get(b.name) || [null, null], g = R.guesses.get(b.name); return [b.name, fp[0] ? fp[0].kind : "", fp[1], g[0], g[1]]; }),
-      unplaced: summary.unplaced, log: summary.log, total: R.blocks.length };
+      unplaced: summary.unplaced, input: summary.input, log: summary.log, total: R.blocks.length };
   }
   function csv(rows) {
     var cols = ["block", "md5", "first_guess", "first_guess_reason", "file", "position", "offset", "how"];
@@ -203,6 +203,13 @@
     return cols.join(",") + "\r\n" + rows.map(function (r) { return cols.map(function (c) { return q(r[c]); }).join(","); }).join("\r\n") + "\r\n";
   }
 
-  BR.recover = { run: run, readZip: readZip, makeBlocks: makeBlocks, fileBytes: fileBytes, summarize: summarize,
+  // recover.fingerprint(): the input's hashes, so anyone can confirm which evidence was analysed
+  var COURSE_MD5 = "017c90727e8dfcb757ae189cacc74c18";
+  function fingerprint(name, data) {
+    var md5 = B.hex(BR.pdfcrypt.md5(data));
+    return { name: name, md5: md5, sha256: sha256(data), course_set: md5 === COURSE_MD5 };
+  }
+
+  BR.recover = { fingerprint: fingerprint, run: run, readZip: readZip, makeBlocks: makeBlocks, fileBytes: fileBytes, summarize: summarize,
     reportData: reportData, csv: csv, sha256: sha256 };
 })();

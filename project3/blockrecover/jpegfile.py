@@ -18,7 +18,13 @@ class JPEGFileError(PlaceError):
     pass
 
 
-def rebuild(pool, log=None, beams=(8, 24)):
+# How many partial orders the picture search keeps. A wider search gives the textured
+# bottom rows a better chance, at about eight times the running time.
+BEAMS = (8, 24)
+THOROUGH = (64,)
+
+
+def rebuild(pool, log=None, beams=BEAMS):
     """pool: the blocks left after the other files. -> Layout of the picture."""
     log = log or (lambda *a: None)
     heads = [b for b in pool if b.data[:3] == b"\xff\xd8\xff"]

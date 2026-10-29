@@ -65,9 +65,30 @@ their phase, and empty areas take the all-zero blocks.
 
 **JPEG.** The block with the JPEG signature comes first and the block with the end-of-image
 marker comes last. Each block in between is decoded as the continuation of the picture,
-and the new 8x8 squares are compared with the squares already above and to their left.
-Several partial orders are kept at once (a beam search), with back-up and retry at dead
-ends, and the picture must end exactly in the block before the end marker.
+and the new 8x8 squares are compared with the squares already above and to their left
+(the "seam" between them). Several partial orders are kept at once (a beam search), and the
+order with the smoothest seams over the whole picture wins. Two clean-up passes follow:
+runs of blocks that clearly belong together are kept as units, and each block is tried in
+other places in case it fits better there ("second thoughts").
+
+A JPEG has no map, and flat areas of a picture fit almost anywhere, so this file is a best
+effort: the report marks it *incomplete* and flags the blocks it is least sure of. On the
+course picture the sky, birds, hill and near water come out right; the textured water at the
+bottom (about the last fifth) is partly scrambled. `--thorough` keeps eight times as many
+partial orders (about eight times slower) and often gives a cleaner bottom.
+
+## Browser edition
+
+`BlockRecovery.html` is the same toolkit as one offline web page. Open it in a browser and
+drop the ZIP (or all the block files) on it. Nothing is uploaded; the work runs on your
+computer. While it works it shows the pile of blocks, each one leaving the pile when it gets
+a checked place, and the three files filling in. At the end it offers the rebuilt files, the
+block map, the summary and the report (also shown in its *Report* tab). On the course set it
+takes about four minutes and gives byte-for-byte the same files as the command line.
+
+The page is built from `web/` with `py -3 web/build.py`. The JavaScript in `web/src/`
+mirrors the Python modules one for one, and `tests/test_web.py` runs it under Node to check
+that both editions place every block the same way.
 
 ## Results
 
@@ -79,7 +100,7 @@ See `RESULTS.md` (course set and evaluation sets).
 py -3 -m unittest discover -s tests
 ```
 
-The JPEG tests need Pillow. Put the course block set at `tests/data/CP3-3-blockset.zip`
+The JPEG tests need Pillow, and the browser-edition tests need Node. Put the course block set at `tests/data/CP3-3-blockset.zip`
 (it is not in the repository) to run the end-to-end check on it.
 
 To build evaluation sets with a known answer (needs LibreOffice and Pillow, used only to

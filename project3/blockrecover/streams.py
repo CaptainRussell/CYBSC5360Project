@@ -406,12 +406,12 @@ def kind_for(pdfobj, s):
 def pool_for(pdfobj, kind=None):
     """Free blocks that could be the inside of this stream. Encrypted data looks like noise
     and breaks the JPEG rule for FF bytes (encryption scrambles it). Unencrypted compressed
-    data also looks like noise."""
+    data is nearly as dense."""
     free = list(pdfobj.free.values())
     if pdfobj.sec is not None:
         return [b for b in free if features.random_like(b.data) and features.jpeg_scan_like(b.data) != "yes"]
     if isinstance(kind, (FlateText, FlateBinary)):
-        return [b for b in free if features.random_like(b.data)]
+        return [b for b in free if features.compressed_like(b.data)]
     return free                     # (a JPEG's header blocks hold markers, so no filter there)
 
 

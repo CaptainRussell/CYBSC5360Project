@@ -257,7 +257,7 @@
   function poolFor(pdfobj, kind) {
     var free = Array.from(pdfobj.free.values()), F = BR.features;
     if (pdfobj.sec !== null) return free.filter(function (b) { return F.randomLike(b.data) && F.jpegScanLike(b.data) !== "yes"; });
-    if (kind instanceof FlateText || kind instanceof FlateBinary) return free.filter(function (b) { return F.randomLike(b.data); });
+    if (kind instanceof FlateText || kind instanceof FlateBinary) return free.filter(function (b) { return F.compressedLike(b.data); });
     return free;
   }
 
