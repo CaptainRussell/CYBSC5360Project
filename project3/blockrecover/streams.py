@@ -20,12 +20,13 @@ import struct
 import zlib
 
 from . import binfmt, features, inflate, jpeg, pdflex
+from .layout import PlaceError
 
 BS = 512
 TIE_LIMIT = 300
 
 
-class StreamError(Exception):
+class StreamError(PlaceError):
     pass
 
 
@@ -89,10 +90,10 @@ class FlateBinary(Kind):
 
     def _score(self, inf):
         if self.checker:
-            bad, chk, _good = self.checker(bytes(inf.out) if inf.base == 0 else b"")
+            bad, chk, good = self.checker(bytes(inf.out) if inf.base == 0 else b"")
         else:
-            bad, chk = 0, 0
-        return (inf, (bad + 1) / (chk + 50))
+            bad, chk, good = 0, 0, 0
+        return (inf, (bad + 1) / (chk + 50) / (1 + good))
 
     def extend(self, st, piece):
         inf = st[0].copy()
@@ -158,6 +159,7 @@ class JPEGStream(Kind):
     """A JPEG picture: first its header segments must chain correctly, then the picture
     data must decode and its rows must join up."""
     name = "JPEG picture"
+    may_end = False          # set when the last row may fall at the very end of a middle piece
 
     def begin(self, head):
         return self._advance({"raw": b"", "dec": None, "j": None, "tot": 0.0, "cnt": 0,
@@ -185,6 +187,9 @@ class JPEGStream(Kind):
         _dcs, info = dec.run(js, piece)
         if info["error"] or info["eoi"]:
             return None
+        if js.done and (info["rest"] > 4 or not self.may_end):
+            # the picture is complete before its blocks are used up: the order is wrong
+            return None
         m, c = dec.junction(info["edges"], self._overlay(st))
         return {"raw": b"", "dec": dec, "j": js, "tot": st["tot"] + (m or 0) * c, "cnt": st["cnt"] + c,
                 "new": info["edges"], "parent": st}
@@ -201,6 +206,7 @@ class JPEGStream(Kind):
             return st
         new = raw[a + fed:min(len(raw), b)]
         kind = JPEGStream()
+        kind.may_end = True
         th = st.get("thumb")
         if th is None:
             th = kind.begin(new) if len(raw) < b else None
@@ -381,13 +387,16 @@ def kind_for(pdfobj, s):
 
 # --- the search -------------------------------------------------------------------
 
-def pool_for(pdfobj):
-    """Free blocks that could be the inside of an encrypted stream: they look like noise,
-    and they do not follow the JPEG rule for FF bytes (encryption breaks that rule)."""
-    if pdfobj.sec is None:
-        return list(pdfobj.free.values())
-    return [b for b in pdfobj.free.values()
-            if features.random_like(b.data) and features.jpeg_scan_like(b.data) != "yes"]
+def pool_for(pdfobj, kind=None):
+    """Free blocks that could be the inside of this stream. Encrypted data looks like noise
+    and breaks the JPEG rule for FF bytes (encryption scrambles it). Unencrypted compressed
+    data also looks like noise."""
+    free = list(pdfobj.free.values())
+    if pdfobj.sec is not None:
+        return [b for b in free if features.random_like(b.data) and features.jpeg_scan_like(b.data) != "yes"]
+    if isinstance(kind, (FlateText, FlateBinary)):
+        return [b for b in free if features.random_like(b.data)]
+    return free                     # (a JPEG's header blocks hold markers, so no filter there)
 
 
 def order(pdfobj, s, beams=(6, 40, 300), log=None):
@@ -411,7 +420,9 @@ def order(pdfobj, s, beams=(6, 40, 300), log=None):
 
     head = b"".join(piece(p, L.at[p].data) for p in range(first, todo[0]))
     tail = b"".join(piece(p, L.at[p].data) for p in range(todo[-1] + 1, last + 1))
-    pool = pool_for(pdfobj)
+    pool = pool_for(pdfobj, kind)
+    if isinstance(kind, JPEGStream):
+        kind.may_end = tail[:2] == b"\xff\xd9"
     err = None
     for beam in beams:
         try:

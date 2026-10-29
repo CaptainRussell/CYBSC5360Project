@@ -346,6 +346,7 @@ class Decoder:
             info["error"] = "end of image before the last MCU"
         s.coefs = coefs
         info["edges"] = edges_out
+        info["rest"] = n - i                 # bytes of the piece not read (after the last row)
         s.buf, s.nbits, s.k, s.bi, s.mcu = buf & ((1 << nbits) - 1) if nbits else 0, nbits, k, bi, mcu
         return dcs, info
 

@@ -127,15 +127,17 @@ def truetype(out):
             continue
         part = out[off:min(off + ln, n)]
         if off + ln <= n:
-            checked += ln
+            # a matching checksum is strong evidence; some font tools write wrong ones,
+            # so a mismatch alone is not held against the data
             if _checksum(bytes(part), tag == b"head") == cs:
                 good += 1
-            else:
-                bad += ln
-            continue
-        # a table still being decoded: what can be checked so far
+                checked += ln
+                continue
+        # a table still being decoded (or one whose checksum did not match): what its structure allows
         if tag == b"DSIG":
             b2, c2 = _dsig(part)
+        elif tag == b"glyf":
+            b2, c2 = _glyf(part)
         elif tag == b"loca":
             vals = [struct.unpack(">H", part[j:j + 2])[0] for j in range(0, len(part) - 1, 2)]
             b2, c2 = 2 * sum(1 for a, b in zip(vals, vals[1:]) if b < a), len(part)
@@ -147,6 +149,88 @@ def truetype(out):
         bad += b2
         checked += c2
     return bad, checked, good
+
+
+def _glyf(part):
+    """Glyphs follow one another: header, contour ends, instructions, point flags and
+    coordinates, each of a size the glyph itself gives, then (after padding) the next glyph."""
+    i, n = 0, len(part)
+    while True:
+        while i < n and i % 2:
+            if part[i]:
+                return n - i, n
+            i += 1
+        # zero padding between glyphs (and empty glyphs take no room)
+        if i + 10 > n:
+            return 0, i
+        nc, x0, y0, x1, y1 = struct.unpack(">hhhhh", part[i:i + 10])
+        if nc == 0:
+            i += 2                                      # padding (a glyph with no contours takes no room)
+            continue
+        if not -1 <= nc <= 300 or x0 > x1 or y0 > y1 or max(abs(x0), abs(y0), abs(x1), abs(y1)) > 16384:
+            if part[i:i + 2] == b"\0\0":
+                i += 2                                  # padding before the next glyph
+                continue
+            return n - i, n
+        j = _glyph_end(part, i + 10, nc)
+        if j is None:
+            return 0, i                                 # runs past the data so far
+        if j is False:
+            return n - i, n
+        i = j
+
+
+def _glyph_end(b, j, nc):
+    n = len(b)
+    if nc >= 0:
+        if j + 2 * nc + 2 > n:
+            return None
+        ends = struct.unpack(">%dH" % nc, b[j:j + 2 * nc]) if nc else ()
+        if any(a >= c for a, c in zip(ends, ends[1:])) or (ends and ends[-1] > 4000):
+            return False
+        j += 2 * nc
+        il = struct.unpack(">H", b[j:j + 2])[0]
+        if il > 8000:
+            return False
+        j += 2 + il
+        pts = ends[-1] + 1 if ends else 0
+        xs = ys = 0
+        k = 0
+        while k < pts:
+            if j >= n:
+                return None
+            f = b[j]
+            j += 1
+            if f & 0xC0 and f & 0x80:
+                return False
+            rep = 1
+            if f & 8:
+                if j >= n:
+                    return None
+                rep += b[j]
+                j += 1
+            if k + rep > pts:
+                return False
+            xs += rep * (1 if f & 2 else (0 if f & 16 else 2))
+            ys += rep * (1 if f & 4 else (0 if f & 32 else 2))
+            k += rep
+        return j + xs + ys if j + xs + ys <= n else None
+    # composite glyph
+    while True:
+        if j + 4 > n:
+            return None
+        flags, _gid = struct.unpack(">HH", b[j:j + 4])
+        if flags & 0xE010:                               # reserved bits
+            return False
+        j += 4 + (4 if flags & 1 else 2)
+        j += 2 if flags & 8 else 4 if flags & 0x40 else 8 if flags & 0x80 else 0
+        if not flags & 0x20:
+            break
+    if flags & 0x100:
+        if j + 2 > n:
+            return None
+        j += 2 + struct.unpack(">H", b[j:j + 2])[0]
+    return j if j <= n else None
 
 
 def _dsig(part):

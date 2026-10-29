@@ -21,6 +21,7 @@ from .layout import BS, Layout, PlaceError as PDFError  # noqa: F401
 
 XREF_LINE = re.compile(rb"(\d{10}) (\d{5}) ([nf])(?:\r\n| \r| \n)")
 OBJ = re.compile(rb"(\d+) (\d+) obj")
+EOF_TAIL = re.compile(rb"startxref\s+(\d+)\s+%%EOF\s*$")
 STREAM_KW = re.compile(rb"stream(\r\n|\n)")
 
 
@@ -92,12 +93,42 @@ class PDF:
             raise PDFError("expected one block starting with %%PDF-, found %d" % len(heads))
         h = heads[0].data
         size = _int_after(h, b"/L") if b"/Linearized" in h else None
+        self.eof = None
         if size is None:
-            raise PDFError("the PDF is not linearized, so its length is not written in its first block")
-        self.size = size
-        self.L = Layout((size + BS - 1) // BS)
+            # not linearized: the last block says where the cross-reference table is
+            ends = []
+            for b in self.blocks:
+                m = EOF_TAIL.search(b.data.rstrip(b"\0"))
+                if m:
+                    ends.append((b, m))
+            if len(ends) != 1:
+                raise PDFError("expected one block ending the PDF (startxref ... %%%%EOF), found %d" % len(ends))
+            self.eof = ends[0]
+            self.size = None
+            self.L = Layout(len(self.blocks) + 1)
+            self.log("header", heads[0].name, "not linearized; the table is at byte %s" % ends[0][1].group(1).decode())
+        else:
+            self.size = size
+            self.L = Layout((size + BS - 1) // BS)
+            self.log("header", heads[0].name, "file is %d bytes = %d blocks" % (size, self.L.n))
         self.place(0, heads[0], "starts with %PDF-")
-        self.log("header", heads[0].name, "file is %d bytes = %d blocks" % (size, self.L.n))
+
+    def place_end(self, table_end):
+        """Non-linearized: the trailer follows the last table, and the block holding
+        "%%EOF" ends the file. That fixes the file's length."""
+        b, m = self.eof
+        p = table_end // BS
+        if not (b.data.find(b"trailer") == table_end % BS or self.L.at[p] is not None):
+            p += 1
+        if self.L.at[p] is not None and self.L.at[p] is not b:
+            p += 1
+        self.place(p, b, "ends the file (%%EOF)")
+        self.size = p * BS + m.end() + len(re.match(rb"[\r\n]*", b.data[m.end():]).group(0))
+        n = -(-self.size // BS)
+        if any(x is not None for x in self.L.at[n:]):
+            raise PDFError("blocks were placed past the end of the file")
+        self.L.n, self.L.at, self.L.how = n, self.L.at[:n], self.L.how[:n]
+        self.log("size", "file is %d bytes = %d blocks" % (self.size, n))
 
     def read_xref(self, offset):
         """Read a cross-reference table at `offset`, placing its blocks as they are needed. -> trailer text."""
@@ -218,14 +249,23 @@ class PDF:
             if not sm:
                 continue
             d = body[:k]
-            length = _int_after(d, b"/Length")
-            if length is None or re.search(rb"/Length\s+\d+\s+\d+\s+R", d):
-                raise PDFError("object %d: stream length is not written directly" % num)
+            ref = re.search(rb"/Length\s+(\d+)\s+(\d+)\s+R", d)
+            length = self._length_object(int(ref.group(1))) if ref else _int_after(d, b"/Length")
+            if length is None:
+                raise PDFError("object %d: stream length could not be read" % num)
             flt = re.search(rb"/Filter\s*/(\w+)", d)
             self.streams.append({
                 "num": num, "gen": gen, "start": off + len(head) + sm.end(), "length": length,
                 "filter": flt.group(1).decode() if flt else None, "dict": d,
             })
+
+    def _length_object(self, num):
+        """A stream length given as a separate object: "N 0 obj 1234 endobj"."""
+        if num not in self.objects:
+            return None
+        gen, off = self.objects[num]
+        m = re.match(rb"\d+ \d+ obj\s*(\d+)\s*endobj", self._read_known(off, 64))
+        return int(m.group(1)) if m else None
 
     def _read_known(self, off, n):
         out = b""
@@ -265,8 +305,11 @@ class PDF:
 
     def anchor(self):
         self.find_header()
-        m = re.search(rb"xref", self.L.at[0].data)
-        offsets = [m.start()] if m else []
+        if self.eof:
+            offsets = [int(self.eof[1].group(1))]
+        else:
+            m = re.search(rb"xref", self.L.at[0].data)
+            offsets = [m.start()] if m else []
         trailers, seen = [], set()
         while offsets:
             off = offsets.pop(0)
@@ -274,6 +317,8 @@ class PDF:
                 continue
             seen.add(off)
             end = self.read_xref(off)
+            if self.eof and len(seen) == 1:
+                self.place_end(end)
             self.place_objects()
             t = self.read_trailer(end)
             trailers.append(t)
