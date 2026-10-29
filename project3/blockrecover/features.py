@@ -14,7 +14,10 @@ def entropy(data):
     n = len(data)
     if not n:
         return 0.0
-    return -sum(c / n * math.log2(c / n) for c in Counter(data).values())
+    s = 0.0
+    for c in Counter(data).values():       # a plain loop: sum() of floats differs across Python versions
+        s += c / n * math.log2(c / n)
+    return -s
 
 
 def text_share(data):

@@ -160,6 +160,7 @@ class JPEGStream(Kind):
     data must decode and its rows must join up."""
     name = "JPEG picture"
     may_end = False          # set when the last row may fall at the very end of a middle piece
+    strict = True            # False: blocks may follow the last row (a best effort when no order fits)
 
     def begin(self, head):
         return self._advance({"raw": b"", "dec": None, "j": None, "tot": 0.0, "cnt": 0,
@@ -189,7 +190,8 @@ class JPEGStream(Kind):
             return None
         if js.done and (info["rest"] > 4 or not self.may_end):
             # the picture is complete before its blocks are used up: the order is wrong
-            return None
+            if self.strict:
+                return None
         m, c = dec.junction(info["edges"], self._overlay(st))
         steps, ssum = st.get("steps", 0), st.get("ssum", 0.0)
         if c:
@@ -237,6 +239,12 @@ class JPEGStream(Kind):
         return st["ov"]
 
     def extend(self, st, piece):
+        if st["j"] is not None and st["j"].done:
+            if self.strict:
+                return None
+            # lenient: a block after the last row adds nothing and costs a penalty
+            return dict(st, steps=st.get("steps", 0) + 1, ssum=st.get("ssum", 0.0) + 50.0,
+                        over=st.get("over", 0) + 1, new=(), parent=st)
         if st["j"] is not None and features.jpeg_scan_like(piece) == "no":
             return None
         return self._advance(st, piece)
@@ -249,6 +257,8 @@ class JPEGStream(Kind):
     def finish(self, st, tail):
         if st["j"] is None:
             return False
+        if st["j"].done and not self.strict:
+            return True
         js = st["j"].copy()
         _dcs, info = st["dec"].run(js, tail, final=True)
         # the decoder stops once the last row is decoded; the end marker must follow
@@ -439,11 +449,16 @@ def order(pdfobj, s, beams=(6, 40, 300), log=None):
     raise err
 
 
-def _search(kind, head, tail, todo, pool, piece, beam, num):
-    st0 = kind.begin(head)
-    if st0 is None:
-        raise StreamError("stream %s: its known start does not read correctly" % num)
-    paths = [(st0, ())]
+def _search(kind, head, tail, todo, pool, piece, beam, num, start=None):
+    """Beam search. `start` = (state, chosen) continues an earlier search. A failure carries
+    the best partial path found (e.partial) so the caller can back up and search again."""
+    if start is None:
+        st0 = kind.begin(head)
+        if st0 is None:
+            raise StreamError("stream %s: its known start does not read correctly" % num)
+        paths = [(st0, ())]
+    else:
+        paths = [start]
     for p in todo:
         pieces = {b.name: piece(p, b.data) for b in pool}
         nxt = []
@@ -456,7 +471,9 @@ def _search(kind, head, tail, todo, pool, piece, beam, num):
                 if st2 is not None:
                     nxt.append((kind.cost(st2), st2, chosen + (b,)))
         if not nxt:
-            raise StreamError("stream %s: no block continues it at position %d" % (num, p))
+            e = StreamError("stream %s: no block continues it at position %d" % (num, p))
+            e.partial = paths[0][1]
+            raise e
         nxt.sort(key=lambda x: x[0])
         best = nxt[0][0]
         paths, seen = [], set()
@@ -472,4 +489,6 @@ def _search(kind, head, tail, todo, pool, piece, beam, num):
     for st, chosen in paths:
         if kind.finish(st, tail):
             return chosen
-    raise StreamError("stream %s: no ordering closes the stream correctly" % num)
+    e = StreamError("stream %s: no ordering closes the stream correctly" % num)
+    e.partial = paths[0][1]
+    raise e

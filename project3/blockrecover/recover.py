@@ -91,8 +91,10 @@ def run(path_or_blocks, progress=None, stages=("PDF", "Word", "JPEG")):
             L = jpegfile.rebuild(free, log=say)
             used = {b.name for b in L.at if b}
             free = [b for b in free if b.name not in used]
-            R.files.append(_file("JPEG", "recovered.jpg", L, None, True,
-                                 "decodes to the last row, then the end-of-image marker"))
+            exact = getattr(L, "exact", True)
+            R.files.append(_file("JPEG", "recovered.jpg", L, None, exact,
+                                 "decodes to the last row, then the end-of-image marker" if exact else
+                                 "best order found; some blocks could not be placed with confidence"))
         except PlaceError as e:
             say("JPEG", "stopped:", e)
 

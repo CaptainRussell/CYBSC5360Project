@@ -32,8 +32,10 @@ class _NeedMore(Exception):
     pass
 
 
-def _table(lengths):
-    """-> (lookup list indexed by the next maxbits input bits, maxbits). Entry = (sym << 4) | len."""
+def _table(lengths, kind="lens"):
+    """-> (lookup list indexed by the next maxbits input bits, maxbits). Entry = (sym << 4) | len.
+    As strict as zlib: an over-subscribed code is invalid, and so is an incomplete one
+    (except a lone 1-bit code among literal/length or distance codes)."""
     maxbits = max(lengths) if lengths else 0
     if maxbits == 0:
         return [-1], 0
@@ -46,6 +48,8 @@ def _table(lengths):
         left = (left << 1) - count[n]
         if left < 0:
             raise InflateError("over-subscribed code")
+    if left > 0 and (kind == "codes" or maxbits != 1):
+        raise InflateError("incomplete code")
     code, nxt = 0, [0] * 16
     for n in range(1, 16):
         code = (code + count[n - 1]) << 1
@@ -70,7 +74,7 @@ def _fixed():
     global _FIXED
     if _FIXED is None:
         lit = [8] * 144 + [9] * 112 + [7] * 24 + [8] * 8
-        _FIXED = (_table(lit), _table([5] * 30))
+        _FIXED = (_table(lit), _table([5] * 32))        # codes 30 and 31 exist but are invalid
     return _FIXED
 
 
@@ -222,11 +226,11 @@ class Inflater:
         self.inp = self.inp[self.ip:] + data
         self.ip = 0
         while not self.eof:
-            save = (self.ip, self.bits, self.nbits)
+            save = (self.ip, self.bits, self.nbits, self.final)
             try:
                 self._step()
             except _NeedMore:
-                self.ip, self.bits, self.nbits = save
+                self.ip, self.bits, self.nbits, self.final = save
                 break
         return self
 
@@ -234,7 +238,7 @@ class Inflater:
         st = self.state
         if st == "zhead":
             cmf, flg = self._get(8), self._get(8)
-            if cmf & 15 != 8 or ((cmf << 8) | flg) % 31 or flg & 32:
+            if cmf & 15 != 8 or cmf >> 4 > 7 or ((cmf << 8) | flg) % 31 or flg & 32:
                 raise InflateError("bad zlib header")
             self.state = "block"
         elif st == "block":
@@ -301,10 +305,12 @@ class Inflater:
 
     def _dynamic(self):
         hlit, hdist, hclen = self._get(5) + 257, self._get(5) + 1, self._get(4) + 4
+        if hlit > 286 or hdist > 30:
+            raise InflateError("too many length or distance symbols")
         cl = [0] * 19
         for i in range(hclen):
             cl[CL_ORDER[i]] = self._get(3)
-        clt = _table(cl)
+        clt = _table(cl, "codes")
         lens = []
         while len(lens) < hlit + hdist:
             s = self._sym(clt)

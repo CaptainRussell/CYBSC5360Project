@@ -44,14 +44,18 @@ def rebuild(pool, log=None, beams=(8, 24)):
     else:
         log("picture", "the header carries on past the first block")
     err, chosen = None, None
-    for beam in beams:
+    try:
+        chosen = backtracking_search(kind, head, tail, middle, beams, log)
+    except streams.StreamError as e:
+        err = e
+        # best effort: let blocks follow the last row, and say which ones did
+        log("picture", "no order ends exactly at the last row; keeping the best order found")
+        kind.strict = False
         try:
             chosen = list(streams._search(kind, head.data, tail.data, list(range(len(middle))), middle,
-                                          lambda p, d: d, beam, "picture"))
-            break
-        except streams.StreamError as e:
-            err = e
-            log("picture", "widening the search after:", e)
+                                          lambda p, d: d, beams[0], "picture"))
+        except streams.StreamError as e2:
+            err = e2
     ev = evaluate(kind, head, tail, chosen) if chosen else None
     if ev:
         log("picture", "first pass: seam cost %.3f" % total_cost(kind, head, tail, chosen))
@@ -60,18 +64,46 @@ def rebuild(pool, log=None, beams=(8, 24)):
         items = [Run([b]) for b in middle]
     # second pass: trusted runs as units, best-first with limited discrepancies, judged on
     # the whole picture
-    best = lds(kind, head, tail, items, chosen, log)
+    best = lds(kind, head, tail, items, chosen, log, tries=max(4, min(40, 3000 // max(1, len(items)))))
     if best is None:
         if chosen is None:
             raise JPEGFileError(str(err) if err else "no order decodes the whole picture")
         best = chosen
     chosen = best
+    over = after_last_row(kind, head, chosen)
     L = Layout(n)
     L.put(0, head, "starts with the JPEG signature")
     for p, b in enumerate(chosen, 1):
-        L.put(p, b, "picture rows join up")
+        L.put(p, b, "picture rows join up" if p - 1 < len(chosen) - over else
+              "not confirmed: comes after the picture's last row in the best order found")
+    L.exact = over == 0
     L.put(n - 1, tail, "holds the end-of-image marker")
     return L
+
+
+def backtracking_search(kind, head, tail, middle, beams, log, back=12, tries=4):
+    """Beam search; at a dead end, keep the best path up to `back` blocks before it and
+    search the rest again with a wider beam, backing up further each time it fails."""
+    beam = beams[0]
+    prefix = []
+    for t in range(tries):
+        st = kind.begin(head.data)
+        for b in prefix:
+            st = kind.extend(st, b.data)
+            kind._overlay(st)
+        used = {b.name for b in prefix}
+        pool = [b for b in middle if b.name not in used]
+        try:
+            rest = streams._search(kind, head.data, tail.data, list(range(len(pool))), pool,
+                                   lambda p, d: d, beam, "picture", start=(st, ()))
+            return prefix + list(rest)
+        except streams.StreamError as e:
+            part = prefix + list(getattr(e, "partial", ()))
+            keep = max(0, len(part) - back * (2 ** t))
+            log("picture", "dead end after %d blocks; backing up to %d and widening the search" % (len(part), keep))
+            prefix = part[:keep]
+            beam = beams[min(len(beams) - 1, t + 1)] if t + 1 < len(beams) else beams[-1]
+    raise streams.StreamError("picture: no order decodes the whole picture")
 
 
 class Run:
@@ -105,6 +137,19 @@ def consolidate(flat, incs, rows, min_len=6):
         else:
             out += [Run([b]) for b in r]
     return out
+
+
+def after_last_row(kind, head, order):
+    """How many blocks at the end of `order` come after the picture is complete."""
+    st = kind.begin(head.data)
+    for i, b in enumerate(order):
+        if st["j"] is not None and st["j"].done:
+            return len(order) - i
+        st = kind.extend(st, b.data)
+        if st is None:
+            return len(order) - i
+        kind._overlay(st)
+    return 0
 
 
 def total_cost(kind, head, tail, order):
