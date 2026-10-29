@@ -108,6 +108,9 @@ stop at any block boundary, copy its state, and try every candidate from the sam
 The picture has no map, and a flat area of a picture fits almost anywhere (JPEG codes each
 square's brightness as a difference from the last one, so a plain block reads as plausible
 in many places). The picture is therefore a best effort, and the report says so (§5).
+If no order reaches the picture's last row at all, the blocks left are still the picture's
+set: they are kept in the best partial order found and every one is marked *not
+confirmed*.
 
 ### 2.5 What is produced
 
@@ -175,9 +178,53 @@ is rebuilt as a best effort.
 
 ### 4.2 Sets with a known answer
 
-(Filled from `eval/results.json`; see `RESULTS.md`.)
+| Set | Blocks | First guess right | Sorted right | PDF in place | Word in place | JPEG in place | Identical files | Time |
+|---|---|---|---|---|---|---|---|---|
+| set01 | 204 | 123 (60%) | 183 (90%) | 52/62 (checked) | 51/62 | 3/80 | none | 702 s |
+| set02 | 209 | 114 (55%) | 197 (94%) | 50/62 (checked) | 55/55 (checked) | 4/92 (checked) | Word | 290 s |
+| set03 | 173 | 118 (68%) | 173 (100%) | 64/64 (checked) | 61/61 (checked) | 48/48 (checked) | PDF, Word, JPEG | 140 s |
+| **All** | 586 | 355 (61%) | 553 (94%) | | | | | |
 
-<!--EVAL-->
+*Sorted right* is the required task: the block is in the file it came from. *In place* is
+the bonus task: the block (or an identical copy of it, such as an all-zero block) is at its
+true position. *checked* means the file's own checks passed.
+
+What the three sets show:
+
+* **The structure-driven parts are exact when nothing interferes.** In set03 all three
+  files come back byte for byte identical to the originals, and set02's Word file does too.
+* **The one systematic failure is two pictures in one pile.** In sets 01 and 02 the PDF
+  holds its own (unencrypted) JPEG, and the separate JPEG's data blocks decode as plausible
+  continuations of it. 10 and 6 of the separate picture's blocks were taken into the PDF's
+  picture, which still decoded to its last row, so the PDF's checks passed. The PDF's own
+  blocks were then left for the separate picture, which could not be ordered. Every
+  sorting error in the table (21 in set01, 12 in set02) is one of these blocks. The seam
+  measures could not tell the two apart: on set02 the true path finished with a higher
+  mean seam (2.82 against 2.64) and a higher worst seam (5.72 against 4.06) than the
+  wrong one. The course PDF is encrypted, so its stream blocks cannot be confused with
+  the separate picture's, and the problem does not arise there.
+* **Text without paragraph marks is the weak part of Word.** In set01, 21 of the 42 text
+  blocks hold no paragraph mark, so they were ordered by a language model trained on the
+  document's own blocks; 11 positions came out wrong. (The course document's text blocks
+  all carry paragraph marks.)
+* **Content alone is not enough.** The first guess from each block's own bytes gets 61%
+  right; rebuilding raises sorting to 94%.
+
+Three fixes came out of this evaluation, each checked against the course set, which came
+out unchanged after each one:
+
+1. A compressed font block at 7.13 bits per byte had been filtered out of the candidates
+   (the cutoff was 7.35), so no order could close its stream. The cutoff for unencrypted
+   compressed streams is now 6.5.
+2. Wrong blocks starting with bytes FF E0..EF read as a long application segment after the
+   picture's frame header, so the header never seemed to end. Encoders never put one there,
+   so this now rules a block out.
+3. A mostly-zero Word table block passed the JPEG byte rule by chance and was left out of
+   Word's last positions; and an old directory copy swapped places with Word's font table.
+   Sparse blocks now pass, and the font table's own record lengths settle its block.
+
+When the picture cannot be ordered at all, its blocks are still kept as the picture's set,
+marked *not confirmed*, instead of being left unsorted.
 
 ## 5. Forensic principles
 
@@ -222,13 +269,19 @@ working one. These are the ones the toolkit was designed around.
   ordered in more than one plausible way. On the course picture the bottom fifth is partly
   wrong. `--thorough` widens the search (about eight times slower) and often helps, but
   cannot guarantee the exact order.
-* **Two pictures of the same kind.** When an unencrypted PDF holds a picture and a separate
-  JPEG is also in the pile, the two pictures' data blocks look alike and both searches must
-  choose from the same pool. The course PDF is encrypted, which keeps them apart; an
-  unencrypted one makes this harder.
+* **Two pictures in one pile.** When an unencrypted PDF holds a picture and a separate JPEG
+  is also in the pile, the separate picture's blocks decode as plausible continuations of
+  the PDF's picture. In two of the three test sets, 6 to 10 blocks went to the wrong
+  picture even though the PDF passed its checks, because a picture's end check (the right
+  number of rows) is much weaker than a checksum. Every sorting error in the evaluation
+  comes from this case. The course PDF is encrypted, which keeps the two apart.
+* **Text without paragraph marks.** Word text blocks that hold no paragraph mark are
+  ordered by a language model, which can swap blocks of similar prose (11 of 62 positions
+  in one test set). The course document's text blocks all carry paragraph marks.
 * **Speed.** The method tries every free block at every unknown position. The course set
-  takes about four minutes in the browser and longer from the command line; a pile of many
-  thousands of blocks would need the candidate pools narrowed first.
+  takes about 4 minutes in the browser edition and about 16 from the command line (13 of
+  them on the picture); a pile of many thousands of blocks would need the candidate pools
+  narrowed first.
 * **The files must be complete.** The method assumes every block of each file is present
   (as the course set states). A missing block breaks a stream's checksum, so that stream
   would be reported as unconfirmed rather than rebuilt.
@@ -244,6 +297,12 @@ working one. These are the ones the toolkit was designed around.
 * **Better picture ordering**: score seams on all three colour channels and on the
   frequency content, or use a learned model of natural-image edges; treat the order as a
   shortest-path problem over the whole picture instead of a beam search.
+* **Two pictures at once**: order the PDF's picture and the separate JPEG together, so a
+  block goes to the picture it fits better rather than to whichever is searched first;
+  each picture has its own quantization and Huffman tables, which could also be used to
+  test which picture a block was encoded for.
+* **Text order**: use Word's character-formatting runs (which give byte positions where
+  the formatting changes) as extra anchors for text blocks without paragraph marks.
 * **Mixed piles from a real disk**: add unallocated noise and duplicate blocks, and
   several files of the same type, to the known-answer sets, then sort first by
   statistics (to split, say, two Word files) before rebuilding each.

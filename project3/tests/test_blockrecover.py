@@ -144,6 +144,18 @@ class TestJPEG(unittest.TestCase):
         fake = data[:sof] + data[sof:sof + 2 + struct.unpack(">H", data[sof + 2:sof + 4])[0]] + b"\xff\xe5\x60\x00"
         self.assertEqual(streams.header_check(fake), (False, None))
 
+    def test_keeps_the_set_when_no_order_fits(self):
+        from blockrecover import jpegfile
+        data = self.picture()
+        data += b"\0" * (-len(data) % 512)
+        bl = [Block("B%02d" % i, data[512 * i:512 * i + 512], i) for i in range(len(data) // 512)]
+        k = len(bl) // 2
+        pool = bl[:k] + bl[k + 1:]                  # one block of the picture is missing
+        L = jpegfile.rebuild(pool)
+        self.assertFalse(L.exact)
+        self.assertEqual(sorted(b.name for b in L.at if b), sorted(b.name for b in pool))
+        self.assertTrue(all(h.startswith("not confirmed") for h in L.how[1:-1]))
+
     def decode_all(self, data):
         h = jpeg.Header(data)
         dec = jpeg.Decoder(h)

@@ -89,8 +89,7 @@ class TestBrowserEdition(unittest.TestCase):
             self.assertNotIn(mark, html)
         self.assertIn("Created by Captain Scott Russell for CPRE 5360", html)
 
-    @unittest.skipUnless(Image, "Pillow is not installed")
-    def test_same_picture_order(self):
+    def picture_folder(self, name, drop=None):
         img = Image.new("RGB", (160, 120))
         px = img.load()
         for y in range(120):
@@ -100,15 +99,29 @@ class TestBrowserEdition(unittest.TestCase):
         img.save(buf, "JPEG", quality=85)
         data = buf.getvalue()
         data += b"\0" * (-len(data) % 512)
-        folder = os.path.join(self.tmp, "picture")
+        folder = os.path.join(self.tmp, name)
         os.makedirs(folder)
         names = ["B%03d" % i for i in range(len(data) // 512)]
         random.Random(5).shuffle(names)
         for i, n in enumerate(names):
-            with open(os.path.join(folder, n), "wb") as fh:
-                fh.write(data[512 * i:512 * i + 512])
+            if i != drop:
+                with open(os.path.join(folder, n), "wb") as fh:
+                    fh.write(data[512 * i:512 * i + 512])
+        return folder
+
+    @unittest.skipUnless(Image, "Pillow is not installed")
+    def test_same_picture_order(self):
+        folder = self.picture_folder("picture")
         stages = ("PDF", "Word", "JPEG")
         self.assertEqual(self.node_answer(folder, stages), python_answer(folder, stages))
+
+    @unittest.skipUnless(Image, "Pillow is not installed")
+    def test_same_answer_when_a_block_is_missing(self):
+        folder = self.picture_folder("missing", drop=6)
+        stages = ("PDF", "Word", "JPEG")
+        py = python_answer(folder, stages)
+        self.assertEqual([f[:2] for f in py["files"]], [["JPEG", False]])
+        self.assertEqual(self.node_answer(folder, stages), py)
 
     @unittest.skipUnless(os.path.exists(COURSE_SET), "course block set not present")
     def test_same_answer_on_course_set(self):

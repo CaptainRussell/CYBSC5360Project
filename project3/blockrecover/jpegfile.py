@@ -71,14 +71,25 @@ def rebuild(pool, log=None, beams=BEAMS):
     # second pass: trusted runs as units, best-first with limited discrepancies, judged on
     # the whole picture
     best = lds(kind, head, tail, items, chosen, log, tries=max(4, min(40, 3000 // max(1, len(items)))))
-    if best is None:
-        if chosen is None:
-            raise JPEGFileError(str(err) if err else "no order decodes the whole picture")
-        best = chosen
-    chosen = best
-    over = after_last_row(kind, head, chosen)
     L = Layout(n)
     L.put(0, head, "starts with the JPEG signature")
+    if best is None and chosen is None:
+        # No order reaches the last row (some of the picture's blocks may have gone to
+        # another file). Every block left still belongs to the picture's set; keep the best
+        # partial order found, then the rest, and say that none of it is confirmed.
+        partial = list(getattr(err, "partial", None) or ())
+        names = {b.name for b in partial}
+        rest = [b for b in middle if b.name not in names]
+        log("picture", "no order reaches the last row; %d blocks kept in the best partial order, %d unordered"
+            % (len(partial), len(rest)))
+        for p, b in enumerate(partial + rest, 1):
+            L.put(p, b, "not confirmed: best partial order found" if p <= len(partial) else
+                  "not confirmed: in the picture's set, position unknown")
+        L.exact = False
+        L.put(n - 1, tail, "holds the end-of-image marker")
+        return L
+    chosen = best if best is not None else chosen
+    over = after_last_row(kind, head, chosen)
     for p, b in enumerate(chosen, 1):
         L.put(p, b, "picture rows join up" if p - 1 < len(chosen) - over else
               "not confirmed: comes after the picture's last row in the best order found")

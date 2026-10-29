@@ -1,0 +1,116 @@
+[
+ {
+  "set": "set01",
+  "seconds": 702.6,
+  "blocks": 204,
+  "files": {
+   "JPEG": {
+    "blocks": 80,
+    "rebuilt": true,
+    "checked": false,
+    "exact_or_identical_copy": 3,
+    "right_neighbour": 27,
+    "neighbour_pairs": 79,
+    "identical": false
+   },
+   "PDF": {
+    "blocks": 62,
+    "rebuilt": true,
+    "checked": true,
+    "exact_or_identical_copy": 52,
+    "right_neighbour": 50,
+    "neighbour_pairs": 61,
+    "identical": false
+   },
+   "Word": {
+    "blocks": 62,
+    "rebuilt": true,
+    "checked": false,
+    "exact_or_identical_copy": 51,
+    "right_neighbour": 41,
+    "neighbour_pairs": 61,
+    "identical": false
+   }
+  },
+  "first_guess_right": 123,
+  "first_guess_unsure": 66,
+  "sorted_right": 183,
+  "exact_position": 106
+ },
+ {
+  "set": "set02",
+  "seconds": 290.3,
+  "blocks": 209,
+  "files": {
+   "JPEG": {
+    "blocks": 92,
+    "rebuilt": true,
+    "checked": true,
+    "exact_or_identical_copy": 4,
+    "right_neighbour": 26,
+    "neighbour_pairs": 91,
+    "identical": false
+   },
+   "PDF": {
+    "blocks": 62,
+    "rebuilt": true,
+    "checked": true,
+    "exact_or_identical_copy": 50,
+    "right_neighbour": 53,
+    "neighbour_pairs": 61,
+    "identical": false
+   },
+   "Word": {
+    "blocks": 55,
+    "rebuilt": true,
+    "checked": true,
+    "exact_or_identical_copy": 55,
+    "right_neighbour": 51,
+    "neighbour_pairs": 54,
+    "identical": true
+   }
+  },
+  "first_guess_right": 114,
+  "first_guess_unsure": 87,
+  "sorted_right": 197,
+  "exact_position": 107
+ },
+ {
+  "set": "set03",
+  "seconds": 140.7,
+  "blocks": 173,
+  "files": {
+   "PDF": {
+    "blocks": 64,
+    "rebuilt": true,
+    "checked": true,
+    "exact_or_identical_copy": 64,
+    "right_neighbour": 63,
+    "neighbour_pairs": 63,
+    "identical": true
+   },
+   "JPEG": {
+    "blocks": 48,
+    "rebuilt": true,
+    "checked": true,
+    "exact_or_identical_copy": 48,
+    "right_neighbour": 47,
+    "neighbour_pairs": 47,
+    "identical": true
+   },
+   "Word": {
+    "blocks": 61,
+    "rebuilt": true,
+    "checked": true,
+    "exact_or_identical_copy": 61,
+    "right_neighbour": 60,
+    "neighbour_pairs": 60,
+    "identical": true
+   }
+  },
+  "first_guess_right": 118,
+  "first_guess_unsure": 37,
+  "sorted_right": 173,
+  "exact_position": 173
+ }
+]

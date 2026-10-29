@@ -175,13 +175,21 @@
       items = consolidate(chosen, ev[1], ev[2]);
     } else items = middle.map(function (b) { return new Run([b]); });
     var best = lds(kind, head, tail, items, chosen, log, Math.max(4, Math.min(40, Math.floor(3000 / Math.max(1, items.length)))));
-    if (best === null) {
-      if (chosen === null) throw new JPEGFileError(err ? err.message : "no order decodes the whole picture");
-      best = chosen;
-    }
-    chosen = best;
-    var over = afterLastRow(kind, head, chosen), L = new BR.Layout(n);
+    var L = new BR.Layout(n);
     L.put(0, head, "starts with the JPEG signature");
+    if (best === null && chosen === null) {   // (see jpegfile.py: keep the picture's set, unconfirmed)
+      var partial = (err && err.partial) ? err.partial.slice() : [], names = new Set(partial.map(function (b) { return b.name; }));
+      var rest = middle.filter(function (b) { return !names.has(b.name); });
+      log("picture", "no order reaches the last row; " + partial.length + " blocks kept in the best partial order, " + rest.length + " unordered");
+      partial.concat(rest).forEach(function (b, i) {
+        L.put(i + 1, b, i < partial.length ? "not confirmed: best partial order found" : "not confirmed: in the picture's set, position unknown");
+      });
+      L.exact = false;
+      L.put(n - 1, tail, "holds the end-of-image marker");
+      return L;
+    }
+    chosen = best !== null ? best : chosen;
+    var over = afterLastRow(kind, head, chosen);
     chosen.forEach(function (b, i) {
       L.put(i + 1, b, i < chosen.length - over ? "picture rows join up" : "not confirmed: comes after the picture's last row in the best order found");
     });
