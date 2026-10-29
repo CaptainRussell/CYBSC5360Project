@@ -85,11 +85,12 @@ def run(path_or_blocks, progress=None, stages=("PDF", "Word", "JPEG"), thorough=
         W = word.Word(free, log=say)
         try:
             W.anchor()
-            # leftovers: low-content blocks that are not JPEG picture data
+            # leftovers: low-content blocks that are not JPEG picture data. (A mostly-zero
+            # Word block can pass the JPEG byte rule by chance; picture data is never that sparse.)
             from . import features
-            cands = [b for b in W.free.values() if features.jpeg_scan_like(b.data) != "yes"
-                     and b"\xff\xd9" not in b.data and not b.data.startswith(b"\xff\xd8")
-                     and features.entropy(b.data) < 6.5]
+            cands = [b for b in W.free.values() if b"\xff\xd9" not in b.data and not b.data.startswith(b"\xff\xd8")
+                     and features.entropy(b.data) < 6.5
+                     and not (features.jpeg_scan_like(b.data) == "yes" and features.entropy(b.data) >= 6.0)]
             W.leftovers(cands)
             ok, note = all(x is not None for x in W.L.at), "header, FAT, directory and Word's own tables agree"
         except PlaceError as e:

@@ -575,6 +575,40 @@ class Word:
                 old = self.expect_zero.get(secs[k])
                 self.expect_zero[secs[k]] = (min(a, old[0]), max(b, old[1])) if old else (a, b)
 
+    FONT_TABLE = 15             # SttbfFfn's pair in the FIB's table list
+
+    def _font_table_fits(self, p, b):
+        """Word's font table is a count, a zero, then one record per font, each led by its
+        length. With block b at position p, the records must chain to exactly the table's
+        end. -> True or False, or None when p holds none of the table (or other blocks of
+        it are still unknown)."""
+        if self.FONT_TABLE >= len(self.fclcb):
+            return None
+        fc, lcb = self.fclcb[self.FONT_TABLE]
+        if not lcb or fc + lcb > self.table_size:
+            return None
+        involved = {self.tloc(o)[0] + 1 for o in range(fc, fc + lcb, 64 if self.table_mini else BS)}
+        involved.add(self.tloc(fc + lcb - 1)[0] + 1)
+        if p not in involved:
+            return None
+
+        def byte(off):
+            sec, o = self.tloc(off)
+            blk = b if sec + 1 == p else self.at_sector(sec)
+            return None if blk is None else blk.data[o]
+        lo, hi = byte(fc), byte(fc + 1)
+        if lo is None or hi is None or byte(fc + 2) != 0 or byte(fc + 3) != 0:
+            return None if None in (lo, hi, byte(fc + 2), byte(fc + 3)) else False
+        off, end = fc + 4, fc + lcb
+        for _ in range(lo | hi << 8):
+            if off >= end:
+                return False
+            n = byte(off)
+            if n is None:
+                return None
+            off += 1 + n
+        return off == end
+
     def leftovers(self, candidates):
         """The last few positions: pick the assignment whose joins with the neighbours look most
         like the bytes around them, among blocks that are zero where they must be."""
@@ -607,6 +641,9 @@ class Word:
             for o in starts.get(p, ()):
                 if b.data[o:o + 2] == b"\xff\xff":     # a string table starts here
                     sc += 4
+            fonts = self._font_table_fits(p, b)
+            if fonts is not None:
+                sc += 10 if fonts else -10                # the font table's records chain up
             return sc
 
         table = {(b.name, p): score(b, p) for b in cands for p in todo}

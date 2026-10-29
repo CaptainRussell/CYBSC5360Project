@@ -503,6 +503,30 @@
     }
     return hits / tot;
   }
+  P.FONT_TABLE = 15;   // SttbfFfn's pair in the FIB's table list
+  P.fontTableFits = function (p, b) {   // _font_table_fits()
+    if (this.FONT_TABLE >= this.fclcb.length) return null;
+    var self = this, fc = this.fclcb[this.FONT_TABLE][0], lcb = this.fclcb[this.FONT_TABLE][1];
+    if (!lcb || fc + lcb > this.tableSize) return null;
+    var involved = new Set(), step = this.tableMini ? 64 : BS;
+    for (var o = fc; o < fc + lcb; o += step) involved.add(this.tloc(o)[0] + 1);
+    involved.add(this.tloc(fc + lcb - 1)[0] + 1);
+    if (!involved.has(p)) return null;
+    function byte(off) {
+      var l = self.tloc(off), blk = l[0] + 1 === p ? b : self.atSector(l[0]);
+      return blk === null || blk === undefined ? null : blk.data[l[1]];
+    }
+    var lo = byte(fc), hi = byte(fc + 1), z0 = byte(fc + 2), z1 = byte(fc + 3);
+    if (lo === null || hi === null || z0 !== 0 || z1 !== 0) return (lo === null || hi === null || z0 === null || z1 === null) ? null : false;
+    var off = fc + 4, end = fc + lcb, count = lo | (hi << 8);
+    for (var k = 0; k < count; k++) {
+      if (off >= end) return false;
+      var n = byte(off);
+      if (n === null) return null;
+      off += 1 + n;
+    }
+    return off === end;
+  };
   P.leftovers = function (candidates) {
     var self = this, todo = [];
     for (var p = 1; p < this.L.n; p++) if (this.L.at[p] === null) todo.push(p);
@@ -524,6 +548,8 @@
       if (right !== null) sc += join(b.data, right.data);
       if (wdSet.has(p - 1) && !textSecs.has(p - 1) && fkpShape(b.data, self.wdSize())) sc += 2;
       (starts.get(p) || []).forEach(function (o) { if (b.data[o] === 0xFF && b.data[o + 1] === 0xFF) sc += 4; });
+      var fonts = self.fontTableFits(p, b);
+      if (fonts !== null) sc += fonts ? 10 : -10;   // the font table's records chain up
       return sc;
     }
     var table = new Map();

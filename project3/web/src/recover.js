@@ -113,7 +113,9 @@
         W.anchor();
         var cands = [];
         W.free.forEach(function (b) {
-          if (F.jpegScanLike(b.data) !== "yes" && B.find(b.data, B.fromB("\xff\xd9")) < 0 && !(b.data[0] === 0xFF && b.data[1] === 0xD8) && F.entropy(b.data) < 6.5) cands.push(b);
+          var e = F.entropy(b.data);
+          if (B.find(b.data, B.fromB("\xff\xd9")) < 0 && !(b.data[0] === 0xFF && b.data[1] === 0xD8) && e < 6.5 &&
+              !(F.jpegScanLike(b.data) === "yes" && e >= 6.0)) cands.push(b);
         });
         W.leftovers(cands);
         wok = W.L.at.every(function (x) { return x !== null; }); wnote = "header, FAT, directory and Word's own tables agree";
