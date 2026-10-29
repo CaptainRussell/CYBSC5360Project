@@ -63,10 +63,11 @@
   function Inflater(zlibHeader) {
     this.inp = new Uint8Array(0); this.ip = 0; this.bits = 0; this.nbits = 0;
     this.out = new Uint8Array(CAP); this.olen = 0; this.base = 0;
-    this.state = zlibHeader === false ? "block" : "zhead";
+    this.raw = zlibHeader === false;      // raw deflate (as in a ZIP file): no header, no checksum
+    this.state = this.raw ? "block" : "zhead";
     this.lit = this.dist = null; this.final = false; this.eof = false;
     this.slips = 0; this.tokens = 0; this.afterMatch = null; this.lits = [];
-    this.storedLeft = 0; this.adler = 1; this.summed = 0;
+    this.storedLeft = 0; this.adler = 1; this.summed = 0; this.cap = null;
   }
   var P = Inflater.prototype;
   P.copy = function () {
@@ -108,6 +109,11 @@
 
   P._byte = function (abs) { var i = abs - this.base; return i >= 0 && i < this.olen ? this.out[i] : -1; };
   P._push = function (c) {
+    var cap = this.cap;
+    if (cap) {
+      if (cap.n === cap.buf.length) { var g = new Uint8Array(cap.buf.length * 2); g.set(cap.buf); cap.buf = g; }
+      cap.buf[cap.n++] = c;
+    }
     this.out[this.olen++] = c;
     if (this.olen > 2 * WINDOW) {
       this._sum();
@@ -158,6 +164,12 @@
     return null;
   };
 
+  // feed, and return every byte of output it made (not only what the window keeps)
+  P.feedCapture = function (data) {
+    this.cap = { buf: new Uint8Array(4096), n: 0 };
+    try { this.feed(data); } finally { var c = this.cap; this.cap = null; }
+    return c.buf.subarray(0, c.n);
+  };
   P.feed = function (data) {
     var rest = this.inp.subarray(this.ip), inp = new Uint8Array(rest.length + data.length);
     inp.set(rest); inp.set(data, rest.length);
@@ -180,7 +192,7 @@
       if ((cmf & 15) !== 8 || (cmf >> 4) > 7 || ((cmf << 8) | flg) % 31 || (flg & 32)) throw new InflateError("bad zlib header");
       this.state = "block";
     } else if (st === "block") {
-      if (this.final) { this.state = "adler"; return; }
+      if (this.final) { if (this.raw) { this.eof = true; return; } this.state = "adler"; return; }
       var ip = this.ip, bits = this.bits, nbits = this.nbits;
       this.final = !!this._get(1);
       var kind = this._get(2);

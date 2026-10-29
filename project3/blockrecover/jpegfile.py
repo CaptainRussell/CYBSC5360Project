@@ -43,19 +43,19 @@ def rebuild(pool, log=None, beams=(8, 24)):
             h.width, h.height, len(h.scan), h.mcus, ", restart every %d" % h.restart if h.restart else ""))
     else:
         log("picture", "the header carries on past the first block")
+    # Blocks may follow the picture's last row, at a heavy cost per block: an order that
+    # ends exactly is always preferred, and when none is found the best one is kept and
+    # its extra blocks are reported as not confirmed.
     err, chosen = None, None
-    try:
-        chosen = backtracking_search(kind, head, tail, middle, beams, log)
-    except streams.StreamError as e:
-        err = e
-        # best effort: let blocks follow the last row, and say which ones did
-        log("picture", "no order ends exactly at the last row; keeping the best order found")
-        kind.strict = False
+    kind.strict = False
+    for beam in beams:
         try:
             chosen = list(streams._search(kind, head.data, tail.data, list(range(len(middle))), middle,
-                                          lambda p, d: d, beams[0], "picture"))
-        except streams.StreamError as e2:
-            err = e2
+                                          lambda p, d: d, beam, "picture"))
+            break
+        except streams.StreamError as e:
+            err = e
+            log("picture", "widening the search after:", e)
     ev = evaluate(kind, head, tail, chosen) if chosen else None
     if ev:
         log("picture", "first pass: seam cost %.3f" % total_cost(kind, head, tail, chosen))
@@ -79,31 +79,6 @@ def rebuild(pool, log=None, beams=(8, 24)):
     L.exact = over == 0
     L.put(n - 1, tail, "holds the end-of-image marker")
     return L
-
-
-def backtracking_search(kind, head, tail, middle, beams, log, back=12, tries=4):
-    """Beam search; at a dead end, keep the best path up to `back` blocks before it and
-    search the rest again with a wider beam, backing up further each time it fails."""
-    beam = beams[0]
-    prefix = []
-    for t in range(tries):
-        st = kind.begin(head.data)
-        for b in prefix:
-            st = kind.extend(st, b.data)
-            kind._overlay(st)
-        used = {b.name for b in prefix}
-        pool = [b for b in middle if b.name not in used]
-        try:
-            rest = streams._search(kind, head.data, tail.data, list(range(len(pool))), pool,
-                                   lambda p, d: d, beam, "picture", start=(st, ()))
-            return prefix + list(rest)
-        except streams.StreamError as e:
-            part = prefix + list(getattr(e, "partial", ()))
-            keep = max(0, len(part) - back * (2 ** t))
-            log("picture", "dead end after %d blocks; backing up to %d and widening the search" % (len(part), keep))
-            prefix = part[:keep]
-            beam = beams[min(len(beams) - 1, t + 1)] if t + 1 < len(beams) else beams[-1]
-    raise streams.StreamError("picture: no order decodes the whole picture")
 
 
 class Run:
@@ -281,43 +256,3 @@ def evaluate(kind, head, tail, middle):
     if not kind.finish(st, tail.data):
         return None
     return kind.cost(st), incs, rows
-
-
-def repair(kind, head, tail, middle, log=None, rounds=40):
-    """The beam search can join long correct runs in the wrong order (where the picture is
-    flat, early on, many blocks fit). Find the weakest joins, try moving each run between
-    them to another weak join, and keep any move that lowers the picture's total seam cost
-    while it still decodes exactly to its last row."""
-    log = log or (lambda *a: None)
-    ev = evaluate(kind, head, tail, middle)
-    if ev is None:
-        return middle
-    cost, incs, rows = ev
-    for _r in range(rounds):
-        srt = sorted(incs)
-        med = srt[len(srt) // 2] or 1e-9
-        cuts = {0, len(middle)} | {i for i, v in enumerate(incs) if v > 2.5 * med}
-        if len(cuts) > 40:
-            cuts = {0, len(middle)} | set(sorted(range(len(incs)), key=lambda i: -incs[i])[:38])
-        # the top rows have nothing above them to check against, so a wrong run can start
-        # there without a weak join to show it: every position in them may be a cut
-        cuts = sorted(cuts | {i for i, r in enumerate(rows) if 0 <= r < 2})
-        best = None
-        segs = list(zip(cuts, cuts[1:]))
-        for a, b in segs:
-            seg = middle[a:b]
-            rest = middle[:a] + middle[b:]
-            for c in cuts:
-                # insertion points in `rest` coordinates
-                ins = c if c <= a else c - (b - a)
-                if ins < 0 or ins > len(rest) or a <= c <= b:
-                    continue
-                trial = rest[:ins] + seg + rest[ins:]
-                ev2 = evaluate(kind, head, tail, trial)
-                if ev2 and ev2[0] < cost - 1e-9 and (best is None or ev2[0] < best[0]):
-                    best = (ev2[0], trial, ev2[1], ev2[2])
-        if best is None:
-            break
-        cost, middle, incs, rows = best
-        log("picture", "moved a run of blocks; seam cost now %.3f" % cost)
-    return middle

@@ -250,9 +250,10 @@ class JPEGStream(Kind):
         return self._advance(st, piece)
 
     def cost(self, st):
-        # each block's own seams count equally: a single wrong join is not diluted by the
-        # many squares decoded before it
-        return st.get("ssum", 0.0) / st["steps"] if st.get("steps") else 0.0
+        # the mean pixel jump over every join decoded on this path, plus a penalty for any
+        # block after the last row (lenient mode)
+        base = st["tot"] / st["cnt"] if st["cnt"] else 0.0
+        return base + 50.0 * st.get("over", 0)
 
     def finish(self, st, tail):
         if st["j"] is None:
