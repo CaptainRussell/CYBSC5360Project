@@ -7,7 +7,7 @@ note: Draft of the proposed solution and evaluation plan, November 1, 2026
 ---
 
 ::: abstract
-People hiding evidence on a computer can change a file's dates, rename a photo so it looks like a program, or tuck one file inside another, each in a few seconds. But Windows and its file system write the same facts down in several separate places, and a cover-up rarely changes all of them. I built the Artifact Disagreement Scorer (ADS), a tool that compares these records with each other and points the examiner to the files where they disagree, with a plain-English reason for each one. It runs as a command-line program or as a single web page that works offline. I am testing it on the two disk images from this course's lab projects, using my own EnCase and FTK findings as the answer key. On Project 1 it ranked six of the seven evidence files in its top ten out of 2,246 files. On Project 2, where the checks were locked before I examined the image, it found seven of the sixteen evidence files among 4,818, five of them in its top ten.
+People hiding evidence on a computer can change a file's dates, rename a photo so it looks like a program, or tuck one file inside another, each in a few seconds. But Windows and its file system write the same facts down in several separate places, and a cover-up rarely changes all of them. I built the Artifact Disagreement Scorer, a tool that compares these records with each other and points the examiner to the files where they disagree, with a plain-English reason for each one. It runs as a command-line program or as a single web page that works offline. I am testing it on the two disk images from this course's lab projects, using my own findings from EnCase and the Forensic Toolkit (FTK) as the answer key. On Project 1 it ranked six of the seven evidence files in its top ten out of 2,246 files. On Project 2, where the checks were locked before I examined the image, it found seven of the sixteen evidence files among 4,818, five of them in its top ten.
 :::
 
 ::: keywords
@@ -16,107 +16,108 @@ Digital forensics, anti-forensics, timestamp tampering, NTFS, triage, tool valid
 
 # The Problem
 
-Hiding evidence is cheap. Any program can rewrite the dates Windows shows for a file, a trick called *timestomping* [4]. A photo can be renamed `gzip` so it sits among system programs, and a file can be hidden inside a ZIP or after the end of another file.
+Hiding evidence is cheap. Any program can rewrite the dates Windows shows for a file, a trick called *timestomping* [4]. A photo can be renamed *gzip* so it sits among system programs, and a file can be hidden inside a ZIP or after the end of another file.
 
-Hiding it *well* is much harder. Windows records the same facts in more than one place, written by different parts of the system for different reasons. The file system keeps a second, harder-to-reach copy of every file's dates. Windows writes a shortcut file when a document is opened, a Prefetch file when a program runs, and event logs for logons and clock changes. A file's name says what it should be, and its first bytes say what it really is. Someone covering their tracks may fix one of these, but rarely all of them, so a cover-up leaves records that *disagree*.
+Hiding it *well* is much harder. Windows records the same facts in more than one place, written by different parts of the system for different reasons. Windows' file system (NTFS) keeps a second, harder-to-reach copy of every file's dates. Windows writes a shortcut file when a document is opened, a Prefetch file when a program runs, and event logs for logons and clock changes. A file's name says what it should be, and its first bytes say what it really is. Someone covering their tracks may fix one of these, but rarely all of them, so a cover-up leaves records that *disagree*.
 
-Today's tools leave that comparison to the examiner. EnCase and FTK display every record, but the examiner has to notice that two of them conflict. Specialized tools automate a single check, and a single check is noisy: normal use also produces odd dates, so one filter can return hundreds of files.
+Today's tools leave that comparison to the examiner. EnCase and the Forensic Toolkit display every record, but the examiner has to notice that two of them conflict. Specialized tools automate a single check, and a single check is noisy: normal use also produces odd dates, so one filter can return hundreds of files.
 
-The question for this paper is the one from my topic proposal: *does combining many disagreement checks point an examiner to hidden evidence better than any single check?* To answer it I built ADS. Fig. 1 shows the front page of its report on the Project 2 image: of 5,607 entries on the drive, 164 files have at least one clue and 7 are marked "look first".
+The question for this paper is the one from my topic proposal: *does combining many disagreement checks point an examiner to hidden evidence better than any single check?* To answer it I built the Artifact Disagreement Scorer. Fig. 1 shows the front page of its report on the Project 2 image: of 5,607 entries on the drive, 164 files have at least one clue and 7 are marked "look first".
 
-![The ADS report on the Project 2 image narrows the whole drive to a short list.](figures/shot_funnel.png){width=column}
+![The Artifact Disagreement Scorer's report on the Project 2 image narrows the whole drive to a short list.](figures/shot_funnel.png){width=column}
 
-Section II covers what already exists, Section III shows how ADS works, and Section IV explains how I am testing it.
+Section II covers what already exists, Section III shows how the tool works, and Section IV explains how I am testing it.
 
-# Background and Related Work
+# What Already Exists
 
-**Terms.** NTFS stores four dates for each file in its *Master File Table* (MFT): Created, Modified, Accessed, and Entry-changed (when the file's record last changed). It stores them twice. The *Standard Information* copy (SI) is what Explorer shows and what programs can set; the *File Name* copy (FN) is kept by the file system and cannot be set through the normal programming interface. This paper writes SI-C for the SI created date, FN-C for the FN created date, and so on.
+**Two copies of every date.** Windows' file system keeps a table with one entry per file (the Master File Table). Each entry holds four dates, for when the file was created, last changed, last opened, and when its entry last changed. It holds them *twice*. The **visible dates** (formally, Standard Information) are what Windows Explorer shows, and any program can change them. The **protected dates** (formally, File Name) are kept by the file system itself and cannot be set the normal way. When the visible dates say a file is older than the protected dates do, something is off.
 
-**Single checks.** Early work set out rules that NTFS dates obey in normal use [3] and noted that SI dates earlier than FN dates [5], or SI dates with an all-zero fraction of a second [6], suggest tampering. Magnet AXIOM reports SI and FN mismatches [10], which is one check (R6 below) on its own; timeline tools such as Plaso merge records by time without testing whether they agree. Recent work studies NTFS dates in more depth [11], [12]. Willassen [7] and Casey [8] showed that the order in which records are allocated on disk, like layers of rock, can reveal a file that claims to be older than its neighbors. File-signature analysis, which compares a file's name with its first bytes, is a standard single check in EnCase and FTK.
+**Single checks.** Chow and colleagues listed the rules that these dates follow in normal use [3]. Willassen [7] showed that the order in which files were laid down on disk, like layers of rock, can expose a file that claims to be older than its neighbors. Magnet AXIOM, a commercial tool, flags files whose visible and protected dates disagree [10], which is just one of my tool's checks on its own. EnCase and the Forensic Toolkit compare a file's name with its first bytes, another single check. Timeline tools put records in time order but do not test whether they agree.
 
-**Combining records.** Palmbach and Breitinger [1] are the closest work. They showed that the change journal, LNK files, Prefetch, and event logs all carry traces of timestamp changes, concluded that none is reliable alone, and proposed five rules across them. They recommend combining sources but did not measure whether combining helps, and their test used four files on an unused system. Vanini, Hargreaves, and Breitinger [2] proposed seven factors for rating how hard a record is to tamper with, but they rate the record type, not whether a given drive shows tampering.
+**Combining records.** The closest work is Palmbach and Breitinger [1]. They showed that the change journal, shortcut files, Prefetch and event logs all keep traces of timestamp changes, concluded that none is reliable alone, and proposed five rules that use them together. Vanini, Hargreaves and Breitinger [2] proposed a way to rate how hard each *type* of record is to fake.
 
-**The gap.** No prior work measures, on images an examiner actually receives, whether combining cross-record checks reaches planted evidence with less effort than the best single check.
+**What is missing.** Each of these stops short in a way that matters to an examiner:
 
-# Proposed Solution
+- Palmbach and Breitinger [1] recommend combining sources but never measure whether combining helps. Their test used four files on an unused computer, so it cannot say how often ordinary activity sets off their rules.
+- Vanini and colleagues [2] rate record types in general, not whether a particular drive shows tampering.
+- The single checks are each easy to dodge or to trip by accident, and the commercial tools leave it to the examiner to connect them.
 
-## Overview and Design Goals
+No one has measured, on the kind of images an examiner actually receives, whether combining these checks finds planted evidence faster than the best single check. That is the gap my tool is built to test.
 
-The Artifact Disagreement Scorer (ADS) opens a raw image of a FAT or NTFS drive, lines up its independent records file by file, applies two families of checks, and combines the results into one ranked list (Fig. 2). Four goals shape the design:
+# How the Tool Works
 
-1. **Combine, do not trust one check.** A file rises when several independent checks disagree about it, so normal noise in one record does not put it at the top.
-2. **Treat a missing record as a clue.** Deleting a record is often easier than faking one [1]. ADS reports cleared or missing records instead of silently skipping the rules that need them.
-3. **Explain every flag.** Every score breaks down into the checks that fired and the values they compared, in plain language, so an examiner can state and defend why a file was flagged.
-4. **Usable by non-specialists.** Findings go to investigators, lawyers, and commanders. ADS runs from a point-and-click window, never changes the image, and writes one web page that explains each flag in plain sentences.
+## The Idea in One Picture
 
-![The ADS pipeline. Every input is hashed, so the chain of custody reaches each intermediate file.](figures/fig1_pipeline.png){width=2.9in}
+The Artifact Disagreement Scorer opens an exact copy of a drive without changing it, lines up each file's records, asks two sets of questions, and ranks the files by how many independent questions disagree about them (Fig. 2). Four goals shape it:
 
-**Scope.** Raw images of FAT and NTFS drives; for the date rules, changes made from inside a running Windows system. Changes made by editing the raw disk offline bypass the journals and are out of scope.
+1. **Combine; never trust one check.** A file rises only when several independent checks disagree about it, so normal noise in one record does not put it at the top.
+2. **A missing record is a clue.** Deleting a record is often easier than faking one [1], so the tool reports records that were cleared or are missing instead of quietly skipping the checks that need them.
+3. **Explain every flag.** Each flag comes with a plain sentence and the values behind it, so an examiner can state and defend why a file was picked.
+4. **Usable by non-specialists.** Findings go to investigators, lawyers and commanders. The tool runs from the command line or as one web page that works offline, and its report is written in plain English.
 
-## Windows Date Checks
+![How the tool works. Every input is fingerprinted, so each result traces back to the original drive copy.](figures/fig1_pipeline.png){width=2.9in}
 
-Table I lists the five records the date rules compare. Each is written by a different part of Windows, which is what makes their agreement meaningful.
+**Scope.** Copies of USB sticks (the FAT file system) and Windows drives (the NTFS file system). The date rules target changes made from inside a running Windows system; editing a raw disk offline bypasses Windows' own logs and is out of scope.
 
-Table: Records used by the date checks
+## Eight First-Look Questions, for Any Drive
 
-| Record | Written by | What ADS uses | Linked by |
-|---|---|---|---|
-| MFT (SI and FN) | File system | Eight dates, record number | File ID |
-| Change journal ($J) | File system | Create and date-change entries | File ID |
-| Shortcut (LNK) files | Windows shell | Own dates; copy of target's dates | Path |
-| Prefetch | Windows | Program name, last 8 run times | Path, time |
-| Event logs | Event Log service | Logons, log clearing, clock changes | Time |
+Many drives an examiner receives are not Windows system drives: a USB stick, or a data drive full of another system's files. So the tool first asks eight questions of every file, each comparing what a file claims to be with what it holds. Fig. 3 shows them as the report lists them, with how many files each one flagged on Project 2. For example, *disguised file* (C1) compares a file's name with its first bytes; *stands out from its neighbors* (C5) finds the only photo in a folder of programs; *never mentioned* (C6) finds a file that the folder's own guides and web pages never name, though they name its neighbors; and *changed at an unusual time* (F1) finds a file written apart from the bulk copy around it.
 
-Journal entries carry the file ID (MFT record number plus a reuse counter), so those links are exact; shortcuts and Prefetch name files by path; event logs are linked by time. ADS reads the MFT straight from an NTFS image, or all five records from the output of Eric Zimmerman's parsers [9]. Each rule gives one of three answers: *consistent*, *violated*, or *cannot check* when a record is missing (Table II).
+![The eight first-look questions as the report shows them, with how many Project 2 files each flagged.](figures/shot_questions.png){width=column}
 
-Table: Date rules (C = created, A = accessed, E = entry changed)
+## Eleven Date Rules for Windows Drives
 
-| ID | The rule checks that... | From |
+Windows keeps five records that the date rules compare (Table I). Each is written by a different part of Windows, which is what makes their agreement meaningful.
+
+Table: The records the date rules compare
+
+| Record | Written by | What the tool uses |
 |---|---|---|
-| R1 | SI-E is not earlier than the journal's last date-change entry | [1] |
-| R2 | A shortcut's SI-E matches its target's SI-E | [1] |
-| R3 | A shortcut was not created before its target | [1] |
-| R4 | A shortcut's SI-A is not after its target's SI-A | [1] |
-| R5 | SI-C and SI-M fall inside a logged-on session | [1] |
-| R6 | SI-C is not earlier than FN-C | [5] |
-| R7 | SI dates do not have an all-zero fraction of a second | [6] |
-| R8 | The journal's file-created entry agrees with SI-C | New |
-| R9 | The target date copied inside a shortcut agrees with SI-C | New |
-| R10 | A date change does not line up with an unusual program run | [1] ext. |
-| R11 | SI-C is plausible next to neighboring MFT records | [7], [8] |
+| Master File Table | File system | Visible and protected dates (8 per file) |
+| Change journal | File system | When files were created and their dates changed |
+| Shortcut files | Windows Explorer | Their own dates, and a copy of the target's dates |
+| Prefetch files | Windows | Which programs ran, and their last 8 run times |
+| Event logs | Windows | Logons, log clearing, clock changes |
 
-R8 and R9 are the main new rules. A journal's file-created entry is not touched by a later change to the visible dates, so one dated well after the claimed creation date is strong evidence of backdating. Every shortcut keeps a copy of its target's dates, so a creation date that has since moved is suspicious even when the shortcut's own dates look normal. Five warnings keep missing records visible: **S1** an event log was cleared, **S2** the change journal was deleted or starts late, **S3** event logs have numbering gaps, **S4** the system clock was changed, and **S5** files clearly opened have no shortcut or programs that ran have no Prefetch file. They mark every "consistent" answer that rests on a damaged record as low-confidence.
+Table II lists the rules in the same plain words the report uses. Each rule answers *consistent*, *violated*, or *cannot check* when a record it needs is missing.
 
-## First-Look Questions
+Table: The date rules
 
-Many drives an examiner receives are not Windows system drives: a USB stick is often FAT, and a data drive may hold another system's files. The same idea applies to what any drive records about a file's content. Table III lists eight questions ADS asks of every file on a FAT or NTFS image.
+| Rule | Flags a file when... | From |
+|---|---|---|
+| R1 | Its record-change date is before the journal's own entry | [1] |
+| R2 | A shortcut disagrees on its last-change date | [1] |
+| R3 | A shortcut is older than the file it points to | [1] |
+| R4 | A shortcut was opened after the file's last-opened date | [1] |
+| R5 | It changed while nobody was logged on | [1] |
+| R6 | Its visible date is older than the protected copy | [10] |
+| R7 | Its date was set to a round number of seconds | Known |
+| R8 | It was created later than its visible date says | New |
+| R9 | A shortcut remembers a different creation date | New |
+| R10 | Its date changed as an unusual program ran | [1] ext. |
+| R11 | It claims to be much older than its neighbors on disk | [7] |
 
-Table: First-look questions
+R8 and R9 are the main new rules. The change journal's "file created" entry is not touched when someone later rewrites the visible dates, so a journal entry dated well after the claimed creation date is strong evidence of back-dating. Every shortcut also keeps a copy of its target's dates, so a creation date that has since moved is suspicious even when the shortcut's own dates look normal. Five warnings (S1 to S5) keep missing records visible: a cleared event log, a deleted or late-starting change journal, gaps in the event log numbering, a changed system clock, and programs that ran without leaving a Prefetch file. Any "consistent" answer that rests on a damaged record is marked low-confidence.
 
-| ID | Where two records disagree |
-|---|---|
-| C1 | The name says one type; the first bytes say another |
-| C2 | The file continues after its format says it ends |
-| C3 | The file is locked with a password |
-| C4 | A password is written out in plain words inside a file |
-| C5 | The file is unlike everything else in its folder |
-| C6 | The folder's documentation names its neighbors but not it |
-| C7 | An archive holds locked or personal files |
-| F1 | Written at a different time from the bulk copy around it |
+## Scoring: Agreement Beats Noise
 
-## Scoring
-
-Both families are scored the same way. The score rewards agreement among independent checks and discounts checks that fire often:
+Both sets of checks are scored the same way. A file's score is the weighted share of the checks that fired, out of the checks that could be run on it:
 
 $$ D(f) = \frac{\sum_r w_r \, v_r(f)}{\sum_r w_r} $$
 
-Here v_r(f) is 1 if check r fires for file f and 0 if not; checks that cannot be run are left out of both sums, and the number that could be run is reported beside D(f). Each weight w_r is ln(1/p_r), where p_r is how often check r fires on the image being examined, so a check that fires on 2% of its files counts for more than one that fires on 20%. For the date rules, w_r is also multiplied by a factor from 1 to 3 built from the seven tamper-resistance factors of [2], so records a user cannot easily reach (the journal, the FN dates) count for more than records a user can edit or delete (shortcuts, Prefetch). [2] scores the SI and FN dates itself; for the other records I applied its categories, and those scores are provisional. To my knowledge this is the first use of [2] as a numeric input to detection.
+Here v_r(f) is 1 if check r fires for file f and 0 if not. A check that fires on almost every file says little, so each weight is w_r = ln(1/p_r), where p_r is how often check r fires on that drive: a check that fires on 2% of files counts for more than one that fires on 20%. For the date rules, records that a user cannot easily reach (the change journal, the protected dates) also count up to three times more than records a user can edit or delete (shortcuts, Prefetch), using the tamper-resistance ratings of Vanini and colleagues [2]. To my knowledge this is the first use of those ratings as a number inside a detector. A simple weighted sum was chosen over machine learning because there is no labelled training data and because a sum keeps every flag explainable. Fig. 4 shows the result on Project 2: the files ranked by score.
 
-A weighted sum was chosen over a trained classifier because there is no labeled training data and because a sum keeps every flag explainable. Files are ranked by D(f); flagged files whose date evidence falls within five minutes of each other are grouped with any program runs and warnings in that window, turning a list of files into a candidate event.
+![The top five leads on the Project 2 image, ranked by score.](figures/shot_leads.png){width=column}
+
+## Every Flag Explained
+
+Opening a lead shows why it was picked (Fig. 5). For *attr.html*, three independent questions agree: its name says web page but its first bytes (FF D8 FF) say photo; it is the only photo in its folder; and the drive's guides and web pages name three of its four neighbors but never this file. Each line is a sentence an examiner can repeat in a report, with the evidence printed under it.
+
+![One lead opened: each check that fired is explained in a plain sentence, with the evidence under it.](figures/shot_lead_open.png){width=2.6in}
 
 ## Implementation
 
-ADS is written in Python 3 with only the standard library, so it runs on any computer with Python installed. It reads FAT and NTFS images itself, read-only. Both readers were checked against The Sleuth Kit: the FAT reader matched it byte for byte on all 4,923 files of the Project 1 image, and the NTFS reader matched it on every file of a test image built to include fragmented, hard-linked, hidden and deleted files, and on 3,605 files of a larger partitioned image. Every input is hashed with SHA-256. Each check is a separate function that records the values it compared, and the same code produces each single-check baseline ("C1 only," "R6 only") from identical inputs. The pipeline passes 59 automated tests.
+The tool is written in Python 3 using only its standard library, so it runs on any computer with Python installed. It reads the drive copies itself and never writes to them. Both of its drive readers were checked against The Sleuth Kit, a standard open-source forensic toolkit: the USB-stick reader matched it byte for byte on all 4,923 files of the Project 1 image, and the Windows-drive reader matched it on a test image built with fragmented, linked, hidden and deleted files, and on 3,605 files of a larger image. Every input is fingerprinted with SHA-256. The same code produces the "one check only" results that the evaluation compares against. A browser edition puts the whole tool in a single offline web page, and it gives exactly the same results as the command line on both course images. The code passes 59 automated tests.
 
 # Evaluation Plan
 
