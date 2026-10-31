@@ -58,7 +58,7 @@ def para(doc, text="", size=10, align=WD_ALIGN_PARAGRAPH.JUSTIFY, indent=True, b
     f = p.paragraph_format
     f.alignment, f.space_before, f.space_after, f.line_spacing = align, Pt(before), Pt(after), 1.0
     if indent:
-        f.first_line_indent = Inches(0.14)
+        f.first_line_indent = Inches(0.2)          # the IEEE template's body-text indent
     if (bold or italic or align == WD_ALIGN_PARAGRAPH.CENTER) and size <= 10 and text:
         f.keep_with_next = True
     add_runs(p, text, size, bold, italic)
@@ -130,7 +130,11 @@ def build():
     # Title block, one column.
     para(doc, meta.get("title", ""), size=22, align=WD_ALIGN_PARAGRAPH.CENTER, indent=False, after=8)
     para(doc, meta.get("author", ""), size=11, align=WD_ALIGN_PARAGRAPH.CENTER, indent=False)
-    para(doc, meta.get("affiliation", ""), size=9, align=WD_ALIGN_PARAGRAPH.CENTER, indent=False, italic=True)
+    # affiliation lines are separated by " | ", as in the IEEE template's author block
+    for line in meta.get("affiliation", "").split(" | "):
+        para(doc, line, size=9, align=WD_ALIGN_PARAGRAPH.CENTER, indent=False, italic=True)
+    if meta.get("email"):
+        para(doc, meta["email"], size=9, align=WD_ALIGN_PARAGRAPH.CENTER, indent=False)
     if meta.get("note"):
         para(doc, meta["note"], size=9, align=WD_ALIGN_PARAGRAPH.CENTER, indent=False, italic=True, after=10)
     set_columns(doc.add_section(WD_SECTION.CONTINUOUS), 2)
@@ -149,7 +153,7 @@ def build():
                 add_runs(p, text, 9, bold=True)
             elif block == "keywords":
                 p = para(doc, "", size=9, indent=False, after=6)
-                add_runs(p, "Index Terms—", 9, bold=True, italic=True)
+                add_runs(p, "Keywords—", 9, bold=True, italic=True)
                 add_runs(p, text, 9, bold=True)
             elif block == "references":
                 m = re.match(r"(\[\d+\])\s*(.*)", text)

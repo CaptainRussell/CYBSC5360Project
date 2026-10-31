@@ -1,27 +1,32 @@
 ---
-title: Catching Cover-Ups: Cross-Checking a Drive's Independent Records to Find Tampered and Hidden Evidence
+title: Cross-Checking Windows Artifacts to Detect Anti-Forensic Tampering
 author: Captain Scott Russell
-affiliation: CPRE 5360 Computer and Network Forensics, Iowa State University
+affiliation: Department of Computer Engineering (Cybersecurity) | Iowa State University, Ames, Iowa
+email: russesco@iastate.edu
 note: Draft of the proposed solution and evaluation plan, November 1, 2026
 ---
 
 ::: abstract
-A person hiding evidence on a computer can change the dates on a file, rename a photo to look like a program, or tuck a file inside another one, each in seconds. But a drive records the same facts in several independent places, and a cover-up rarely keeps all of them in agreement. This paper proposes the Artifact Disagreement Scorer (ADS), a tool that checks a drive's records against each other and points an examiner to the files where they disagree. It has two families of checks: eleven rules that compare the dates Windows keeps in different places, and eight first-look questions that compare what a file claims to be with what it holds. It combines the results into one ranked list with a plain-language reason for every flag. The evaluation is a proof of function on the two forensic images from this course, using my own EnCase and FTK examinations as the answer key. On the first image, a development case, ADS listed all seven evidence files I had found by hand among 2,246 files, six of them in its top ten. The second image is a held-out test: the checks were frozen before it was examined. On it, ADS listed seven of the sixteen evidence files among 4,818 files, five in its top ten, and showed that nearly every visible date on the drive had been set to one moment.
+People hiding evidence on a computer can change a file's dates, rename a photo so it looks like a program, or tuck one file inside another, each in a few seconds. But Windows and its file system write the same facts down in several separate places, and a cover-up rarely changes all of them. I built the Artifact Disagreement Scorer (ADS), a tool that compares these records with each other and points the examiner to the files where they disagree, with a plain-English reason for each one. It runs as a command-line program or as a single web page that works offline. I am testing it on the two disk images from this course's lab projects, using my own EnCase and FTK findings as the answer key. On Project 1 it ranked six of the seven evidence files in its top ten out of 2,246 files. On Project 2, where the checks were locked before I examined the image, it found seven of the sixteen evidence files among 4,818, five of them in its top ten.
 :::
 
 ::: keywords
-Digital forensics, anti-forensics, timestamp manipulation, NTFS, FAT, tool validation, triage
+Digital forensics, anti-forensics, timestamp tampering, NTFS, triage, tool validation
 :::
 
-# Introduction
+# The Problem
 
-Investigations depend on trusting what a drive says about its files: when each was made, what it is, and where it sits. Each of these is easy to fake. The dates Windows shows can be rewritten by any program with ordinary rights, a technique called *timestomping* [4]. A photo can be renamed to look like a system program, and a file can be hidden inside another one or after its end.
+Hiding evidence is cheap. Any program can rewrite the dates Windows shows for a file, a trick called *timestomping* [4]. A photo can be renamed `gzip` so it sits among system programs, and a file can be hidden inside a ZIP or after the end of another file.
 
-A drive, however, records the same facts in more than one place, written by different parts of the system for different reasons. The NTFS file system keeps a second, harder-to-reach copy of every file's dates, and a journal of changes. Windows writes shortcut (LNK) files when a document is opened, Prefetch files when a program runs, and event logs for logons and clock changes. A file's name says what it is, and so do its first bytes. Someone covering their tracks may change one of these, but keeping all of them consistent is much harder, so a cover-up tends to leave records that *disagree* (Fig. 1).
+Hiding it *well* is much harder. Windows records the same facts in more than one place, written by different parts of the system for different reasons. The file system keeps a second, harder-to-reach copy of every file's dates. Windows writes a shortcut file when a document is opened, a Prefetch file when a program runs, and event logs for logons and clock changes. A file's name says what it should be, and its first bytes say what it really is. Someone covering their tracks may fix one of these, but rarely all of them, so a cover-up leaves records that *disagree*.
 
-![What a disagreement looks like. The file's visible date was set back to 2019, but three independent records place its creation in 2026.](figures/fig2_disagree.png){width=column}
+Today's tools leave that comparison to the examiner. EnCase and FTK display every record, but the examiner has to notice that two of them conflict. Specialized tools automate a single check, and a single check is noisy: normal use also produces odd dates, so one filter can return hundreds of files.
 
-Commercial suites such as EnCase and FTK display these records but leave the examiner to notice that two of them disagree. Specialized tools automate single checks, and each one alone is weak: normal activity also produces odd dates, and a single filter returns hundreds of files. This paper asks: *does combining many independent disagreement checks point an examiner to planted evidence better than any single check?* Section II reviews prior work, Section III describes the tool, and Section IV gives the plan to test it on the two course images.
+The question for this paper is the one from my topic proposal: *does combining many disagreement checks point an examiner to hidden evidence better than any single check?* To answer it I built ADS. Fig. 1 shows the front page of its report on the Project 2 image: of 5,607 entries on the drive, 164 files have at least one clue and 7 are marked "look first".
+
+![The ADS report on the Project 2 image narrows the whole drive to a short list.](figures/shot_funnel.png){width=column}
+
+Section II covers what already exists, Section III shows how ADS works, and Section IV explains how I am testing it.
 
 # Background and Related Work
 
